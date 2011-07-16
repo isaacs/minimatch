@@ -8,12 +8,14 @@ var path = require("path")
   , LRU = require("lru-cache")
 
 minimatch.filter = function (pattern, options) {
+  options = options || {}
   return function (p, i, list) {
     return minimatch(p, pattern, options)
   }
 }
 
 minimatch.match = function (list, pattern, options) {
+  if (!options) options = {}
   var ret = list.filter(minimatch.filter(pattern, options))
 
   // set the null flag to allow empty match sets
@@ -31,7 +33,7 @@ function minimatch (p, pattern, options) {
     throw new TypeError("glob pattern string required")
   }
 
-  if (!options) options = {}
+  options = options || {}
 
   // to set the cache, just replace with a different obj
   // supporting set(k,v) and v=get(k) methods.
