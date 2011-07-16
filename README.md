@@ -43,15 +43,26 @@ interpreting the character escapes.  For example,
 
 ## Functions
 
-* `minimatch(path, pattern, options)` Main export.  Tests a path against
-  the pattern using the options.
-* `minimatch.filter(pattern, options)` Returns a function that tests its
-  supplied argument, suitable for use with `Array.filter`.
-* `minimatch.match(list, pattern, options)` Match against the list of
-  files, in the style of fnmatch or glob.  If nothing is matched, then
-  return the pattern (unless `{ null: true }` in the options.)
-* `minimatch.makeRe(pattern, options)` Make a regular expression object
-  from the pattern.
+### `minimatch(path, pattern, options)`
+
+Main export.  Tests a path against
+the pattern using the options.
+
+### `minimatch.filter(pattern, options)`
+
+Returns a function that tests its
+supplied argument, suitable for use with `Array.filter`.
+
+### `minimatch.match(list, pattern, options)`
+
+Match against the list of
+files, in the style of fnmatch or glob.  If nothing is matched, then
+return the pattern (unless `{ null: true }` in the options.)
+
+### `minimatch.makeRe(pattern, options)`
+
+Make a regular expression object
+from the pattern.
 
 ## Options
 
