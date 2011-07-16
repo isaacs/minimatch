@@ -43,23 +43,23 @@ interpreting the character escapes.  For example,
 
 ## Functions
 
-### `minimatch(path, pattern, options)`
+### minimatch(path, pattern, options)
 
 Main export.  Tests a path against
 the pattern using the options.
 
-### `minimatch.filter(pattern, options)`
+### minimatch.filter(pattern, options)
 
 Returns a function that tests its
 supplied argument, suitable for use with `Array.filter`.
 
-### `minimatch.match(list, pattern, options)`
+### minimatch.match(list, pattern, options)
 
 Match against the list of
 files, in the style of fnmatch or glob.  If nothing is matched, then
 return the pattern (unless `{ null: true }` in the options.)
 
-### `minimatch.makeRe(pattern, options)`
+### minimatch.makeRe(pattern, options)
 
 Make a regular expression object
 from the pattern.
@@ -68,17 +68,40 @@ from the pattern.
 
 All options are `false` by default.
 
-* `debug` Dump a ton of stuff to stderr.
-* `null` Return an empty list from minimatch.match, instead of a list
-  containing the pattern itself.
-* `nocase` Perform a case-insensitive match.
-* `cache` An LRU cache with `.get(k)` and `.set(k,v)` methods.  By
-  default, an instance of `node-lru-cache` is used, with 1000 max
-  entries.
-* `slash` If set, then `a/*` will match `a/` as well as `a/b`.
-* `matchBase` If set, then patterns without slashes will be matched
-  against the basename of the path if it contains slashes.  For example,
-  `a?b` would match `xyz/123/acb`.
-* `partial` Internal.  Used by `minimatch.makeRe`.
-* `dot` Allow patterns to match paths starting with a period, even if
-  the pattern does not explicitly start with a period.
+### debug
+
+Dump a ton of stuff to stderr.
+
+### null
+
+Return an empty list from minimatch.match, instead of a list
+containing the pattern itself.
+
+### nocase
+
+Perform a case-insensitive match.
+
+### cache
+
+An LRU cache with `.get(k)` and `.set(k,v)` methods.  By
+default, an instance of `node-lru-cache` is used, with 1000 max
+entries.
+
+### slash
+
+If set, then `a/*` will match `a/` as well as `a/b`.
+
+### matchBase
+
+If set, then patterns without slashes will be matched
+against the basename of the path if it contains slashes.  For example,
+`a?b` would match `xyz/123/acb`.
+
+### partial
+
+Internal.  Used by `minimatch.makeRe`.
+
+### dot
+
+Allow patterns to match paths starting with a period, even if
+the pattern does not explicitly start with a period.
