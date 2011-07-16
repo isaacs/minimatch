@@ -101,7 +101,8 @@ function makeRe (pattern, options) {
     , stateChar
     , negate = false
     , negating = false
-    , inClass = 0
+    , inClass = false
+    , reClassStart = []
 
   for ( var i = 0, len = pattern.length, c
       ; (i < len) && (c = pattern.charAt(i))
@@ -147,12 +148,15 @@ function makeRe (pattern, options) {
         if (escaping) {
           re += "\\" + c
           escaping = false
+        } else if (inClass) {
+          re += c
         } else if (c === "*" && stateChar === "*") { // **
           re += twoStar
           stateChar = false
         } else {
           if (stateChar) {
             if (stateChar === "*") re += oneStar
+            else if (stateChar === "?") re += "."
             else re += "\\" + stateChar
           }
           stateChar = c
@@ -163,6 +167,8 @@ function makeRe (pattern, options) {
         if (escaping) {
           re += "\\("
           escaping = false
+        } else if (inClass) {
+          re += "("
         } else if (stateChar) {
           plType = stateChar
           patternListStack.push(plType)
@@ -174,7 +180,7 @@ function makeRe (pattern, options) {
         continue
 
       case ")":
-        if (escaping) {
+        if (escaping || inClass) {
           re += "\\)"
           escaping = false
         } else if (patternListStack.length) {
@@ -193,7 +199,7 @@ function makeRe (pattern, options) {
         continue
 
       case "|":
-        if (escaping) {
+        if (escaping || inClass) {
           re += "\\|"
           escaping = false
         } else if (patternListStack.length) {
@@ -203,34 +209,53 @@ function makeRe (pattern, options) {
         }
         continue
 
-      // turns out these are the same in regexp and glob :)
+      // these are mostly the same in regexp and glob :)
       case "[":
-        inClass = 2
-        // fallthrough, sorry
-      case "]":
-        inClass --
-        // That was like a bad pun.
-
         if (stateChar) {
-          // some state-tracking char was before the [ or ]
-          if (inClass && stateChar === "*") {
-            re += oneStar
-          } else {
-            re += stateChar
+          // some state-tracking char was before the [
+          switch (stateChar) {
+            case "*":
+              re += oneStar
+              break
+            case "?":
+              re += "."
+              break
+            default:
+              re += "\\"+stateChar
+              break
           }
           stateChar = false
         }
 
-        if (escaping) {
+        if (escaping || inClass) {
           re += "\\" + c
           escaping = false
         } else {
+          inClass = true
+          classStart = i
+          reClassStart = re.length
+          re += c
+        }
+        continue
+
+      case "]":
+        //  a right bracket shall lose its special
+        //  meaning and represent itself in
+        //  a bracket expression if it occurs
+        //  first in the list.  -- POSIX.2 2.8.3.2
+        if (i === classStart + 1) escaping = true
+
+        if (escaping || !inClass) {
+          re += "\\" + c
+          escaping = false
+        } else {
+          inClass = false
           re += c
         }
         continue
 
       case "{":
-        if (escaping) {
+        if (escaping || inClass) {
           re += "\\{"
           escaping = false
         } else {
@@ -240,7 +265,7 @@ function makeRe (pattern, options) {
         continue
 
       case "}":
-        if (escaping || braceDepth === 0) {
+        if (escaping || inClass || braceDepth === 0) {
           re += "\\}"
           escaping = false
         } else {
@@ -250,7 +275,7 @@ function makeRe (pattern, options) {
         continue
 
       case ",":
-        if (escaping || braceDepth === 0) {
+        if (escaping || inClass || braceDepth === 0) {
           re += ","
           escaping = false
         } else {
@@ -312,6 +337,22 @@ function makeRe (pattern, options) {
     re += "\\\\"
   }
 
+  // "[abc" is valid, equivalent to "\[abc"
+  if (inClass) {
+    // split where the last [ was, and escape it
+    // this is a huge pita.  We now have to re-walk
+    // the contents of the would-be class to re-translate
+    // any characters that were passed through as-is
+    var cs = re.substr(reClassStart + 1)
+      , csOpts = Object.create(options)
+    csOpts.partial = true
+
+    re = re.substr(0, reClassStart) + "\\["
+       + makeRe(cs, csOpts)
+  }
+
+  if (options.partial) return re
+
   // don't match "." files unless pattern starts with "."
   if (!options.dot && pattern.charAt(0) !== ".") {
     re = "(?!\\.)" + re
@@ -325,14 +366,22 @@ function makeRe (pattern, options) {
   if (negate) re = "^(?!" + re + ").*$"
 
   // really insane glob patterns can cause bad things.
+  var flags = ""
+  if (options.nocase) flags += "i"
+
+  if (options.debug) {
+    console.error("/%s/%s", re, flags)
+  }
+
   try {
-    return new RegExp(re)
+    return new RegExp(re, flags)
   } catch(ex) {
     return false
   }
 }
 
 if (require.main === module) {
+  // more tests in test/*.js
   var tests = ["{a,b{c,d}}"
               ,"a.*$?"
               ,"\\{a,b{c,d}}"
@@ -346,5 +395,3 @@ if (require.main === module) {
     console.log([t,makeRe(t)])
   })
 }
-
-

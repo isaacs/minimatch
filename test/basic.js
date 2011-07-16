@@ -10,12 +10,10 @@ var tap = require("tap")
                         , ".x", ".y" ])
 
 tap.test("basic tests", function (t) {
-  t.comment("See: "+
-            "http://www.bashcookbook.com/bashinfo"+
-            "/source/bash-1.14.7/tests/glob-test")
-
-  // [ pattern, [matches] ]
-  ; [ ["a*", ["a", "abc", "abd", "abe"]]
+  // [ pattern, [matches], MM opts, files, TAP opts]
+  ; [ "http://www.bashcookbook.com/bashinfo" +
+      "/source/bash-1.14.7/tests/glob-test"
+    , ["a*", ["a", "abc", "abd", "abe"]]
     , ["X*", ["X*"]]
     // allow null glob expansion
     , ["X*", [], { null: true }]
@@ -61,16 +59,75 @@ tap.test("basic tests", function (t) {
     , ["a\\*c", [], {null: true}, ["abc"]]
     , ["", [""], { null: true }, [""]]
 
+    , "http://www.opensource.apple.com/source/bash/bash-23/" +
+      "bash/tests/glob-test"
+    , function () { files.push("man/", "man/man1/", "man/man1/bash.1") }
+    , ["*/man*/bash.*", ["man/man1/bash.1"]]
+    , ["man/man1/bash.1", ["man/man1/bash.1"]]
+    , ["a***c", ["abc"], null, ["abc"]]
+    , ["a*****?c", ["abc"], null, ["abc"]]
+    , ["?*****??", ["abc"], null, ["abc"]]
+    , ["*****??", ["abc"], null, ["abc"]]
+    , ["?*****?c", ["abc"], null, ["abc"]]
+    , ["?***?****c", ["abc"], null, ["abc"]]
+    , ["?***?****?", ["abc"], null, ["abc"]]
+    , ["?***?****", ["abc"], null, ["abc"]]
+    , ["*******c", ["abc"], null, ["abc"]]
+    , ["*******?", ["abc"], null, ["abc"]]
+    , ["a*cd**?**??k", ["abcdecdhjk"], null, ["abcdecdhjk"]]
+    , ["a**?**cd**?**??k", ["abcdecdhjk"], null, ["abcdecdhjk"]]
+    , ["a**?**cd**?**??k***", ["abcdecdhjk"], null, ["abcdecdhjk"]]
+    , ["a**?**cd**?**??***k", ["abcdecdhjk"], null, ["abcdecdhjk"]]
+    , ["a**?**cd**?**??***k**", ["abcdecdhjk"], null, ["abcdecdhjk"]]
+    , ["a****c**?**??*****", ["abcdecdhjk"], null, ["abcdecdhjk"]]
+    , ["[-abc]", ["-"], null, ["-"]]
+    , ["[abc-]", ["-"], null, ["-"]]
+    , ["\\", ["\\"], null, ["\\"]]
+    , ["[\\\\]", ["\\"], null, ["\\"]]
+    , ["[[]", ["["], null, ["["]]
+    , ["[", ["["], null, ["["]]
+    , ["[*", ["[abc"], null, ["[abc"]]
+    , "a right bracket shall lose its special meaning and " +
+      "represent itself in a bracket expression if it occurs " +
+      "first in the list.  -- POSIX.2 2.8.3.2"
+    , ["[]]", ["]"], null, ["]"]]
+    , ["[]-]", ["]"], null, ["]"]]
+    , ["[a-\z]", ["p"], null, ["p"]]
+    , ["[/\\\\]*", ["/tmp"], null, ["/tmp"]]
+    , ["??**********?****?", [], { null: true }, ["abc"]]
+    , ["??**********?****c", [], { null: true }, ["abc"]]
+    , ["?************c****?****", [], { null: true }, ["abc"]]
+    , ["*c*?**", [], { null: true }, ["abc"]]
+    , ["a*****c*?**", [], { null: true }, ["abc"]]
+    , ["a********???*******", [], { null: true }, ["abc"]]
+    , ["[]", [], { null: true }, ["a"]]
+    , ["[abc", [], { null: true }, ["["]]
+
+    , "nocase tests"
+    , ["XYZ", ["xYz"], { nocase: true, null: true }
+      , ["xYz", "ABC", "IjK"]]
+    , ["ab*", ["ABC"], { nocase: true, null: true }
+      , ["xYz", "ABC", "IjK"]]
+    , ["[ia]?[ck]", ["ABC", "IjK"], { nocase: true, null: true }
+      , ["xYz", "ABC", "IjK"]]
+
     ].forEach(function (c) {
       if (typeof c === "function") return c()
+      if (typeof c === "string") return t.comment(c)
 
       var pattern = c[0]
         , expect = c[1].sort(alpha)
         , options = c[2] || {}
         , f = c[3] || files
+        , tapOpts = c[4] || {}
 
       // options.debug = true
-      var actual = mm.match(f, pattern, options).sort(alpha)
+      var r = mm.makeRe(pattern, options)
+      tapOpts.re = String(r) || JSON.stringify(r)
+      tapOpts.files = JSON.stringify(f)
+      tapOpts.pattern = pattern
+
+      var actual = mm.match(f, pattern, options)
 
       t.equivalent( actual, expect
                   , JSON.stringify(pattern) + " " + JSON.stringify(expect)
