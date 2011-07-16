@@ -19,11 +19,18 @@ tap.test("basic tests", function (t) {
     , ["X*", ["X*"]]
     // allow null glob expansion
     , ["X*", [], { null: true }]
+
+    // isaacs: Slightly different than bash/sh/ksh
+    // \\* is not un-escaped to literal "*" in a failed match,
+    // but it does make it get treated as a literal star
     , ["\\*", ["\\*"]]
+    , ["\\**", ["\\**"]]
+
     , ["b*/", ["bdir/"]]
     , ["c*", ["c", "ca", "cb"]]
     , ["**", files]
-    , ["\\**", ["\\**"]]
+
+
     , ["\\.\\./*/", ["\\.\\./*/"]]
     , ["s/\\..*//", ["s/\\..*//"]]
 
