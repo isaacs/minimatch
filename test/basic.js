@@ -131,7 +131,7 @@ tap.test("basic tests", function (t) {
 
       t.equivalent( actual, expect
                   , JSON.stringify(pattern) + " " + JSON.stringify(expect)
-                  , c[4] )
+                  , tapOpts )
     })
   t.end()
 })
