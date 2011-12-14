@@ -129,6 +129,10 @@ tap.test("basic tests", function (t) {
     , ["**", ["a/b","a/.d",".a/.d"], { dot: true }
       , [ ".a/.d", "a/.d", "a/b"]]
 
+    , "paren sets cannot contain slashes"
+    , ["*(a/b)", ["*(a/b)"], {}, ["a/b"]]
+
+
     ].forEach(function (c) {
       if (typeof c === "function") return c()
       if (typeof c === "string") return t.comment(c)

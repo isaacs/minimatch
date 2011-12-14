@@ -124,6 +124,7 @@ function makeRe (pattern, options) {
       : "(?:(?!(?:\\\/|^)\\.).)*?"
     , reSpecials = "().*{}+?[]^$/\\"
     , patternListStack = []
+    , plType
     , stateChar
     , negate = false
     , negating = false
@@ -305,6 +306,12 @@ function makeRe (pattern, options) {
           re += "|"
         }
         continue
+
+      case "/":
+        if (patternListStack.length && !escaping && !inClass) {
+          return false
+        }
+        // fallthrough
 
       default:
         // swallow any state char that wasn't consumed
