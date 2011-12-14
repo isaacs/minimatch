@@ -1,6 +1,7 @@
 // http://www.bashcookbook.com/bashinfo/source/bash-1.14.7/tests/glob-test
 
 var tap = require("tap")
+  , globalBefore = Object.keys(global)
   , mm = require("../")
   , files = [ "a", "b", "c", "d", "abc"
             , "abd", "abe", "bb", "bcd"
@@ -10,6 +11,8 @@ var tap = require("tap")
                         , ".x", ".y" ])
 
 tap.test("basic tests", function (t) {
+  var start = Date.now()
+
   // [ pattern, [matches], MM opts, files, TAP opts]
   ; [ "http://www.bashcookbook.com/bashinfo" +
       "/source/bash-1.14.7/tests/glob-test"
@@ -32,13 +35,13 @@ tap.test("basic tests", function (t) {
     , ["\\.\\./*/", ["\\.\\./*/"]]
     , ["s/\\..*//", ["s/\\..*//"]]
 
-    // legendary larry crashes bashes
+    , "legendary larry crashes bashes"
     , ["/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\\1/"
       , ["/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\\1/"]]
     , ["/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\1/"
       , ["/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\1/"]]
 
-    // character classes
+    , "character classes"
     , ["[a-c]b*", ["abc", "abd", "abe", "bb", "cb"]]
     , ["[a-y]*[^c]", ["abd", "abe", "bb", "bcd",
        "bdir/", "ca", "cb", "dd", "de"]]
@@ -87,8 +90,8 @@ tap.test("basic tests", function (t) {
     , ["[[]", ["["], null, ["["]]
     , ["[", ["["], null, ["["]]
     , ["[*", ["[abc"], null, ["[abc"]]
-    , "a right bracket shall lose its special meaning and " +
-      "represent itself in a bracket expression if it occurs " +
+    , "a right bracket shall lose its special meaning and\n" +
+      "represent itself in a bracket expression if it occurs\n" +
       "first in the list.  -- POSIX.2 2.8.3.2"
     , ["[]]", ["]"], null, ["]"]]
     , ["[]-]", ["]"], null, ["]"]]
@@ -110,6 +113,21 @@ tap.test("basic tests", function (t) {
       , ["xYz", "ABC", "IjK"]]
     , ["[ia]?[ck]", ["ABC", "IjK"], { nocase: true, null: true }
       , ["xYz", "ABC", "IjK"]]
+
+    // [ pattern, [matches], MM opts, files, TAP opts]
+    , "onestar/twostar"
+    , ["{/*,*}", [], {null: true}, ["/asdf/asdf/asdf"]]
+    , ["{/?,*}", ["/a", "bb"], {null: true}
+      , ["/a", "/b/b", "/a/b/c", "bb"]]
+
+    , "dots should not match unless requested"
+    , ["**", ["a/b"], {}, ["a/b", "a/.d", ".a/.d"]]
+
+    // this also tests that changing the options needs
+    // to change the cache key, even if the pattern is
+    // the same!
+    , ["**", ["a/b","a/.d",".a/.d"], { dot: true }
+      , [ ".a/.d", "a/.d", "a/b"]]
 
     ].forEach(function (c) {
       if (typeof c === "function") return c()
@@ -133,6 +151,14 @@ tap.test("basic tests", function (t) {
                   , JSON.stringify(pattern) + " " + JSON.stringify(expect)
                   , tapOpts )
     })
+
+  t.comment("time=" + (Date.now() - start) + "ms")
+  t.end()
+})
+
+tap.test("global leak test", function (t) {
+  var globalAfter = Object.keys(global)
+  t.equivalent(globalAfter, globalBefore, "no new globals, please")
   t.end()
 })
 
