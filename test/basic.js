@@ -131,6 +131,26 @@ tap.test("basic tests", function (t) {
 
     , "paren sets cannot contain slashes"
     , ["*(a/b)", ["*(a/b)"], {}, ["a/b"]]
+    // invalid glob pattern.  should fail.
+    , ["*(a|{b),c)}", ["*(a|{b),c)}"], {}, ["a", "ab", "ac", "ad"]]
+
+    // test partial parsing in the presence of comment/negation chars
+    , ["[!a*", ["[!ab"], {}, ["[!ab", "[ab"]]
+    , ["[#a*", ["[#ab"], {}, ["[#ab", "[ab"]]
+
+
+    // crazy nested {,,} and *(||) tests.
+    , function () {
+        files = [ "a", "b", "c", "d"
+                , "ab", "ac", "ad"
+                , "bc,d", "c,db", "c,d"
+                , "d)", "(b|c"
+                , "b|c", "b|cc", "cb|c" ]
+      }
+    , ["*(a|{b,c})", ["a", "ab", "ac"]]
+    , ["{a,*(b|c,d)}", ["a","b", "bc,d", "c,db", "c,d"]]
+    , ["{a,*(b|{c,d})}", ["a","b", "bc", "cb", "c"]]
+    , ["*(a|{b|c,c})", ["a", "b|c", "b|cc", "cb|c", "c"]]
 
 
     ].forEach(function (c) {

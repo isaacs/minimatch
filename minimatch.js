@@ -50,7 +50,7 @@ function minimatch (p, pattern, options) {
   // check the cache
   var re = cache.get(pattern + "\n" + JSON.stringify(options))
   if (!re && re !== false) {
-    cache.set(pattern, re = minimatch.makeRe(pattern, options))
+    cache.set(pattern, re = makeRe(pattern, options))
   }
 
   if (options.debug) {
@@ -90,8 +90,217 @@ function minimatch (p, pattern, options) {
   return match
 }
 
+// need to expand braces first.
+// then, turn each piece into a pattern, and join
+// together.
+// Brace expansion:
+// a{b,c}d -> abd acd
+// a{b,}c -> abc ac
+// a{0..3}d -> a0d a1d a2d a3d
+// a{b,c{d,e}f}g -> abg acdfg acefg
+// a{b,c}d{e,f}g -> abdeg acdeg abdeg abdfg
+//
+// Invalid sets are not expanded.
+// a{2..}b -> a{2..}b
+// a{b}c -> a{b}c
+
+minimatch.braceExpand = braceExpand
+function braceExpand (pattern) {
+  // console.error("braceExpand", pattern)
+  if (!pattern.match(/\{/) || !pattern.match(/\}/)) {
+    // shortcut. definitely no sets.
+    return [pattern]
+  }
+
+  var escaping = false
+
+  // examples and comments refer to this crazy pattern:
+  // a{b,c{d,e},{f,g}h}x{y,z}
+  // expected:
+  // abxy
+  // abxz
+  // acdxy
+  // acdxz
+  // acexy
+  // acexz
+  // afhxy
+  // afhxz
+  // aghxy
+  // aghxz
+
+  // everything before the first { is just a prefix.
+  // So, we pluck that off, and work with the rest,
+  // and then prepend it to everything we find.
+  if (pattern.charAt(0) !== "{") {
+    // console.error(pattern)
+    var prefix = null
+    for (var i = 0, l = pattern.length; i < l; i ++) {
+      var c = pattern.charAt(i)
+      // console.error(i, c)
+      if (c === "\\") {
+        escaping = !escaping
+      } else if (c === "{" && !escaping) {
+        prefix = pattern.substr(0, i)
+        break
+      }
+    }
+
+    // actually no sets, all { were escaped.
+    if (prefix === null) {
+      // console.error("no sets")
+      return [pattern]
+    }
+
+    var tail = braceExpand(pattern.substr(i))
+    return tail.map(function (t) {
+      return prefix + t
+    })
+  }
+
+  // now we have something like:
+  // {b,c{d,e},{f,g}h}x{y,z}
+  // walk through the set, expanding each part, until
+  // the set ends.  then, we'll expand the suffix.
+  // If the set only has a single member, then'll put the {} back
+
+  // first, handle numeric sets, since they're easier
+  var numset = pattern.match(/^\{(-?[0-9]+)\.\.(-?[0-9]+)\}/)
+  if (numset) {
+    // console.error("numset", numset[1], numset[2])
+    var suf = braceExpand(pattern.substr(numset[0].length))
+      , start = +numset[1]
+      , end = +numset[2]
+      , inc = start > end ? -1 : 1
+      , set = []
+    for (var i = start; i != (end + inc); i += inc) {
+      // append all the suffixes
+      for (var ii = 0, ll = suf.length; ii < ll; ii ++) {
+        set.push(i + suf[ii])
+      }
+    }
+    return set
+  }
+
+  // ok, walk through the set
+  // We hope, somewhat optimistically, that there
+  // will be a } at the end.
+  // If the closing brace isn't found, then the pattern is
+  // interpreted as braceExpand("\\" + pattern) so that
+  // the leading { will be interpreted literally.
+  var i = 1 // skip the {
+    , depth = 1
+    , set = []
+    , member = ""
+    , sawEnd = false
+    , escaping = false
+
+  function addMember () {
+    set.push(member)
+    member = ""
+  }
+
+  // console.error("Entering for")
+  FOR: for (i = 1, l = pattern.length; i < l; i ++) {
+    var c = pattern.charAt(i)
+    // console.error("", i, c)
+
+    if (escaping) {
+      escaping = false
+      member += "\\" + c
+    } else {
+      switch (c) {
+        case "\\":
+          escaping = true
+          continue
+
+        case "{":
+          depth ++
+          member += "{"
+          continue
+
+        case "}":
+          depth --
+          // if this closes the actual set, then we're done
+          if (depth === 0) {
+            addMember()
+            // pluck off the close-brace
+            i ++
+            break FOR
+          } else {
+            member += c
+            continue
+          }
+
+        case ",":
+          if (depth === 1) {
+            addMember()
+          } else {
+            member += c
+          }
+          continue
+
+        default:
+          member += c
+          continue
+      } // switch
+    } // else
+  } // for
+
+  // now we've either finished the set, and the suffix is
+  // pattern.substr(i), or we have *not* closed the set,
+  // and need to escape the leading brace
+  if (depth !== 0) {
+    // console.error("didn't close", pattern)
+    return braceExpand("\\" + pattern)
+  }
+
+  // x{y,z} -> ["xy", "xz"]
+  // console.error("set", set)
+  // console.error("suffix", pattern.substr(i))
+  var suf = braceExpand(pattern.substr(i))
+  // ["b", "c{d,e}","{f,g}h"] ->
+  //   [["b"], ["cd", "ce"], ["fh", "gh"]]
+  var addBraces = set.length === 1
+  // console.error("set pre-expanded", set)
+  set = set.map(braceExpand)
+  // console.error("set expanded", set)
+
+
+  // [["b"], ["cd", "ce"], ["fh", "gh"]] ->
+  //   ["b", "cd", "ce", "fh", "gh"]
+  set = set.reduce(function (l, r) {
+    return l.concat(r)
+  })
+
+  if (addBraces) {
+    set = set.map(function (s) {
+      return "{" + s + "}"
+    })
+  }
+
+  // now attach the suffixes.
+  var ret = []
+  for (var i = 0, l = set.length; i < l; i ++) {
+    for (var ii = 0, ll = suf.length; ii < ll; ii ++) {
+      ret.push(set[i] + suf[ii])
+    }
+  }
+  return ret
+}
+
+
 minimatch.makeRe = makeRe
 function makeRe (pattern, options) {
+  options = options || {}
+  if (options.nobrace) return makeRe2(pattern, options)
+
+  return braceExpand(pattern).map(function (p) {
+    return makeRe2(p, options)
+  }).join("|")
+}
+
+
+function makeRe2 (pattern, options) {
   options = options || {}
 
   function clearStateChar () {
@@ -113,8 +322,7 @@ function makeRe (pattern, options) {
     }
   }
 
-  var braceDepth = 0
-    , re = ""
+  var re = ""
     , escaping = false
     , oneStar = options.dot ? "[^\\/]*?"
       : "(?:(?!(?:\\\/|^)\\.)[^\\/])*?"
@@ -274,44 +482,10 @@ function makeRe (pattern, options) {
         }
         continue
 
-      case "{":
-        if (escaping || inClass) {
-          re += "\\{"
-          escaping = false
-        } else {
-          re += "(?:"
-          braceDepth ++
-        }
-        continue
-
-      case "}":
-        if (escaping || inClass || braceDepth === 0) {
-          re += "\\}"
-          escaping = false
-        } else {
-          // swallow any state char that wasn't consumed
-          clearStateChar()
-          re += ")"
-          braceDepth --
-        }
-        continue
-
-      case ",":
-        if (escaping || inClass || braceDepth === 0) {
-          re += ","
-          escaping = false
-        } else {
-          // swallow any state char that wasn't consumed
-          clearStateChar()
-          re += "|"
-        }
-        continue
-
       case "/":
         if (patternListStack.length && !escaping && !inClass) {
           return false
         }
-        // fallthrough
 
       default:
         // swallow any state char that wasn't consumed
@@ -373,7 +547,7 @@ function makeRe (pattern, options) {
 
   try {
     return new RegExp(re, flags)
-  } catch(ex) {
+  } catch (ex) {
     return false
   }
 }
