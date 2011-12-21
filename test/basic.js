@@ -18,6 +18,7 @@ tap.test("basic tests", function (t) {
       "/source/bash-1.14.7/tests/glob-test"
     , ["a*", ["a", "abc", "abd", "abe"]]
     , ["X*", ["X*"]]
+
     // allow null glob expansion
     , ["X*", [], { null: true }]
 
@@ -96,7 +97,6 @@ tap.test("basic tests", function (t) {
     , ["[]]", ["]"], null, ["]"]]
     , ["[]-]", ["]"], null, ["]"]]
     , ["[a-\z]", ["p"], null, ["p"]]
-    , ["[/\\\\]*", ["/tmp"], null, ["/tmp"]]
     , ["??**********?****?", [], { null: true }, ["abc"]]
     , ["??**********?****c", [], { null: true }, ["abc"]]
     , ["?************c****?****", [], { null: true }, ["abc"]]
@@ -131,8 +131,22 @@ tap.test("basic tests", function (t) {
 
     , "paren sets cannot contain slashes"
     , ["*(a/b)", ["*(a/b)"], {}, ["a/b"]]
-    // invalid glob pattern.  should fail.
-    , ["*(a|{b),c)}", ["*(a|{b),c)}"], {}, ["a", "ab", "ac", "ad"]]
+
+    // brace sets trump all else.
+    //
+    // invalid glob pattern.  fails on bash4 and bsdglob.
+    // however, in this implementation, it's easier just
+    // to do the intuitive thing, and let brace-expansion
+    // actually come before parsing any extglob patterns,
+    // like the documentation seems to say.
+    //
+    // XXX: if anyone complains about this, either fix it
+    // or tell them to grow up and stop complaining.
+    //
+    // bash/bsdglob says this:
+    // , ["*(a|{b),c)}", ["*(a|{b),c)}"], {}, ["a", "ab", "ac", "ad"]]
+    // but we do this instead:
+    , ["*(a|{b),c)}", ["a", "ab", "ac"], {}, ["a", "ab", "ac", "ad"]]
 
     // test partial parsing in the presence of comment/negation chars
     , ["[!a*", ["[!ab"], {}, ["[!ab", "[ab"]]
@@ -143,15 +157,18 @@ tap.test("basic tests", function (t) {
     , function () {
         files = [ "a", "b", "c", "d"
                 , "ab", "ac", "ad"
+                , "bc", "cb"
                 , "bc,d", "c,db", "c,d"
-                , "d)", "(b|c"
+                , "d)", "(b|c", "*(b|c"
                 , "b|c", "b|cc", "cb|c" ]
       }
-    , ["*(a|{b,c})", ["a", "ab", "ac"]]
-    , ["{a,*(b|c,d)}", ["a","b", "bc,d", "c,db", "c,d"]]
-    , ["{a,*(b|{c,d})}", ["a","b", "bc", "cb", "c"]]
-    , ["*(a|{b|c,c})", ["a", "b|c", "b|cc", "cb|c", "c"]]
-
+    , ["*(a|{b,c})", ["a", "b", "c", "ab", "ac"]]
+    , ["{a,*(b|c,d)}", ["a","(b|c", "*(b|c", "d)"]]
+    // a
+    // *(b|c)
+    // *(b|d)
+    , ["{a,*(b|{c,d})}", ["a","b", "bc", "cb", "c", "d"]]
+    , ["*(a|{b|c,c})", ["a", "b", "c", "ab", "ac", "bc", "cb"]]
 
     ].forEach(function (c) {
       if (typeof c === "function") return c()
@@ -164,12 +181,16 @@ tap.test("basic tests", function (t) {
         , tapOpts = c[4] || {}
 
       // options.debug = true
-      var r = mm.makeRe(pattern, options)
+      var m = new mm.Minimatch(pattern, options)
+      var r = m.makeRe()
       tapOpts.re = String(r) || JSON.stringify(r)
       tapOpts.files = JSON.stringify(f)
       tapOpts.pattern = pattern
+      tapOpts.set = m.set
+      tapOpts.regExpSet = m.makeRegExpSet()
 
       var actual = mm.match(f, pattern, options)
+      actual.sort(alpha)
 
       t.equivalent( actual, expect
                   , JSON.stringify(pattern) + " " + JSON.stringify(expect)

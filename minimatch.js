@@ -1,32 +1,53 @@
-// This is a JavaScript implementation of the fnmatch-like
-// stuff that git uses in its .gitignore files.
-// See `man 5 gitignore`.
-
 module.exports = minimatch
+minimatch.Minimatch = Minimatch
 
 var path = require("path")
-  , LRU = require("lru-cache")
+  // any single thing other than /
+  // don't need to escape / when using new RegExp()
+  , qmark = "[^/]"
 
-minimatch.filter = function (pattern, options) {
+  // * => any number of characters
+  , star = qmark + "*?"
+
+  // ** when dots are allowed.  Anything goes.
+  , twoStarDot = ".*?"
+
+  // not a ^ or / followed by a dot,
+  // followed by anything, any number of times.
+  , twoStarNoDot = "(?:(?!(?:\\\/|^)\\.).)*?"
+
+  // characters that need to be escaped in RegExp.
+  , reSpecials = charSet("().*{}+?[]^$\\!")
+
+// "abc" -> { a:true, b:true, c:true }
+function charSet (s) {
+  return s.split("").reduce(function (set, c) {
+    set[c] = true
+    return set
+  }, {})
+}
+
+// preserve a////b, instead of compressing to a/b in the result
+var multiSlashSplit = "/"
+var slashSplit = /\/+/
+
+minimatch.monkeyPatch = monkeyPatch
+function monkeyPatch () {
+  var desc = Object.getOwnPropertyDescriptor(String.prototype, "match")
+  var orig = desc.value
+  desc.value = function (p) {
+    if (p instanceof Minimatch) return p.match(this)
+    return orig.call(this, p)
+  }
+  Object.defineProperty(String.prototype, desc)
+}
+
+minimatch.filter = filter
+function filter (pattern, options) {
   options = options || {}
   return function (p, i, list) {
     return minimatch(p, pattern, options)
   }
-}
-
-minimatch.match = function (list, pattern, options) {
-  if (!options) options = {}
-  var ret = list.filter(minimatch.filter(pattern, options))
-  if (options.debug) console.error("\nmatch: %s %j %j", pattern, list, ret)
-
-  // set the null flag to allow empty match sets
-  // Note that minimatch itself, and filter(), do not
-  // respect this flag, only minimatch.match(list, pattern) does.
-  if (!options.null && !ret.length) {
-    return [pattern]
-  }
-
-  return ret
 }
 
 function minimatch (p, pattern, options) {
@@ -34,65 +55,112 @@ function minimatch (p, pattern, options) {
     throw new TypeError("glob pattern string required")
   }
 
-  options = options || {}
+  if (!options) options = {}
 
-  // to set the cache, just replace with a different obj
-  // supporting set(k,v) and v=get(k) methods.
-  var cache = options.cache || minimatch.cache
-  if (!cache) cache = minimatch.cache = new LRU(1000)
-
-  // "" only matches ""
-  if (!pattern) return p === ""
-
-  // comments.
+  // shortcut: comments match nothing.
   if (pattern.trim().charAt(0) === "#") return false
 
-  // check the cache
-  var re = cache.get(pattern + "\n" + JSON.stringify(options))
-  if (!re && re !== false) {
-    cache.set(pattern, re = makeRe(pattern, options))
-  }
+  // "" only matches ""
+  if (pattern.trim() === "") return p === ""
 
-  if (options.debug) {
-    console.error(pattern + "\t" + re, JSON.stringify(p))
-  }
-
-  // some kind of invalid thing
-  if (!re) return false
-
-
-  // patterns that end in / can only match dirs
-  // however, dirs also match the same thing that *doesn't*
-  // end in a slash.
-  var match =
-    // a/ should not match a/*, but will match */
-    // accomplish this by not applying the regexp
-    // directly, unless the pattern would match
-    // trailing slash'ed things, or the thing isn't
-    // a trailing slash, or slashes are opted-in
-    ( ( options.slash ||
-        p.substr(-1) !== "/" ||
-        pattern.substr(-1) === "/" )
-      && !!p.match(re) )
-
-    // a/ should match * or a
-    || ( p.substr(-1) === "/" &&
-         !!p.slice(0, -1).match(re) )
-
-    // a pattern with *no* slashes will match against
-    // either the full path, or just the basename.
-    || ( options.matchBase &&
-         pattern.indexOf("/") === -1 &&
-         path.basename(p).match(re) )
-
-  //console.error("  MINIMATCH: %j %j %j %j",
-  //            re.toString(), pattern, p, match)
-  return match
+  return new Minimatch(pattern, options).match(p)
 }
 
-// need to expand braces first.
-// then, turn each piece into a pattern, and join
-// together.
+function Minimatch (pattern, options) {
+  if (!(this instanceof Minimatch)) {
+    return new Minimatch(pattern, options, cache)
+  }
+
+  if (typeof pattern !== "string") {
+    throw new TypeError("glob pattern string required")
+  }
+
+  if (!options) options = {}
+
+  this.options = options
+  this.set = []
+  this.regExpSet = []
+  this.pattern = pattern.trim()
+  this.regexp = null
+  this.negate = false
+  this.comment = false
+
+  // make the set of regexps etc.
+  this.make()
+}
+
+Minimatch.prototype.make = make
+function make () {
+  // don't do it more than once.
+  if (this.regexp) return this.regexp
+
+  var pattern = this.pattern
+  var options = this.options
+
+  // empty patterns and comments match nothing.
+  if (pattern.charAt(0) === "#") {
+    this.comment = true
+    return
+  }
+  if (!pattern) {
+    this.empty = true
+    return
+  }
+
+  // step 1: figure out negation, etc.
+  this.parseNegate()
+
+  // step 2: expand braces
+  var set = this.braceExpand()
+
+  if (options.debug) console.error(this.pattern, set)
+
+  // now we have a set, so turn each one into a series of path-portion
+  // matching patterns.
+  // These will be regexps, except in the case of "**", which is
+  // retained as-is for globstar behavior, and will not contain any
+  // / characters
+  var split = options.multiSlash ? multiSlashSplit : slashSplit
+  set = set.map(function (s) {
+    return s.split(split)
+  })
+
+  if (options.debug) console.error(this.pattern, set)
+
+  // glob --> regexp strings
+  set = set.map(function (s, si, set) {
+    return s.map(this.parse, this)
+  }, this)
+
+  if (options.debug) console.error(this.pattern, set)
+
+  // filter out everything that didn't compile properly.
+  set = set.filter(function (s) {
+    return -1 === s.indexOf(false)
+  })
+
+  if (options.debug) console.error(this.pattern, set)
+
+  this.set = set
+}
+
+Minimatch.prototype.parseNegate = parseNegate
+function parseNegate () {
+  var pattern = this.pattern
+    , negate = false
+    , negateOffset = 0
+
+  for ( var i = 0, l = pattern.length
+      ; i < l && pattern.charAt(i) === "!"
+      ; i ++) {
+    negate = !negate
+    negateOffset ++
+  }
+
+  if (negateOffset) this.pattern = pattern.substr(negateOffset)
+  this.negate = negate
+}
+
 // Brace expansion:
 // a{b,c}d -> abd acd
 // a{b,}c -> abc ac
@@ -103,12 +171,23 @@ function minimatch (p, pattern, options) {
 // Invalid sets are not expanded.
 // a{2..}b -> a{2..}b
 // a{b}c -> a{b}c
+minimatch.braceExpand = function (pattern, options) {
+  return new Minimatch(pattern, options).braceExpand()
+}
 
-minimatch.braceExpand = braceExpand
-function braceExpand (pattern) {
-  // console.error("braceExpand", pattern)
-  if (!pattern.match(/\{/) || !pattern.match(/\}/)) {
-    // shortcut. definitely no sets.
+Minimatch.prototype.braceExpand = braceExpand
+function braceExpand (pattern, options) {
+  options = options || this.options
+  pattern = typeof pattern === "undefined"
+    ? this.pattern : pattern
+
+  if (typeof pattern === "undefined") {
+    throw new Error("undefined pattern")
+  }
+
+  if (options.nobrace ||
+      !pattern.match(/\{.*\}/)) {
+    // shortcut. no need to expand.
     return [pattern]
   }
 
@@ -128,7 +207,7 @@ function braceExpand (pattern) {
   // aghxy
   // aghxz
 
-  // everything before the first { is just a prefix.
+  // everything before the first \{ is just a prefix.
   // So, we pluck that off, and work with the rest,
   // and then prepend it to everything we find.
   if (pattern.charAt(0) !== "{") {
@@ -151,7 +230,7 @@ function braceExpand (pattern) {
       return [pattern]
     }
 
-    var tail = braceExpand(pattern.substr(i))
+    var tail = braceExpand(pattern.substr(i), options)
     return tail.map(function (t) {
       return prefix + t
     })
@@ -167,7 +246,7 @@ function braceExpand (pattern) {
   var numset = pattern.match(/^\{(-?[0-9]+)\.\.(-?[0-9]+)\}/)
   if (numset) {
     // console.error("numset", numset[1], numset[2])
-    var suf = braceExpand(pattern.substr(numset[0].length))
+    var suf = braceExpand(pattern.substr(numset[0].length), options)
       , start = +numset[1]
       , end = +numset[2]
       , inc = start > end ? -1 : 1
@@ -186,8 +265,8 @@ function braceExpand (pattern) {
   // will be a } at the end.
   // If the closing brace isn't found, then the pattern is
   // interpreted as braceExpand("\\" + pattern) so that
-  // the leading { will be interpreted literally.
-  var i = 1 // skip the {
+  // the leading \{ will be interpreted literally.
+  var i = 1 // skip the \{
     , depth = 1
     , set = []
     , member = ""
@@ -251,18 +330,20 @@ function braceExpand (pattern) {
   // and need to escape the leading brace
   if (depth !== 0) {
     // console.error("didn't close", pattern)
-    return braceExpand("\\" + pattern)
+    return braceExpand("\\" + pattern, options)
   }
 
   // x{y,z} -> ["xy", "xz"]
   // console.error("set", set)
   // console.error("suffix", pattern.substr(i))
-  var suf = braceExpand(pattern.substr(i))
+  var suf = braceExpand(pattern.substr(i), options)
   // ["b", "c{d,e}","{f,g}h"] ->
   //   [["b"], ["cd", "ce"], ["fh", "gh"]]
   var addBraces = set.length === 1
   // console.error("set pre-expanded", set)
-  set = set.map(braceExpand)
+  set = set.map(function (p) {
+    return braceExpand(p, options)
+  })
   // console.error("set expanded", set)
 
 
@@ -288,20 +369,36 @@ function braceExpand (pattern) {
   return ret
 }
 
+// parse a component of the expanded set.
+// At this point, no pattern may contain "/" in it
+// so we're going to return a 2d array, where each entry is the full
+// pattern, split on '/', and then turned into a regular expression.
+// A regexp is made at the end which joins each array with an
+// escaped /, and another full one which joins each regexp with |.
+//
+// Following the lead of Bash 4.1, note that "**" only has special meaning
+// when it is the *only* thing in a path portion.  Otherwise, any series
+// of * is equivalent to a single *.  Globstar behavior is enabled by
+// default, and can be disabled by setting options.noglobstar.
+Minimatch.prototype.parse = parse
+function parse (pattern) {
+  var options = this.options
 
-minimatch.makeRe = makeRe
-function makeRe (pattern, options) {
-  options = options || {}
-  if (options.nobrace) return makeRe2(pattern, options)
+  // shortcuts
+  if (!options.noglobstar && pattern === "**") return "**"
+  if (pattern === "") return ""
 
-  return braceExpand(pattern).map(function (p) {
-    return makeRe2(p, options)
-  }).join("|")
-}
-
-
-function makeRe2 (pattern, options) {
-  options = options || {}
+  var re = ""
+    , escaping = false
+    // ? => one single character
+    , patternListStack = []
+    , plType
+    , stateChar
+    , inClass = false
+    , reClassStart = -1
+    , classStart = -1
+    , patternStart = options.dot || pattern.charAt(0) === "."
+      ? "" : "(?!\\.)"
 
   function clearStateChar () {
     if (stateChar) {
@@ -309,10 +406,10 @@ function makeRe2 (pattern, options) {
       // that wasn't consumed by this pass.
       switch (stateChar) {
         case "*":
-          re += oneStar
+          re += star
           break
         case "?":
-          re += "."
+          re += qmark
           break
         default:
           re += "\\"+stateChar
@@ -322,148 +419,128 @@ function makeRe2 (pattern, options) {
     }
   }
 
-  var re = ""
-    , escaping = false
-    , oneStar = options.dot ? "[^\\/]*?"
-      : "(?:(?!(?:\\\/|^)\\.)[^\\/])*?"
-    , twoStar = options.dot ? ".*?"
-      // not a ^ or / followed by a dot,
-      // followed by anything, any number of times.
-      : "(?:(?!(?:\\\/|^)\\.).)*?"
-    , reSpecials = "().*{}+?[]^$/\\"
-    , patternListStack = []
-    , plType
-    , stateChar
-    , negate = false
-    , negating = false
-    , inClass = false
-    , reClassStart = -1
-    , classStart = -1
-    , classStartPattern = options.dot ? ""
-      : "(?:(?!(?:\\\/|^)\\.)"
-    , classEndPattern = options.dot ? "" : ")"
-
   for ( var i = 0, len = pattern.length, c
       ; (i < len) && (c = pattern.charAt(i))
       ; i ++ ) {
 
-    if (options.debug) {
+    if (true || options.debug) {
       console.error("%s\t%s %s %j", pattern, i, re, c)
     }
 
-    switch (c) {
+    // skip over any that are escaped.
+    if (escaping && reSpecials[c]) {
+      re += "\\" + c
+      escaping = false
+      continue
+    }
+
+    SWITCH: switch (c) {
+      case "/":
+        // completely not allowed, even escaped.
+        // Should already be path-split by now.
+        return false
+
       case "\\":
-        if (stateChar) {
-          if (stateChar === "*") re += oneStar
-          else re += "\\" + stateChar
-          stateChar = false
-        }
-        if (escaping) {
-          re += "\\\\" // must match literal \
-          escaping = false
-        } else {
-          escaping = true
-        }
+        clearStateChar()
+        escaping = true
         continue
 
       // the various stateChar values
-      case "!":
-        if (i === 0 || negating) {
-          negate = !negate
-          negating = true
-          break
-        } else {
-          negating = false
-        }
-        // fallthrough
+      // for the "extglob" stuff.
+      case "?":
+      case "*":
       case "+":
       case "@":
-      case "*":
-      case "?":
-       if (options.debug) {
-         console.error("%s\t%s %s %j <-- stateChar", pattern, i, re, c)
-       }
-
-        negating = false
-        if (escaping) {
-          re += "\\" + c
-          escaping = false
-        } else if (inClass) {
-          re += c
-        } else if (c === "*" && stateChar === "*") { // **
-          re += twoStar
-          stateChar = false
-        } else {
-          if (stateChar) {
-            if (stateChar === "*") re += oneStar
-            else if (stateChar === "?") re += "."
-            else re += "\\" + stateChar
-          }
-          stateChar = c
+      case "!":
+        if (true || options.debug) {
+          console.error("%s\t%s %s %j <-- stateChar", pattern, i, re, c)
         }
+
+        // all of those are literals inside a class, except that
+        // the glob [!a] means [^a] in regexp
+        if (inClass) {
+          if (c === "!" && i === classStart + 1) c = "^"
+          re += c
+          continue
+        }
+
+        // if we already have a stateChar, then it means
+        // that there was something like ** or +? in there.
+        // Handle the stateChar, then proceed with this one.
+        switch (stateChar) {
+          case "?":
+            re += qmark
+            break
+          case "*":
+            re += star
+            break
+          default:
+            clearStateChar()
+            break
+        }
+        stateChar = c
         continue
 
       case "(":
-        if (escaping) {
-          re += "\\("
-          escaping = false
-        } else if (inClass) {
+        if (inClass) {
           re += "("
-        } else if (stateChar) {
-          plType = stateChar
-          patternListStack.push(plType)
-          re += stateChar === "!" ? "(?!" : "(?:"
-          stateChar = false
-        } else {
-          re += "\\("
+          continue
         }
+
+        if (!stateChar) {
+          re += "\\("
+          continue
+        }
+
+        plType = stateChar
+        patternListStack.push({ type: plType
+                              , start: i - 1
+                              , reStart: re.length })
+        re += stateChar === "!" ? "(?!" : "(?:"
+        stateChar = false
         continue
 
       case ")":
-        if (escaping || inClass) {
+        if (inClass || !patternListStack.length) {
           re += "\\)"
-          escaping = false
-        } else if (patternListStack.length) {
-          re += ")"
-          plType = patternListStack.pop()
-          switch (plType) {
-            case "?":
-            case "+":
-            case "*": re += plType
-            case "!":
-            case "@": break
-          }
-        } else {
-          re += "\\)"
+          continue
+        }
+
+        re += ")"
+        plType = patternListStack.pop().type
+        switch (plType) {
+          case "?":
+          case "+":
+          case "*": re += plType
+          case "!": // already handled by the start
+          case "@": break // the default anyway
         }
         continue
 
       case "|":
-        if (escaping || inClass) {
+        if (inClass || !patternListStack.length || escaping) {
           re += "\\|"
           escaping = false
-        } else if (patternListStack.length) {
-          re += "|"
-        } else {
-          re += "\\|"
+          continue
         }
+
+        re += "|"
         continue
 
-      // these are mostly the same in regexp and glob :)
+      // these are mostly the same in regexp and glob
       case "[":
         // swallow any state-tracking char before the [
         clearStateChar()
 
-        if (escaping || inClass) {
+        if (inClass) {
           re += "\\" + c
-          escaping = false
-        } else {
-          inClass = true
-          classStart = i
-          reClassStart = re.length
-          re += classStartPattern
-          re += c
+          continue
         }
+
+        inClass = true
+        classStart = i
+        reClassStart = re.length
+        re += c
         continue
 
       case "]":
@@ -471,21 +548,16 @@ function makeRe2 (pattern, options) {
         //  meaning and represent itself in
         //  a bracket expression if it occurs
         //  first in the list.  -- POSIX.2 2.8.3.2
-        if (i === classStart + 1) escaping = true
-
-        if (escaping || !inClass) {
+        if (i === classStart + 1 || !inClass) {
           re += "\\" + c
           escaping = false
-        } else {
-          inClass = false
-          re += c + classEndPattern
+          continue
         }
-        continue
 
-      case "/":
-        if (patternListStack.length && !escaping && !inClass) {
-          return false
-        }
+        // finish up the class.
+        inClass = false
+        re += c
+        continue
 
       default:
         // swallow any state char that wasn't consumed
@@ -494,7 +566,7 @@ function makeRe2 (pattern, options) {
         if (escaping) {
           // no need
           escaping = false
-        } else if (reSpecials.indexOf(c) !== -1
+        } else if (reSpecials[c]
                    && !(c === "^" && inClass)) {
           re += "\\"
         }
@@ -502,52 +574,327 @@ function makeRe2 (pattern, options) {
         re += c
 
     } // switch
-
-    if (negating && c !== "!") negating = false
-
   } // for
 
-  // handle trailing things that only matter at the very end.
-  if (stateChar) {
-    clearStateChar()
-  } else if (escaping) {
-    re += "\\\\"
-  }
 
+  // handle the case where we left a class open.
   // "[abc" is valid, equivalent to "\[abc"
   if (inClass) {
     // split where the last [ was, and escape it
     // this is a huge pita.  We now have to re-walk
     // the contents of the would-be class to re-translate
     // any characters that were passed through as-is
-    var cs = re.substr(reClassStart + classStartPattern.length + 1)
-      , csOpts = Object.create(options)
-    csOpts.partial = true
-
+    var cs = pattern.substr(classStart + 1)
     re = re.substr(0, reClassStart) + "\\["
-       + makeRe(cs, csOpts)
+       + this.parse(cs)
   }
 
-  if (options.partial) return re
+  // handle the case where we had a +( thing at the *end*
+  // of the pattern.
+  // each pattern list stack adds 3 chars.
+  var pl
+  while (pl = patternListStack.pop()) {
+    var tail = re.slice(pl.reStart + 3)
+    tail = tail.replace(/([^|]?|\\\\)\|/g, function (_, capture) {
+      console.error("%j capture=%j", _, capture)
+      // | would not be escaped, and \ would be escaped
+      // extra.
+      if (capture === "\\" || capture === "" || capture === "\\\\") {
+        return "\\|"
+      }
+      return capture + "\\|"
+    })
+
+    //console.error("tail=%j", tail)
+    var t = pl.type === "*" ? star
+          : pl.type === "?" ? qmark
+          : "\\" + pl.type
+
+    re = re.slice(0, pl.reStart)
+       + t + "\\("
+       + tail
+  }
+
+  // handle trailing things that only matter at the very end.
+  clearStateChar()
+  if (escaping) {
+    // trailing \\
+    re += "\\\\"
+  }
+
+  // if the re is not "" at this point, then we need to make sure
+  // it doesn't match against an empty path part.
+  // Otherwise a/* will match a/, which it should not.
+  if (re !== "") re = "(?=.)" + re
+
+  // only need to apply the nodot start if the re starts with
+  // something that could conceivably capture a dot
+  switch (re.charAt(0)) {
+    case ".":
+    case "[":
+    case "(": re = patternStart + re
+  }
+  return re
+}
+
+minimatch.makeRe = function (pattern, options) {
+  return new Minimatch(pattern, options || {}).makeRe()
+}
+
+Minimatch.prototype.makeRe = makeRe
+function makeRe () {
+  if (this.regexp || this.regexp === false) return this.regexp
+
+  // at this point, this.set is a 2d array of partial
+  // pattern strings, or "**".
+  //
+  // It's better to use .match().  This function shouldn't
+  // be used, really, but it's pretty convenient sometimes,
+  // when you just want to work with a regex.
+  var set = this.set
+
+  if (!set.length) return this.regexp = false
+  var options = this.options
+
+  var twoStar = options.noglobstar ? star
+      : options.dot ? twoStarDot
+      : twoStarNoDot
+    , flags = options.nocase ? "i" : ""
+
+  var re = set.map(function (pattern) {
+    return pattern.map(function (p) {
+      if (p === "**") p = twoStar
+      return p
+    }).join("\\\/")
+  }).join("|")
 
   // must match entire pattern
   // ending in a * or ** will make it less strict.
   re = "^" + re + "$"
 
-  // fail on the pattern, but allow anything otherwise.
-  if (negate) re = "^(?!" + re + ").*$"
-
-  // really insane glob patterns can cause bad things.
-  var flags = ""
-  if (options.nocase) flags += "i"
+  if (this.negate) re = "^(?!" + re + ").*$"
 
   if (options.debug) {
-    console.error("/%s/%s", re, flags)
+    // console.error("/%s/%s", re, flags)
   }
 
   try {
-    return new RegExp(re, flags)
+    return this.regexp = new RegExp(re, flags)
   } catch (ex) {
-    return false
+    return this.regexp = false
   }
+}
+
+minimatch.match = function (list, pattern, options) {
+  var mm = new Minimatch(pattern, options)
+  list = list.filter(function (f) {
+    return mm.match(f)
+  })
+  if (!options.null && !list.length) {
+    list.push(pattern)
+  }
+  return list
+}
+
+Minimatch.prototype.match = match
+function match (f) {
+  // console.error("match", f, this.pattern)
+  // short-circuit in the case of busted things.
+  // comments, etc.
+  if (this.comment) return false
+  if (this.pattern === "") return f === ""
+
+  var options = this.options
+
+  // first, normalize any slash-separated path parts.
+  f = path.normalize(f)
+  var absolute = isAbsolute(f)
+
+  // console.error(this.pattern, f, absolute)
+
+  // windows: need to use /, not \
+  // On other platforms, \ is a valid (albeit bad) filename char.
+  if (process.platform === "win32") {
+    f = f.split("\\").join("/")
+  }
+
+  // treat the test path as a set of pathparts.
+  var split = options.multiSlash ? multiSlashSplit : slashSplit
+  f = f.split(split)
+  // console.error(this.pattern, "split", f)
+
+  // just ONE of the pattern sets in this.set needs to match
+  // in order for it to be valid.  If negating, then just one
+  // match means that we have failed.
+  // Either way, return on the first hit.
+
+  var set = this.regExpSet = this.makeRegExpSet()
+  // console.error(this.pattern, "set", set)
+
+  for (var i = 0, l = set.length; i < l; i ++) {
+    var pattern = set[i]
+    var hit = this.matchOne(f, pattern)
+    if (hit) return !this.negate
+  }
+
+  // didn't get any hits
+  return this.negate
+}
+
+Minimatch.prototype.makeRegExpSet = makeRegExpSet
+function makeRegExpSet () {
+  if (this.regExpSet && this.regExpSet.length) return this.regExpSet
+
+  var options = this.options
+    , flags = options.nocase ? "i" : ""
+
+  return this.regExpSet = this.set.map(function (s) {
+    return s.map(function (p) {
+      if (p === "**" && !options.noglobstar) return p
+      // must match entire part.
+      return new RegExp("^" + p + "$", flags)
+    })
+  })
+}
+
+// set partial to true to test if, for example,
+// "/a/b" matches the start of "/*/b/*/d"
+// Partial means, if you run out of file before you run
+// out of pattern, then that's fine, as long as all
+// the parts match.
+Minimatch.prototype.matchOne = function (file, pattern, partial) {
+  var options = this.options
+
+  if (options.debug) {
+    console.error("matchOne", this.pattern, file, pattern)
+  }
+
+  // console.error("matchOne", file.length, pattern.length)
+
+  for ( var fi = 0
+          , pi = 0
+          , fl = file.length
+          , pl = pattern.length
+      ; (fi < fl) && (pi < pl)
+      ; fi ++, pi ++ ) {
+
+    // console.error("matchOne loop")
+    var p = pattern[pi]
+      , f = file[fi]
+
+    // console.error(pattern, p, f)
+
+    // should be impossible.
+    // some invalid regexp stuff in the set.
+    if (p === false) return false
+
+    if (p === "**") {
+      // globstar.
+      // a/**/b/**/c would match the following:
+      // a/b/x/y/z/c
+      // a/x/y/z/b/c
+      // a/b/x/b/x/c
+      // a/b/c
+      // To do this, take the rest of the pattern after
+      // the **, and see if it would match the file remainder.
+      // If so, return success.
+      // If not, the ** "swallows" a segment, and try again.
+      // This is recursively awful.
+      // a/b/x/y/z/c
+      // - a matches a
+      // - doublestar
+      //   - matchOne(b/x/y/z/c, b/**/c)
+      //     - b matches b
+      //     - doublestar
+      //       - matchOne(x/y/z/c, c) -> no
+      //       - matchOne(y/z/c, c) -> no
+      //       - matchOne(z/c, c) -> no
+      //       - matchOne(c, c) yes, hit
+      var fr = fi
+        , pr = pi + 1
+      if (pr === pl) {
+        // a ** at the end will just swallow the rest.
+        // We have found a match.
+        // however, it will not swallow /.x, unless
+        // options.dot is set.
+        if (!options.dot) for ( ; fi < fl; fi ++) {
+          if (file[fi].charAt(0) === ".") return false
+        }
+        return true
+      }
+      WHILE: while (fr < fl) {
+        var swallowee = file[fr]
+        if (!options.dot && swallowee.charAt(0) === ".") {
+          break WHILE
+        }
+
+        // XXX remove this slice.  Just pass the start index.
+        if (this.matchOne(file.slice(fr), pattern.slice(pr))) {
+          // found a match.
+          return true
+        } else {
+          // ** swallows a segment, and continue.
+          fr ++
+        }
+      }
+      // no match was found.
+      return false
+    }
+
+    // something other than **
+    var hit = f.match(p)
+    if (!hit) return false
+  }
+
+  // Note: ending in / means that we'll get a final ""
+  // at the end of the pattern.  This can only match a
+  // corresponding "" at the end of the file.
+  // If the file ends in /, then it can only match a
+  // a pattern that ends in /, unless the pattern just
+  // doesn't have any more for it. But, a/b/ should *not*
+  // match "a/b/*", even though "" matches against the
+  // [^/]*? pattern, except in partial mode, where it might
+  // simply not be reached yet.
+  // However, a/b/ should still satisfy a/*
+
+  // now either we fell off the end of the pattern, or we're done.
+  if (fi === fl && pi === pl) {
+    // ran out of pattern and filename at the same time.
+    // an exact hit!
+    return true
+  } else if (fi === fl) {
+    // ran out of file, but still had pattern left.
+    // this is ok if we're doing the match as part of
+    // a glob fs traversal.
+    return partial
+  } else if (pi === pl) {
+    // ran out of pattern, still have file left.
+    // this is only acceptable if we're on the very last
+    // empty segment of a file with a trailing slash.
+    // a/* should match a/b/
+    var emptyFileEnd = (fi === fl - 1) && (file[fi] === "")
+    return emptyFileEnd
+  }
+
+  // should be unreachable.
+  throw new Error("wtf?")
+}
+
+
+
+
+
+function isAbsolute (p) {
+  if (process.platform !== "win32") return p.charAt(0) === "/"
+
+  // yanked from node/lib/path.js
+  var splitDeviceRe =
+    /^([a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/][^\\\/]+)?([\\\/])?([\s\S]*?)$/
+
+  var result = p.match(splitDeviceRe)
+    , device = result[1] || ""
+    , isUnc = device && device.charAt(1) !== ":"
+    , isAbs = !!result[2] || isUnc // UNC always absolute
+
+  return isAbs
 }
