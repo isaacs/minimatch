@@ -1,6 +1,9 @@
 module.exports = minimatch
 minimatch.Minimatch = Minimatch
 
+var LRU = require("lru-cache")
+  , cache = minimatch.cache = new LRU(100)
+
 var path = require("path")
   // any single thing other than /
   // don't need to escape / when using new RegExp()
@@ -77,11 +80,22 @@ function Minimatch (pattern, options) {
   }
 
   if (!options) options = {}
+  pattern = pattern.trim()
+
+  // lru storage.
+  // these things aren't particularly big, but walking down the string
+  // and turning it into a regexp can get pretty costly.
+  var cacheKey = pattern + "\n" + Object.keys(options).filter(function (k) {
+    return options[k]
+  }).join(":")
+  var cached = minimatch.cache.get(cacheKey)
+  if (cached) return cached
+  minimatch.cache.set(cacheKey, this)
 
   this.options = options
   this.set = []
   this.regExpSet = []
-  this.pattern = pattern.trim()
+  this.pattern = pattern
   this.regexp = null
   this.negate = false
   this.comment = false
