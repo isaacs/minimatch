@@ -763,6 +763,10 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
     console.error("matchOne", this.pattern, file, pattern)
   }
 
+  if (options.matchBase && pattern.length === 1) {
+    file = path.basename(file.join("/")).split("/")
+  }
+
   // console.error("matchOne", file.length, pattern.length)
 
   for ( var fi = 0

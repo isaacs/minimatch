@@ -176,6 +176,10 @@ tap.test("basic tests", function (t) {
     , [ "*(a|{b|c,c})", ["x(a|b|c)", "x(a|c)", "(a|b|c)", "(a|c)"]
       , { noext: true } ]
 
+    // test of matchBase
+    , ["a?b", ["x/y/acb", "acb/"], {matchBase: true}
+      , ["x/y/acb", "acb/", "acb/d/e", "x/y/acb/d"] ]
+
     ].forEach(function (c) {
       if (typeof c === "function") return c()
       if (typeof c === "string") return t.comment(c)
