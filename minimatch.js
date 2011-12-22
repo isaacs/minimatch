@@ -27,8 +27,7 @@ function charSet (s) {
   }, {})
 }
 
-// preserve a////b, instead of compressing to a/b in the result
-var multiSlashSplit = "/"
+// normalizes slashes.
 var slashSplit = /\/+/
 
 minimatch.monkeyPatch = monkeyPatch
@@ -120,9 +119,8 @@ function make () {
   // These will be regexps, except in the case of "**", which is
   // retained as-is for globstar behavior, and will not contain any
   // / characters
-  var split = options.multiSlash ? multiSlashSplit : slashSplit
   set = set.map(function (s) {
-    return s.split(split)
+    return s.split(slashSplit)
   })
 
   if (options.debug) console.error(this.pattern, set)
@@ -713,8 +711,7 @@ function match (f) {
   }
 
   // treat the test path as a set of pathparts.
-  var split = options.multiSlash ? multiSlashSplit : slashSplit
-  f = f.split(split)
+  f = f.split(slashSplit)
   // console.error(this.pattern, "split", f)
 
   // just ONE of the pattern sets in this.set needs to match
