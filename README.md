@@ -23,12 +23,17 @@ minimatch("bar.foo", "*.bar") // false!
 
 ## Features
 
-Supports all glob features.
+Supports these glob features:
+
+* Brace Expansion
+* Extended glob matching
+* "Globstar" `**` matching
 
 See:
 
 * `man sh`
-* `man fnmatch`
+* `man bash`
+* `man 3 fnmatch`
 * `man 5 gitignore`
 
 ### Comparisons to other fnmatch/glob implementations
@@ -52,8 +57,8 @@ The double-star character `**` is supported by default, unless the
 `noglobstar` flag is set.  This is supported in the manner of bsdglob
 and bash 4.1, where `**` only has special significance if it is the only
 thing in a path part.  That is, `a/**/b` will match `a/x/y/b`, but
-`a/**b` will not.  Note that this is different from the way that `**` is
-implemented in ruby's `Dir` class.
+`a/**b` will not.  **Note that this is different from the way that `**` is
+handled by ruby's `Dir` class.**
 
 If an escaped pattern has no matches, and the `null` flag is not set,
 then minimatch.match returns the pattern as-provided, rather than
@@ -68,18 +73,72 @@ other interpretation of the glob pattern.  Thus, a pattern like
 checked for validity.  Since those two are valid, matching proceeds.
 
 
+## Minimatch Class
+
+Create a minimatch object by instanting the `minimatch.Minimatch` class.
+
+```javascript
+var Minimatch = require("minimatch").Minimatch
+var mm = new Minimatch(pattern, options)
+```
+
+### Properties
+
+* `pattern` The original pattern the minimatch object represents.
+* `options` The options supplied to the constructor.
+* `set` A 2-dimensional array of regexp string expressions.  Each row in the
+  array corresponds to a brace-expanded pattern.  Each item in the row
+  corresponds to a single path-part.  For example, the pattern
+  `{a,b/c}/d` would expand to a set of patterns like:
+
+        [ [ a, d ]
+        , [ b, c, d ] ]
+
+* `regExpSet` The same semantics as `set`, but full regexp objects instead of
+  regexp strings.  The pattern `"**"` is left in string form if globstar is
+  not suppressed, so that it can be treated specially.
+* `regexp` Created by the `makeRe` method.  A single regular expression
+  expressing the entire pattern.  This is useful in cases where you wish
+  to use the mattern somewhat like `fnmatch(3)` with `FNM_PATH` enabled.
+* `negate` True if the pattern is negated.
+* `comment` True if the pattern is a comment.
+
+### Methods
+
+* `makeRe` Generate the `regexp` member if necessary, and return it.
+  Will return `false` if the pattern is invalid.
+* `match(fname)` Return true if the filename matches the pattern, or
+  false otherwise.
+* `matchOne(fileArray, patternArray, partial)` Take a `/`-split
+  filename, and match it against a single row in the `regExpSet`.  This
+  method is mainly for internal use, but is exposed so that it can be
+  used by a glob-walker that needs to avoid excessive filesystem calls.
+
+All other methods are internal, and will be called as necessary.
 
 ## Functions
 
+The top-level exported function has a `cache` property, which is an LRU
+cache set to store 100 items.  So, calling these methods repeatedly
+with the same pattern and options will use the same Minimatch object,
+saving the cost of parsing it multiple times.
+
 ### minimatch(path, pattern, options)
 
-Main export.  Tests a path against
-the pattern using the options.
+Main export.  Tests a path against the pattern using the options.
+
+```javascript
+var isJS = minimatch(file, "*.js", { matchBase: true })
+```
 
 ### minimatch.filter(pattern, options)
 
 Returns a function that tests its
-supplied argument, suitable for use with `Array.filter`.
+supplied argument, suitable for use with `Array.filter`.  Example:
+
+```javascript
+var javascripts = fileList.filter(minimatch.filter("*.js", {matchBase: true}))
+```
 
 ### minimatch.match(list, pattern, options)
 
@@ -87,10 +146,13 @@ Match against the list of
 files, in the style of fnmatch or glob.  If nothing is matched, then
 return the pattern (unless `{ null: true }` in the options.)
 
+```javascript
+var javascripts = minimatch.match(fileList, "*.js", {matchBase: true}))
+```
+
 ### minimatch.makeRe(pattern, options)
 
-Make a regular expression object
-from the pattern.
+Make a regular expression object from the pattern.
 
 ## Options
 
