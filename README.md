@@ -79,36 +79,37 @@ All options are `false` by default.
 
 Dump a ton of stuff to stderr.
 
-### null
+### nobrace
 
-Return an empty list from minimatch.match, instead of a list
-containing the pattern itself.
+Do not expand `{a,b}` and `{1..3}` brace sets.
+
+### noglobstar
+
+Disable `**` matching against multiple folder names.
+
+### dot
+
+Allow patterns to match filenames starting with a period, even if
+the pattern does not explicitly have a period in that spot.
+
+Note that by default, `a/**/b` will **not** match `a/.d/b`, unless `dot`
+is set.
+
+### noext
+
+Disable "extglob" style patterns like `+(a|b)`.
 
 ### nocase
 
 Perform a case-insensitive match.
 
-### cache
+### null
 
-An LRU cache with `.get(k)` and `.set(k,v)` methods.  By
-default, an instance of `node-lru-cache` is used, with 1000 max
-entries.
-
-### slash
-
-If set, then `a/*` will match `a/` as well as `a/b`.
+Return an empty list from minimatch.match, instead of a list
+containing the pattern itself.
 
 ### matchBase
 
 If set, then patterns without slashes will be matched
 against the basename of the path if it contains slashes.  For example,
-`a?b` would match `xyz/123/acb`.
-
-### partial
-
-Internal.  Used by `minimatch.makeRe`.
-
-### dot
-
-Allow patterns to match paths starting with a period, even if
-the pattern does not explicitly start with a period.
+`a?b` would match the path `/xyz/123/acb`, but not `/xyz/abc/123`.
