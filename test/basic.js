@@ -160,7 +160,9 @@ tap.test("basic tests", function (t) {
                 , "bc", "cb"
                 , "bc,d", "c,db", "c,d"
                 , "d)", "(b|c", "*(b|c"
-                , "b|c", "b|cc", "cb|c" ]
+                , "b|c", "b|cc", "cb|c"
+                , "x(a|b|c)", "x(a|c)"
+                , "(a|b|c)", "(a|c)"]
       }
     , ["*(a|{b,c})", ["a", "b", "c", "ab", "ac"]]
     , ["{a,*(b|c,d)}", ["a","(b|c", "*(b|c", "d)"]]
@@ -169,6 +171,10 @@ tap.test("basic tests", function (t) {
     // *(b|d)
     , ["{a,*(b|{c,d})}", ["a","b", "bc", "cb", "c", "d"]]
     , ["*(a|{b|c,c})", ["a", "b", "c", "ab", "ac", "bc", "cb"]]
+
+    // disable extglob.
+    , [ "*(a|{b|c,c})", ["x(a|b|c)", "x(a|c)", "(a|b|c)", "(a|c)"]
+      , { noext: true } ]
 
     ].forEach(function (c) {
       if (typeof c === "function") return c()

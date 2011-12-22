@@ -467,18 +467,12 @@ function parse (pattern) {
         // if we already have a stateChar, then it means
         // that there was something like ** or +? in there.
         // Handle the stateChar, then proceed with this one.
-        switch (stateChar) {
-          case "?":
-            re += qmark
-            break
-          case "*":
-            re += star
-            break
-          default:
-            clearStateChar()
-            break
-        }
+        clearStateChar()
         stateChar = c
+        // if extglob is disabled, then +(asdf|foo) isn't a thing.
+        // just clear the statechar *now*, rather than even diving into
+        // the patternList stuff.
+        if (options.noext) clearStateChar()
         continue
 
       case "(":
