@@ -1,4 +1,7 @@
 // http://www.bashcookbook.com/bashinfo/source/bash-1.14.7/tests/glob-test
+//
+// TODO: Some of these tests do very bad things with backslashes, and will
+// most likely fail badly on windows.  They should probably be skipped.
 
 var tap = require("tap")
   , globalBefore = Object.keys(global)
@@ -18,6 +21,7 @@ tap.test("basic tests", function (t) {
       "/source/bash-1.14.7/tests/glob-test"
     , ["a*", ["a", "abc", "abd", "abe"]]
     , ["X*", ["X*"]]
+
     // allow null glob expansion
     , ["X*", [], { null: true }]
 
@@ -96,7 +100,6 @@ tap.test("basic tests", function (t) {
     , ["[]]", ["]"], null, ["]"]]
     , ["[]-]", ["]"], null, ["]"]]
     , ["[a-\z]", ["p"], null, ["p"]]
-    , ["[/\\\\]*", ["/tmp"], null, ["/tmp"]]
     , ["??**********?****?", [], { null: true }, ["abc"]]
     , ["??**********?****c", [], { null: true }, ["abc"]]
     , ["?************c****?****", [], { null: true }, ["abc"]]
@@ -132,6 +135,78 @@ tap.test("basic tests", function (t) {
     , "paren sets cannot contain slashes"
     , ["*(a/b)", ["*(a/b)"], {}, ["a/b"]]
 
+    // brace sets trump all else.
+    //
+    // invalid glob pattern.  fails on bash4 and bsdglob.
+    // however, in this implementation, it's easier just
+    // to do the intuitive thing, and let brace-expansion
+    // actually come before parsing any extglob patterns,
+    // like the documentation seems to say.
+    //
+    // XXX: if anyone complains about this, either fix it
+    // or tell them to grow up and stop complaining.
+    //
+    // bash/bsdglob says this:
+    // , ["*(a|{b),c)}", ["*(a|{b),c)}"], {}, ["a", "ab", "ac", "ad"]]
+    // but we do this instead:
+    , ["*(a|{b),c)}", ["a", "ab", "ac"], {}, ["a", "ab", "ac", "ad"]]
+
+    // test partial parsing in the presence of comment/negation chars
+    , ["[!a*", ["[!ab"], {}, ["[!ab", "[ab"]]
+    , ["[#a*", ["[#ab"], {}, ["[#ab", "[ab"]]
+
+    // like: {a,b|c\\,d\\\|e} except it's unclosed, so it has to be escaped.
+    , ["+(a|*\\|c\\\\|d\\\\\\|e\\\\\\\\|f\\\\\\\\\\|g"
+      , ["+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g"]
+      , {null: true}
+      , ["+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g", "a", "b\\c"]]
+
+
+    // crazy nested {,,} and *(||) tests.
+    , function () {
+        files = [ "a", "b", "c", "d"
+                , "ab", "ac", "ad"
+                , "bc", "cb"
+                , "bc,d", "c,db", "c,d"
+                , "d)", "(b|c", "*(b|c"
+                , "b|c", "b|cc", "cb|c"
+                , "x(a|b|c)", "x(a|c)"
+                , "(a|b|c)", "(a|c)"]
+      }
+    , ["*(a|{b,c})", ["a", "b", "c", "ab", "ac"]]
+    , ["{a,*(b|c,d)}", ["a","(b|c", "*(b|c", "d)"]]
+    // a
+    // *(b|c)
+    // *(b|d)
+    , ["{a,*(b|{c,d})}", ["a","b", "bc", "cb", "c", "d"]]
+    , ["*(a|{b|c,c})", ["a", "b", "c", "ab", "ac", "bc", "cb"]]
+
+
+    // test various flag settings.
+    , [ "*(a|{b|c,c})", ["x(a|b|c)", "x(a|c)", "(a|b|c)", "(a|c)"]
+      , { noext: true } ]
+    , ["a?b", ["x/y/acb", "acb/"], {matchBase: true}
+      , ["x/y/acb", "acb/", "acb/d/e", "x/y/acb/d"] ]
+    , ["#*", ["#a", "#b"], {nocomment: true}, ["#a", "#b", "c#d"]]
+
+
+    // begin channelling Boole and deMorgan...
+    , "negation tests"
+    , function () {
+        files = ["d", "e", "!ab", "!abc", "a!b", "\\!a"]
+      }
+
+    // anything that is NOT a* matches.
+    , ["!a*", ["\\!a", "d", "e", "!ab", "!abc"]]
+
+    // anything that IS !a* matches.
+    , ["!a*", ["!ab", "!abc"], {nonegate: true}]
+
+    // anything that IS a* matches
+    , ["!!a*", ["a!b"]]
+
+    // anything that is NOT !a* matches
+    , ["!\\!a*", ["a!b", "d", "e", "\\!a"]]
 
     ].forEach(function (c) {
       if (typeof c === "function") return c()
@@ -144,12 +219,17 @@ tap.test("basic tests", function (t) {
         , tapOpts = c[4] || {}
 
       // options.debug = true
-      var r = mm.makeRe(pattern, options)
+      var m = new mm.Minimatch(pattern, options)
+      var r = m.makeRe()
       tapOpts.re = String(r) || JSON.stringify(r)
       tapOpts.files = JSON.stringify(f)
       tapOpts.pattern = pattern
+      tapOpts.set = m.set
+      tapOpts.regExpSet = m.makeRegExpSet()
+      tapOpts.negated = m.negate
 
       var actual = mm.match(f, pattern, options)
+      actual.sort(alpha)
 
       t.equivalent( actual, expect
                   , JSON.stringify(pattern) + " " + JSON.stringify(expect)
