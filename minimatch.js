@@ -107,7 +107,7 @@ function Minimatch (pattern, options) {
 Minimatch.prototype.make = make
 function make () {
   // don't do it more than once.
-  if (this.regexp) return this.regexp
+  if (this._made) return
 
   var pattern = this.pattern
   var options = this.options
@@ -611,22 +611,21 @@ function parse (pattern) {
     var tail = re.slice(pl.reStart + 3)
     // maybe some even number of \, then maybe 1 \, followed by a |
     tail = tail.replace(/((?:\\{2})*)(\\?)\|/g, function (_, $1, $2) {
-      console.error([tail, _, $1, $2])
       if (!$2) {
-        console.error("    add slash")
+        // the | isn't already escaped, so escape it.
         $2 = "\\"
       }
-      console.error("   %s %j", tail, $1 + $1 + $2 + "|")
 
       // need to escape all those slashes *again*, without escaping the
       // one that we need for escaping the | character.  As it works out,
       // escaping an even number of slashes can be done by simply repeating
       // it exactly after itself.  That's why this trick works.
+      //
       // I am sorry that you have to see this.
       return $1 + $1 + $2 + "|"
     })
 
-    console.error("tail=%j\n   %s", tail, tail)
+    // console.error("tail=%j\n   %s", tail, tail)
     var t = pl.type === "*" ? star
           : pl.type === "?" ? qmark
           : "\\" + pl.type
