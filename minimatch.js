@@ -57,7 +57,9 @@ function minimatch (p, pattern, options) {
   if (!options) options = {}
 
   // shortcut: comments match nothing.
-  if (pattern.trim().charAt(0) === "#") return false
+  if (!options.nocomment && pattern.charAt(0) === "#") {
+    return false
+  }
 
   // "" only matches ""
   if (pattern.trim() === "") return p === ""
@@ -97,7 +99,7 @@ function make () {
   var options = this.options
 
   // empty patterns and comments match nothing.
-  if (pattern.charAt(0) === "#") {
+  if (!options.nocomment && pattern.charAt(0) === "#") {
     this.comment = true
     return
   }
@@ -146,7 +148,10 @@ Minimatch.prototype.parseNegate = parseNegate
 function parseNegate () {
   var pattern = this.pattern
     , negate = false
+    , options = this.options
     , negateOffset = 0
+
+  if (options.nonegate) return
 
   for ( var i = 0, l = pattern.length
       ; i < l && pattern.charAt(i) === "!"
@@ -421,7 +426,7 @@ function parse (pattern) {
       ; (i < len) && (c = pattern.charAt(i))
       ; i ++ ) {
 
-    if (true || options.debug) {
+    if (options.debug) {
       console.error("%s\t%s %s %j", pattern, i, re, c)
     }
 
@@ -450,7 +455,7 @@ function parse (pattern) {
       case "+":
       case "@":
       case "!":
-        if (true || options.debug) {
+        if (options.debug) {
           console.error("%s\t%s %s %j <-- stateChar", pattern, i, re, c)
         }
 
@@ -583,21 +588,31 @@ function parse (pattern) {
 
   // handle the case where we had a +( thing at the *end*
   // of the pattern.
-  // each pattern list stack adds 3 chars.
+  // each pattern list stack adds 3 chars, and we need to go through
+  // and escape any | chars that were passed through as-is for the regexp.
+  // Go through and escape them, taking care not to double-escape any
+  // | chars that were already escaped.
   var pl
   while (pl = patternListStack.pop()) {
     var tail = re.slice(pl.reStart + 3)
-    tail = tail.replace(/([^|]?|\\\\)\|/g, function (_, capture) {
-      console.error("%j capture=%j", _, capture)
-      // | would not be escaped, and \ would be escaped
-      // extra.
-      if (capture === "\\" || capture === "" || capture === "\\\\") {
-        return "\\|"
+    // maybe some even number of \, then maybe 1 \, followed by a |
+    tail = tail.replace(/((?:\\{2})*)(\\?)\|/g, function (_, $1, $2) {
+      console.error([tail, _, $1, $2])
+      if (!$2) {
+        console.error("    add slash")
+        $2 = "\\"
       }
-      return capture + "\\|"
+      console.error("   %s %j", tail, $1 + $1 + $2 + "|")
+
+      // need to escape all those slashes *again*, without escaping the
+      // one that we need for escaping the | character.  As it works out,
+      // escaping an even number of slashes can be done by simply repeating
+      // it exactly after itself.  That's why this trick works.
+      // I am sorry that you have to see this.
+      return $1 + $1 + $2 + "|"
     })
 
-    //console.error("tail=%j", tail)
+    console.error("tail=%j\n   %s", tail, tail)
     var t = pl.type === "*" ? star
           : pl.type === "?" ? qmark
           : "\\" + pl.type
@@ -725,10 +740,13 @@ function match (f) {
   for (var i = 0, l = set.length; i < l; i ++) {
     var pattern = set[i]
     var hit = this.matchOne(f, pattern)
-    if (hit) return !this.negate
+    if (hit) {
+      return !this.negate
+    }
   }
 
-  // didn't get any hits
+  // didn't get any hits.  this is success if it's a negative
+  // pattern, failure otherwise.
   return this.negate
 }
 

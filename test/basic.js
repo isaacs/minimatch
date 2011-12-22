@@ -1,4 +1,7 @@
 // http://www.bashcookbook.com/bashinfo/source/bash-1.14.7/tests/glob-test
+//
+// TODO: Some of these tests do very bad things with backslashes, and will
+// most likely fail badly on windows.  They should probably be skipped.
 
 var tap = require("tap")
   , globalBefore = Object.keys(global)
@@ -152,6 +155,12 @@ tap.test("basic tests", function (t) {
     , ["[!a*", ["[!ab"], {}, ["[!ab", "[ab"]]
     , ["[#a*", ["[#ab"], {}, ["[#ab", "[ab"]]
 
+    // like: {a,b|c\\,d\\\|e} except it's unclosed, so it has to be escaped.
+    , ["+(a|*\\|c\\\\|d\\\\\\|e\\\\\\\\|f\\\\\\\\\\|g"
+      , ["+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g"]
+      , {null: true}
+      , ["+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g", "a", "b\\c"]]
+
 
     // crazy nested {,,} and *(||) tests.
     , function () {
@@ -172,13 +181,32 @@ tap.test("basic tests", function (t) {
     , ["{a,*(b|{c,d})}", ["a","b", "bc", "cb", "c", "d"]]
     , ["*(a|{b|c,c})", ["a", "b", "c", "ab", "ac", "bc", "cb"]]
 
-    // disable extglob.
+
+    // test various flag settings.
     , [ "*(a|{b|c,c})", ["x(a|b|c)", "x(a|c)", "(a|b|c)", "(a|c)"]
       , { noext: true } ]
-
-    // test of matchBase
     , ["a?b", ["x/y/acb", "acb/"], {matchBase: true}
       , ["x/y/acb", "acb/", "acb/d/e", "x/y/acb/d"] ]
+    , ["#*", ["#a", "#b"], {nocomment: true}, ["#a", "#b", "c#d"]]
+
+
+    // begin channelling Boole and deMorgan...
+    , "negation tests"
+    , function () {
+        files = ["d", "e", "!ab", "!abc", "a!b", "\\!a"]
+      }
+
+    // anything that is NOT a* matches.
+    , ["!a*", ["\\!a", "d", "e", "!ab", "!abc"]]
+
+    // anything that IS !a* matches.
+    , ["!a*", ["!ab", "!abc"], {nonegate: true}]
+
+    // anything that IS a* matches
+    , ["!!a*", ["a!b"]]
+
+    // anything that is NOT !a* matches
+    , ["!\\!a*", ["a!b", "d", "e", "\\!a"]]
 
     ].forEach(function (c) {
       if (typeof c === "function") return c()
@@ -198,6 +226,7 @@ tap.test("basic tests", function (t) {
       tapOpts.pattern = pattern
       tapOpts.set = m.set
       tapOpts.regExpSet = m.makeRegExpSet()
+      tapOpts.negated = m.negate
 
       var actual = mm.match(f, pattern, options)
       actual.sort(alpha)
