@@ -31,22 +31,43 @@ See:
 * `man fnmatch`
 * `man 5 gitignore`
 
-### Departures from zsh/bash/ksh/sh
+### Comparisons to other fnmatch/glob implementations
 
-If the pattern starts with a `!` character, then it is negated.
+While strict compliance with the existing standards is a worthwhile
+goal, some discrepancies exist between minimatch and other
+implementations, and are intentional.
+
+If the pattern starts with a `!` character, then it is negated.  Set the
+`nonegate` flag to suppress this behavior, and treat leading `!`
+characters normally.  This is perhaps relevant if you wish to start the
+pattern with a negative extglob pattern like `!(a|B)`.  Multiple `!`
+characters at the start of a pattern will negate the pattern multiple
+times.
 
 If a pattern starts with `#`, then it is treated as a comment, and
-will not match anything.  (Use `\#` to match a literal `#` at the
-start of a line.)
+will not match anything.  Use `\#` to match a literal `#` at the
+start of a line, or set the `nocomment` flag to suppress this behavior.
 
-The double-star `**` is always supported, instead of requiring a special
-flag.
+The double-star character `**` is supported by default, unless the
+`noglobstar` flag is set.  This is supported in the manner of bsdglob
+and bash 4.1, where `**` only has special significance if it is the only
+thing in a path part.  That is, `a/**/b` will match `a/x/y/b`, but
+`a/**b` will not.  Note that this is different from the way that `**` is
+implemented in ruby's `Dir` class.
 
 If an escaped pattern has no matches, and the `null` flag is not set,
 then minimatch.match returns the pattern as-provided, rather than
 interpreting the character escapes.  For example,
 `minimatch.match([], "\\*a\\?")` will return `"\\*a\\?"` rather than
 `"*a?"`.
+
+If brace expansion is not disabled, then it is performed before any
+other interpretation of the glob pattern.  Thus, a pattern like
+`+(a|{b),c)}`, which would not be valid in bash or zsh, is expanded
+**first** into the set of `+(a|b)` and `+(a|c)`, and those patterns are
+checked for validity.  Since those two are valid, matching proceeds.
+
+
 
 ## Functions
 
@@ -113,3 +134,12 @@ containing the pattern itself.
 If set, then patterns without slashes will be matched
 against the basename of the path if it contains slashes.  For example,
 `a?b` would match the path `/xyz/123/acb`, but not `/xyz/abc/123`.
+
+### nocomment
+
+Suppress the behavior of treating `#` at the start of a pattern as a
+comment.
+
+### nonegate
+
+Suppress the behavior of treating a leading `!` character as negation.
