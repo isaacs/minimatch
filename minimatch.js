@@ -130,7 +130,7 @@ function make () {
 
   if (options.debug) console.error(this.pattern, set)
 
-  // now we have a set, so turn each one into a series of path-portion
+  // step 3: now we have a set, so turn each one into a series of path-portion
   // matching patterns.
   // These will be regexps, except in the case of "**", which is
   // retained as-is for globstar behavior, and will not contain any
@@ -138,6 +138,32 @@ function make () {
   set = set.map(function (s) {
     return s.split(slashSplit)
   })
+
+  // step 4: if we have a defined root, then patterns starting with ""
+  // get attached to that.  If we have a defined cwd, then patterns
+  // *not* starting with "" get attached to that.
+  // Exception 1: on windows, a pattern like //\?/c:/ or c:/ will
+  // not get anything prefixed to it.
+  // Exception 2: If matchBase is set, and it's just a filename,
+  // then don't prefix anything onto it, since it'll only match
+  // files with that basename anyhow.
+  set = set.map(function (p) {
+    if (process.platform === "win32" &&
+        ( (p[0] === "" && p[1] === "" && p[2] === "\\?") // unc
+        || (p[0].match(/^[a-zA-Z]:$/)) )) {
+      return p
+    }
+    if (options.matchBase && p.length === 1) return p
+    // do prefixing.
+    if (options.root && p[0] === "") {
+      return options.root.split("/").concat(p)
+    }
+    if (options.cwd && p[0] !== "") {
+      return options.cwd.split("/").concat(p)
+    }
+    return p
+  })
+
 
   if (options.debug) console.error(this.pattern, set)
 
@@ -717,7 +743,7 @@ minimatch.match = function (list, pattern, options) {
 }
 
 Minimatch.prototype.match = match
-function match (f) {
+function match (f, partial) {
   // console.error("match", f, this.pattern)
   // short-circuit in the case of busted things.
   // comments, etc.
@@ -752,7 +778,7 @@ function match (f) {
 
   for (var i = 0, l = set.length; i < l; i ++) {
     var pattern = set[i]
-    var hit = this.matchOne(f, pattern)
+    var hit = this.matchOne(f, pattern, partial)
     if (hit) {
       return !this.negate
     }
@@ -855,7 +881,7 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
         }
 
         // XXX remove this slice.  Just pass the start index.
-        if (this.matchOne(file.slice(fr), pattern.slice(pr))) {
+        if (this.matchOne(file.slice(fr), pattern.slice(pr), partial)) {
           // found a match.
           return true
         } else {
@@ -864,7 +890,9 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
         }
       }
       // no match was found.
-      return false
+      // However, in partial mode, we can't say this is necessarily over.
+      // console.error("\n>>> no match ", file, pattern, partial)
+      return partial
     }
 
     // something other than **
