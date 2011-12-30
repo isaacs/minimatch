@@ -432,6 +432,7 @@ function parse (pattern) {
   if (pattern === "") return ""
 
   var re = ""
+    , hasMagic = false
     , escaping = false
     // ? => one single character
     , patternListStack = []
@@ -450,9 +451,11 @@ function parse (pattern) {
       switch (stateChar) {
         case "*":
           re += star
+          hasMagic = true
           break
         case "?":
           re += qmark
+          hasMagic = true
           break
         default:
           re += "\\"+stateChar
@@ -529,6 +532,8 @@ function parse (pattern) {
           continue
         }
 
+        hasMagic = true
+
         plType = stateChar
         patternListStack.push({ type: plType
                               , start: i - 1
@@ -592,6 +597,7 @@ function parse (pattern) {
         }
 
         // finish up the class.
+        hasMagic = true
         inClass = false
         re += c
         continue
@@ -656,6 +662,7 @@ function parse (pattern) {
           : pl.type === "?" ? qmark
           : "\\" + pl.type
 
+    hasMagic = true
     re = re.slice(0, pl.reStart)
        + t + "\\("
        + tail
@@ -668,18 +675,22 @@ function parse (pattern) {
     re += "\\\\"
   }
 
-  // if the re is not "" at this point, then we need to make sure
-  // it doesn't match against an empty path part.
-  // Otherwise a/* will match a/, which it should not.
-  if (re !== "") re = "(?=.)" + re
-
   // only need to apply the nodot start if the re starts with
   // something that could conceivably capture a dot
+  var addPatternStart = false
   switch (re.charAt(0)) {
     case ".":
     case "[":
-    case "(": re = patternStart + re
+    case "(": addPatternStart = true
   }
+
+  // if the re is not "" at this point, then we need to make sure
+  // it doesn't match against an empty path part.
+  // Otherwise a/* will match a/, which it should not.
+  if (re !== "" && hasMagic) re = "(?=.)" + re
+
+  if (addPatternStart) re = patternStart + re
+
   return re
 }
 
