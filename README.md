@@ -86,7 +86,8 @@ var mm = new Minimatch(pattern, options)
 
 * `pattern` The original pattern the minimatch object represents.
 * `options` The options supplied to the constructor.
-* `set` A 2-dimensional array of regexp string expressions.  Each row in the
+* `set` A 2-dimensional array of regexp or string expressions.
+  Each row in the
   array corresponds to a brace-expanded pattern.  Each item in the row
   corresponds to a single path-part.  For example, the pattern
   `{a,b/c}/d` would expand to a set of patterns like:
@@ -94,14 +95,17 @@ var mm = new Minimatch(pattern, options)
         [ [ a, d ]
         , [ b, c, d ] ]
 
-* `regExpSet` The same semantics as `set`, but full regexp objects instead of
-  regexp strings.  The pattern `"**"` is left in string form if globstar is
-  not suppressed, so that it can be treated specially.
+    If a portion of the pattern doesn't have any "magic" in it
+    (that is, it's something like `"foo"` rather than `fo*o?`), then it
+    will be left as a string rather than converted to a regular
+    expression.
+
 * `regexp` Created by the `makeRe` method.  A single regular expression
   expressing the entire pattern.  This is useful in cases where you wish
-  to use the mattern somewhat like `fnmatch(3)` with `FNM_PATH` enabled.
+  to use the pattern somewhat like `fnmatch(3)` with `FNM_PATH` enabled.
 * `negate` True if the pattern is negated.
 * `comment` True if the pattern is a comment.
+* `empty` True if the pattern is `""`.
 
 ### Methods
 

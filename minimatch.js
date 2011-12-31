@@ -94,11 +94,11 @@ function Minimatch (pattern, options) {
 
   this.options = options
   this.set = []
-  this.regExpSet = []
   this.pattern = pattern
   this.regexp = null
   this.negate = false
   this.comment = false
+  this.empty = false
 
   // make the set of regexps etc.
   this.make()
@@ -167,7 +167,7 @@ function make () {
 
   if (options.debug) console.error(this.pattern, set)
 
-  // glob --> regexp strings
+  // glob --> regexps
   set = set.map(function (s, si, set) {
     return s.map(this.parse, this)
   }, this)
@@ -424,7 +424,8 @@ function braceExpand (pattern, options) {
 // of * is equivalent to a single *.  Globstar behavior is enabled by
 // default, and can be disabled by setting options.noglobstar.
 Minimatch.prototype.parse = parse
-function parse (pattern) {
+var SUBPARSE = {}
+function parse (pattern, isSub) {
   var options = this.options
 
   // shortcuts
@@ -532,8 +533,6 @@ function parse (pattern) {
           continue
         }
 
-        hasMagic = true
-
         plType = stateChar
         patternListStack.push({ type: plType
                               , start: i - 1
@@ -548,6 +547,7 @@ function parse (pattern) {
           continue
         }
 
+        hasMagic = true
         re += ")"
         plType = patternListStack.pop().type
         switch (plType) {
@@ -628,8 +628,9 @@ function parse (pattern) {
     // the contents of the would-be class to re-translate
     // any characters that were passed through as-is
     var cs = pattern.substr(classStart + 1)
-    re = re.substr(0, reClassStart) + "\\["
-       + this.parse(cs)
+      , sp = this.parse(cs, SUBPARSE)
+    re = re.substr(0, reClassStart) + "\\[" + sp[0]
+    hasMagic = hasMagic || sp[1]
   }
 
   // handle the case where we had a +( thing at the *end*
@@ -691,7 +692,25 @@ function parse (pattern) {
 
   if (addPatternStart) re = patternStart + re
 
-  return re
+  // parsing just a piece of a larger pattern.
+  if (isSub === SUBPARSE) {
+    return [ re, hasMagic ]
+  }
+
+  // skip the regexp for non-magical patterns
+  // unescape anything in it, though, so that it'll be
+  // an exact match against a file etc.
+  if (!hasMagic) {
+    return globUnescape(pattern)
+  }
+
+  var flags = options.nocase ? "i" : ""
+    , regExp = new RegExp("^" + re + "$", flags)
+
+  regExp._glob = pattern
+  regExp._src = re
+
+  return regExp
 }
 
 minimatch.makeRe = function (pattern, options) {
@@ -720,8 +739,9 @@ function makeRe () {
 
   var re = set.map(function (pattern) {
     return pattern.map(function (p) {
-      if (p === "**") p = twoStar
-      return p
+      return (p === "**") ? twoStar
+           : (typeof p === "string") ? regExpEscape(p)
+           : p._src
     }).join("\\\/")
   }).join("|")
 
@@ -759,7 +779,7 @@ function match (f, partial) {
   // short-circuit in the case of busted things.
   // comments, etc.
   if (this.comment) return false
-  if (this.pattern === "") return f === ""
+  if (this.empty) return f === ""
 
   var options = this.options
 
@@ -784,7 +804,7 @@ function match (f, partial) {
   // match means that we have failed.
   // Either way, return on the first hit.
 
-  var set = this.regExpSet = this.makeRegExpSet()
+  var set = this.set
   // console.error(this.pattern, "set", set)
 
   for (var i = 0, l = set.length; i < l; i ++) {
@@ -800,22 +820,6 @@ function match (f, partial) {
   return this.negate
 }
 
-Minimatch.prototype.makeRegExpSet = makeRegExpSet
-function makeRegExpSet () {
-  if (this.regExpSet && this.regExpSet.length) return this.regExpSet
-
-  var options = this.options
-    , flags = options.nocase ? "i" : ""
-
-  return this.regExpSet = this.set.map(function (s) {
-    return s.map(function (p) {
-      if (p === "**" && !options.noglobstar) return p
-      // must match entire part.
-      return new RegExp("^" + p + "$", flags)
-    })
-  })
-}
-
 // set partial to true to test if, for example,
 // "/a/b" matches the start of "/*/b/*/d"
 // Partial means, if you run out of file before you run
@@ -825,14 +829,19 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
   var options = this.options
 
   if (options.debug) {
-    console.error("matchOne", this.pattern, file, pattern)
+    console.error("matchOne",
+                  { "this": this
+                  , file: file
+                  , pattern: pattern })
   }
 
   if (options.matchBase && pattern.length === 1) {
     file = path.basename(file.join("/")).split("/")
   }
 
-  // console.error("matchOne", file.length, pattern.length)
+  if (options.debug) {
+    console.error("matchOne", file.length, pattern.length)
+  }
 
   for ( var fi = 0
           , pi = 0
@@ -841,11 +850,15 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
       ; (fi < fl) && (pi < pl)
       ; fi ++, pi ++ ) {
 
-    // console.error("matchOne loop")
+    if (options.debug) {
+      console.error("matchOne loop")
+    }
     var p = pattern[pi]
       , f = file[fi]
 
-    // console.error(pattern, p, f)
+    if (options.debug) {
+      console.error(pattern, p, f)
+    }
 
     // should be impossible.
     // some invalid regexp stuff in the set.
@@ -907,7 +920,25 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
     }
 
     // something other than **
-    var hit = f.match(p)
+    // non-magic patterns just have to match exactly
+
+    var hit
+    if (typeof p === "string") {
+      if (options.nocase) {
+        hit = f.toLowerCase() === p.toLowerCase()
+      } else {
+        hit = f === p
+      }
+      if (options.debug) {
+        console.error("string match", p, f, hit)
+      }
+    } else {
+      hit = f.match(p)
+      if (options.debug) {
+        console.error("pattern match", p, f, hit)
+      }
+    }
+
     if (!hit) return false
   }
 
@@ -946,7 +977,15 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
 }
 
 
+// replace stuff like \* with *
+function globUnescape (s) {
+  return s.replace(/\\(.)/g, "$1")
+}
 
+
+function regExpEscape (s) {
+  return s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&")
+}
 
 
 function isAbsolute (p) {

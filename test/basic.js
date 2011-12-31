@@ -225,7 +225,6 @@ tap.test("basic tests", function (t) {
       tapOpts.files = JSON.stringify(f)
       tapOpts.pattern = pattern
       tapOpts.set = m.set
-      tapOpts.regExpSet = m.makeRegExpSet()
       tapOpts.negated = m.negate
 
       var actual = mm.match(f, pattern, options)
