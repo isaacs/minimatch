@@ -30,6 +30,7 @@ tap.test("basic tests", function (t) {
     // but it does make it get treated as a literal star
     , ["\\*", ["\\*"]]
     , ["\\**", ["\\**"]]
+    , ["\\*\\*", ["\\*\\*"]]
 
     , ["b*/", ["bdir/"]]
     , ["c*", ["c", "ca", "cb"]]

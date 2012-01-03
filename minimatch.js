@@ -3,6 +3,7 @@ minimatch.Minimatch = Minimatch
 
 var LRU = require("lru-cache")
   , cache = minimatch.cache = new LRU(100)
+  , GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
 
 var path = require("path")
   // any single thing other than /
@@ -133,8 +134,8 @@ function make () {
   // step 3: now we have a set, so turn each one into a series of path-portion
   // matching patterns.
   // These will be regexps, except in the case of "**", which is
-  // retained as-is for globstar behavior, and will not contain any
-  // / characters
+  // set to the GLOBSTAR object for globstar behavior,
+  // and will not contain any / characters
   set = set.map(function (s) {
     return s.split(slashSplit)
   })
@@ -429,7 +430,7 @@ function parse (pattern, isSub) {
   var options = this.options
 
   // shortcuts
-  if (!options.noglobstar && pattern === "**") return "**"
+  if (!options.noglobstar && pattern === "**") return GLOBSTAR
   if (pattern === "") return ""
 
   var re = ""
@@ -739,7 +740,7 @@ function makeRe () {
 
   var re = set.map(function (pattern) {
     return pattern.map(function (p) {
-      return (p === "**") ? twoStar
+      return (p === GLOBSTAR) ? twoStar
            : (typeof p === "string") ? regExpEscape(p)
            : p._src
     }).join("\\\/")
@@ -784,7 +785,7 @@ function match (f, partial) {
   var options = this.options
 
   // first, normalize any slash-separated path parts.
-  f = path.normalize(f)
+  // f = path.normalize(f)
   var absolute = isAbsolute(f)
 
   // console.error(this.pattern, f, absolute)
@@ -864,8 +865,8 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
     // some invalid regexp stuff in the set.
     if (p === false) return false
 
-    if (p === "**") {
-      // globstar.
+    if (p === GLOBSTAR) {
+      // "**"
       // a/**/b/**/c would match the following:
       // a/b/x/y/z/c
       // a/x/y/z/b/c
@@ -921,7 +922,7 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
 
     // something other than **
     // non-magic patterns just have to match exactly
-
+    // patterns with magic have been turned into regexps.
     var hit
     if (typeof p === "string") {
       if (options.nocase) {
