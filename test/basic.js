@@ -36,7 +36,6 @@ tap.test("basic tests", function (t) {
     , ["c*", ["c", "ca", "cb"]]
     , ["**", files]
 
-
     , ["\\.\\./*/", ["\\.\\./*/"]]
     , ["s/\\..*//", ["s/\\..*//"]]
 
@@ -126,6 +125,17 @@ tap.test("basic tests", function (t) {
 
     , "dots should not match unless requested"
     , ["**", ["a/b"], {}, ["a/b", "a/.d", ".a/.d"]]
+
+    // .. and . can only match patterns starting with .,
+    // even when options.dot is set.
+    , function () {
+        files = ["a/./b", "a/../b", "a/c/b", "a/.d/b"]
+      }
+    , ["a/*/b", ["a/c/b", "a/.d/b"], {dot: true}]
+    , ["a/.*/b", ["a/./b", "a/../b", "a/.d/b"], {dot: true}]
+    , ["a/*/b", ["a/c/b"], {dot:false}]
+    , ["a/.*/b", ["a/./b", "a/../b", "a/.d/b"], {dot: false}]
+
 
     // this also tests that changing the options needs
     // to change the cache key, even if the pattern is

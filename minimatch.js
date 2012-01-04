@@ -13,8 +13,10 @@ var path = require("path")
   // * => any number of characters
   , star = qmark + "*?"
 
-  // ** when dots are allowed.  Anything goes.
-  , twoStarDot = ".*?"
+  // ** when dots are allowed.  Anything goes, except .. and .
+  // not (^ or / followed by one or two dots followed by $ or /),
+  // followed by anything, any number of times.
+  , twoStarDot = "(?:(?!(?:\\\/|^)(?:\\.{1,2})($|\\\/)).)*?"
 
   // not a ^ or / followed by a dot,
   // followed by anything, any number of times.
@@ -443,8 +445,12 @@ function parse (pattern, isSub) {
     , inClass = false
     , reClassStart = -1
     , classStart = -1
-    , patternStart = options.dot || pattern.charAt(0) === "."
-      ? "" : "(?!\\.)"
+    // . and .. never match anything that doesn't start with .,
+    // even when options.dot is set.
+    , patternStart = pattern.charAt(0) === "." ? "" // anything
+      // not (start or / followed by . or .. followed by / or end)
+      : options.dot ? "(?!(?:^|\\\/)\\.{1,2}(?:$|\\\/))"
+      : "(?!\\.)"
 
   function clearStateChar () {
     if (stateChar) {
@@ -750,11 +756,8 @@ function makeRe () {
   // ending in a * or ** will make it less strict.
   re = "^" + re + "$"
 
+  // can match anything, as long as it's not this.
   if (this.negate) re = "^(?!" + re + ").*$"
-
-  if (options.debug) {
-    // console.error("/%s/%s", re, flags)
-  }
 
   try {
     return this.regexp = new RegExp(re, flags)
@@ -894,14 +897,18 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
         // We have found a match.
         // however, it will not swallow /.x, unless
         // options.dot is set.
-        if (!options.dot) for ( ; fi < fl; fi ++) {
-          if (file[fi].charAt(0) === ".") return false
+        // . and .. are *never* matched by **, for explosively
+        // exponential reasons.
+        for ( ; fi < fl; fi ++) {
+          if (file[fi] === "." || file[fi] === ".." ||
+              (!options.dot && file[fi].charAt(0) === ".")) return false
         }
         return true
       }
       WHILE: while (fr < fl) {
         var swallowee = file[fr]
-        if (!options.dot && swallowee.charAt(0) === ".") {
+        if (swallowee === "." || swallowee === ".." ||
+            (!options.dot && swallowee.charAt(0) === ".")) {
           break WHILE
         }
 
