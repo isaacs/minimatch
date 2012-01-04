@@ -190,10 +190,11 @@ Disable "extglob" style patterns like `+(a|b)`.
 
 Perform a case-insensitive match.
 
-### null
+### nonull
 
-Return an empty list from minimatch.match, instead of a list
-containing the pattern itself.
+When a match is not found by `minimatch.match`, return a list containing
+the pattern itself.  When set, an empty list is returned if there are
+no matches.
 
 ### matchBase
 
