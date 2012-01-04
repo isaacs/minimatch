@@ -20,30 +20,30 @@ tap.test("basic tests", function (t) {
   ; [ "http://www.bashcookbook.com/bashinfo" +
       "/source/bash-1.14.7/tests/glob-test"
     , ["a*", ["a", "abc", "abd", "abe"]]
-    , ["X*", ["X*"]]
+    , ["X*", ["X*"], {nonull: true}]
 
     // allow null glob expansion
-    , ["X*", [], { null: true }]
+    , ["X*", []]
 
     // isaacs: Slightly different than bash/sh/ksh
     // \\* is not un-escaped to literal "*" in a failed match,
     // but it does make it get treated as a literal star
-    , ["\\*", ["\\*"]]
-    , ["\\**", ["\\**"]]
-    , ["\\*\\*", ["\\*\\*"]]
+    , ["\\*", ["\\*"], {nonull: true}]
+    , ["\\**", ["\\**"], {nonull: true}]
+    , ["\\*\\*", ["\\*\\*"], {nonull: true}]
 
     , ["b*/", ["bdir/"]]
     , ["c*", ["c", "ca", "cb"]]
     , ["**", files]
 
-    , ["\\.\\./*/", ["\\.\\./*/"]]
-    , ["s/\\..*//", ["s/\\..*//"]]
+    , ["\\.\\./*/", ["\\.\\./*/"], {nonull: true}]
+    , ["s/\\..*//", ["s/\\..*//"], {nonull: true}]
 
     , "legendary larry crashes bashes"
     , ["/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\\1/"
-      , ["/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\\1/"]]
+      , ["/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\\1/"], {nonull: true}]
     , ["/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\1/"
-      , ["/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\1/"]]
+      , ["/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\1/"], {nonull: true}]
 
     , "character classes"
     , ["[a-c]b*", ["abc", "abd", "abe", "bb", "cb"]]
@@ -144,7 +144,7 @@ tap.test("basic tests", function (t) {
       , [ ".a/.d", "a/.d", "a/b"]]
 
     , "paren sets cannot contain slashes"
-    , ["*(a/b)", ["*(a/b)"], {}, ["a/b"]]
+    , ["*(a/b)", ["*(a/b)"], {nonull: true}, ["a/b"]]
 
     // brace sets trump all else.
     //
@@ -169,7 +169,7 @@ tap.test("basic tests", function (t) {
     // like: {a,b|c\\,d\\\|e} except it's unclosed, so it has to be escaped.
     , ["+(a|*\\|c\\\\|d\\\\\\|e\\\\\\\\|f\\\\\\\\\\|g"
       , ["+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g"]
-      , {null: true}
+      , {}
       , ["+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g", "a", "b\\c"]]
 
 
