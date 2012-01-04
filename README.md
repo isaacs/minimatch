@@ -199,7 +199,7 @@ containing the pattern itself.
 
 If set, then patterns without slashes will be matched
 against the basename of the path if it contains slashes.  For example,
-`a?b` would match the path `/xyz/123/acb`, but not `/xyz/abc/123`.
+`a?b` would match the path `/xyz/123/acb`, but not `/xyz/acb/123`.
 
 ### nocomment
 
