@@ -905,10 +905,13 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
         }
         return true
       }
+
+      // ok, let's see if we can swallow whatever we can.
       WHILE: while (fr < fl) {
         var swallowee = file[fr]
         if (swallowee === "." || swallowee === ".." ||
             (!options.dot && swallowee.charAt(0) === ".")) {
+          // console.error("dot detected!")
           break WHILE
         }
 
@@ -923,8 +926,13 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
       }
       // no match was found.
       // However, in partial mode, we can't say this is necessarily over.
-      // console.error("\n>>> no match ", file, pattern, partial)
-      return partial
+      // If there's more *pattern* left, then 
+      if (partial) {
+        // ran out of file
+        // console.error("\n>>> no match, partial?", file, fr, pattern, pr)
+        if (fr === fl) return true
+      }
+      return false
     }
 
     // something other than **
