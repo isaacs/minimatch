@@ -159,10 +159,10 @@ function make () {
     if (options.matchBase && p.length === 1) return p
     // do prefixing.
     if (options.root && p[0] === "") {
-      return options.root.split("/").concat(p)
+      return options.root.split(process.platform === "win32" ? "\\" : "/").concat(p)
     }
     if (options.cwd && p[0] !== "") {
-      return options.cwd.split("/").concat(p)
+      return options.cwd.split(process.platform === "win32" ? "\\" : "/").concat(p)
     }
     return p
   })
