@@ -4,6 +4,7 @@ minimatch.Minimatch = Minimatch
 var LRU = require("lru-cache")
   , cache = minimatch.cache = new LRU(100)
   , GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
+  , pathSplit = process.platform === "win32" ? /\\|\// : "/"
 
 var path = require("path")
   // any single thing other than /
@@ -159,10 +160,10 @@ function make () {
     if (options.matchBase && p.length === 1) return p
     // do prefixing.
     if (options.root && p[0] === "") {
-      return options.root.split("/").concat(p)
+      return options.root.split(pathSplit).concat(p)
     }
     if (options.cwd && p[0] !== "") {
-      return options.cwd.split("/").concat(p)
+      return options.cwd.split(pathSplit).concat(p)
     }
     return p
   })
