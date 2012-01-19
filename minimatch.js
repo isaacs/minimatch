@@ -143,6 +143,22 @@ function make () {
     return s.split(slashSplit)
   })
 
+  if (options.debug) console.error(this.pattern, set)
+
+  // glob --> regexps
+  set = set.map(function (s, si, set) {
+    return s.map(this.parse, this)
+  }, this)
+
+  if (options.debug) console.error(this.pattern, set)
+
+  // filter out everything that didn't compile properly.
+  set = set.filter(function (s) {
+    return -1 === s.indexOf(false)
+  })
+
+  if (options.debug) console.error(this.pattern, set)
+
   // step 4: if we have a defined root, then patterns starting with ""
   // get attached to that.  If we have a defined cwd, then patterns
   // *not* starting with "" get attached to that.
@@ -160,7 +176,11 @@ function make () {
     if (options.matchBase && p.length === 1) return p
     // do prefixing.
     if (options.root && p[0] === "") {
-      return options.root.split(pathSplit).concat(p)
+      var r = options.root.split(pathSplit)
+      if (r[r.length - 1] === "") r.pop()
+      r = r.concat(p.slice(1))
+      r.absolute = true
+      return r
     }
     if (options.cwd && p[0] !== "") {
       return options.cwd.split(pathSplit).concat(p)
@@ -168,22 +188,6 @@ function make () {
     return p
   })
 
-
-  if (options.debug) console.error(this.pattern, set)
-
-  // glob --> regexps
-  set = set.map(function (s, si, set) {
-    return s.map(this.parse, this)
-  }, this)
-
-  if (options.debug) console.error(this.pattern, set)
-
-  // filter out everything that didn't compile properly.
-  set = set.filter(function (s) {
-    return -1 === s.indexOf(false)
-  })
-
-  if (options.debug) console.error(this.pattern, set)
 
   this.set = set
 }
@@ -786,13 +790,12 @@ function match (f, partial) {
   if (this.comment) return false
   if (this.empty) return f === ""
 
+  if (f === "/" && partial) return true
+
   var options = this.options
 
   // first, normalize any slash-separated path parts.
   // f = path.normalize(f)
-  var absolute = isAbsolute(f)
-
-  // console.error(this.pattern, f, absolute)
 
   // windows: need to use /, not \
   // On other platforms, \ is a valid (albeit bad) filename char.
@@ -802,7 +805,9 @@ function match (f, partial) {
 
   // treat the test path as a set of pathparts.
   f = f.split(slashSplit)
-  // console.error(this.pattern, "split", f)
+  if (options.debug) {
+    console.error(this.pattern, "split", f)
+  }
 
   // just ONE of the pattern sets in this.set needs to match
   // in order for it to be valid.  If negating, then just one
@@ -1002,20 +1007,4 @@ function globUnescape (s) {
 
 function regExpEscape (s) {
   return s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&")
-}
-
-
-function isAbsolute (p) {
-  if (process.platform !== "win32") return p.charAt(0) === "/"
-
-  // yanked from node/lib/path.js
-  var splitDeviceRe =
-    /^([a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/][^\\\/]+)?([\\\/])?([\s\S]*?)$/
-
-  var result = p.match(splitDeviceRe)
-    , device = result[1] || ""
-    , isUnc = device && device.charAt(1) !== ":"
-    , isAbs = !!result[2] || isUnc // UNC always absolute
-
-  return isAbs
 }
