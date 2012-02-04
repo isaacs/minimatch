@@ -170,7 +170,7 @@ function make () {
   set = set.map(function (p) {
     if (process.platform === "win32" &&
         ( (p[0] === "" && p[1] === "" && p[2] === "\\?") // unc
-        || (p[0].match(/^[a-zA-Z]:$/)) )) {
+        || (typeof p[0] === "string" && p[0].match(/^[a-zA-Z]:$/)) )) {
       return p
     }
     if (options.matchBase && p.length === 1) return p
