@@ -139,7 +139,7 @@ function make () {
   // These will be regexps, except in the case of "**", which is
   // set to the GLOBSTAR object for globstar behavior,
   // and will not contain any / characters
-  set = set.map(function (s) {
+  set = this.globParts = set.map(function (s) {
     return s.split(slashSplit)
   })
 
@@ -158,36 +158,6 @@ function make () {
   })
 
   if (options.debug) console.error(this.pattern, set)
-
-  // step 4: if we have a defined root, then patterns starting with ""
-  // get attached to that.  If we have a defined cwd, then patterns
-  // *not* starting with "" get attached to that.
-  // Exception 1: on windows, a pattern like //\?/c:/ or c:/ will
-  // not get anything prefixed to it.
-  // Exception 2: If matchBase is set, and it's just a filename,
-  // then don't prefix anything onto it, since it'll only match
-  // files with that basename anyhow.
-  set = set.map(function (p) {
-    if (process.platform === "win32" &&
-        ( (p[0] === "" && p[1] === "" && p[2] === "\\?") // unc
-        || (typeof p[0] === "string" && p[0].match(/^[a-zA-Z]:$/)) )) {
-      return p
-    }
-    if (options.matchBase && p.length === 1) return p
-    // do prefixing.
-    if (options.root && p[0] === "") {
-      var r = options.root.split(pathSplit)
-      if (r[r.length - 1] === "") r.pop()
-      r = r.concat(p.slice(1))
-      r.absolute = true
-      return r
-    }
-    if (options.cwd && p[0] !== "") {
-      return options.cwd.split(pathSplit).concat(p)
-    }
-    return p
-  })
-
 
   this.set = set
 }
