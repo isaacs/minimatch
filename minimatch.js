@@ -130,7 +130,7 @@ function make () {
   this.parseNegate()
 
   // step 2: expand braces
-  var set = this.braceExpand()
+  var set = this.globSet = this.braceExpand()
 
   if (options.debug) console.error(this.pattern, set)
 
