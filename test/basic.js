@@ -219,6 +219,18 @@ tap.test("basic tests", function (t) {
     // anything that is NOT !a* matches
     , ["!\\!a*", ["a!b", "d", "e", "\\!a"]]
 
+    // negation nestled within a pattern
+    , function () {
+        files = [ "foo.js"
+                , "foo.bar"
+                // can't match this one without negative lookbehind.
+                , "foo.js.js"
+                , "blar.js"
+                , "foo."
+                , "boo.js.boo" ]
+      }
+    , ["*.!(js)", ["foo.bar", "foo.", "boo.js.boo"] ]
+
     ].forEach(function (c) {
       if (typeof c === "function") return c()
       if (typeof c === "string") return t.comment(c)

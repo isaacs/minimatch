@@ -519,7 +519,8 @@ function parse (pattern, isSub) {
         patternListStack.push({ type: plType
                               , start: i - 1
                               , reStart: re.length })
-        re += stateChar === "!" ? "(?!" : "(?:"
+        // negation is (?:(?!js)[^/]*)
+        re += stateChar === "!" ? "(?:(?!" : "(?:"
         stateChar = false
         continue
 
@@ -532,11 +533,15 @@ function parse (pattern, isSub) {
         hasMagic = true
         re += ")"
         plType = patternListStack.pop().type
+        // negation is (?:(?!js)[^/]*)
+        // The others are (?:<pattern>)<type>
         switch (plType) {
+          case "!":
+            re += "[^/]*?)"
+            break
           case "?":
           case "+":
           case "*": re += plType
-          case "!": // already handled by the start
           case "@": break // the default anyway
         }
         continue
