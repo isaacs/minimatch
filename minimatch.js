@@ -795,12 +795,14 @@ function match (f, partial) {
     var pattern = set[i]
     var hit = this.matchOne(f, pattern, partial)
     if (hit) {
+      if (options.flipNegate) return true
       return !this.negate
     }
   }
 
   // didn't get any hits.  this is success if it's a negative
   // pattern, failure otherwise.
+  if (options.flipNegate) return false
   return this.negate
 }
 
