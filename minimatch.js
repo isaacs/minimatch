@@ -4,7 +4,6 @@ minimatch.Minimatch = Minimatch
 var LRU = require("lru-cache")
   , cache = minimatch.cache = new LRU(100)
   , GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
-  , pathSplit = process.platform === "win32" ? /\\|\// : "/"
 
 var path = require("path")
   // any single thing other than /
