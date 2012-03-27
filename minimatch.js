@@ -1,4 +1,32 @@
-module.exports = minimatch
+;(function (require, exports, module) {
+
+if (module) module.exports = minimatch
+else exports.minimatch = minimatch
+
+if (!require) {
+  require = function (id) {
+    switch (id) {
+      case "path": return { basename: function (f) {
+        f = f.split(/[\/\\]/)
+        var e = f.pop()
+        if (!e) e = f.pop()
+        return e
+      }}
+      case "lru-cache": return function LRUCache () {
+        // not quite an LRU, but still space-limited.
+        var cache = {}
+        var cnt = 0
+        this.set = function (k, v) {
+          cnt ++
+          if (cnt >= 100) cache = {}
+          cache[k] = v
+        }
+        this.get = function (k) { return cache[k] }
+      }
+    }
+  }
+}
+
 minimatch.Minimatch = Minimatch
 
 var LRU = require("lru-cache")
@@ -768,9 +796,6 @@ function match (f, partial) {
 
   var options = this.options
 
-  // first, normalize any slash-separated path parts.
-  // f = path.normalize(f)
-
   // windows: need to use /, not \
   // On other platforms, \ is a valid (albeit bad) filename char.
   if (process.platform === "win32") {
@@ -984,3 +1009,8 @@ function globUnescape (s) {
 function regExpEscape (s) {
   return s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&")
 }
+
+})( typeof require === "function" ? require : null,
+    this,
+    typeof module === "object" ? module : null
+  )
