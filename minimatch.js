@@ -1,4 +1,4 @@
-;(function (require, exports, module) {
+;(function (require, exports, module, platform) {
 
 if (module) module.exports = minimatch
 else exports.minimatch = minimatch
@@ -798,7 +798,7 @@ function match (f, partial) {
 
   // windows: need to use /, not \
   // On other platforms, \ is a valid (albeit bad) filename char.
-  if (process.platform === "win32") {
+  if (platform === "win32") {
     f = f.split("\\").join("/")
   }
 
@@ -1012,5 +1012,6 @@ function regExpEscape (s) {
 
 })( typeof require === "function" ? require : null,
     this,
-    typeof module === "object" ? module : null
+    typeof module === "object" ? module : null,
+    typeof process === "object" ? process.platform : "win32"
   )
