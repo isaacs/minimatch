@@ -83,6 +83,30 @@ function filter (pattern, options) {
   }
 }
 
+function ext (a, b) {
+  Object.keys(b).forEach(function (k) {
+    a[k] = b[k]
+  })
+  return a
+}
+
+minimatch.defaults = function (def) {
+  function m (p, pattern, options) {
+    return minimatch(p, pattern, ext(ext({}, def), options))
+  }
+
+  m.Minimatch = function (pattern, options) {
+    return new Minimatch(pattern, ext(ext({}, def), options))
+  }
+
+  return m
+}
+
+Minimatch.defaults = function (def) {
+  return minimatch.defaults(def).Minimatch
+}
+
+
 function minimatch (p, pattern, options) {
   if (typeof pattern !== "string") {
     throw new TypeError("glob pattern string required")
