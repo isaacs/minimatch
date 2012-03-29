@@ -86,21 +86,27 @@ function filter (pattern, options) {
 function ext (a, b) {
   a = a || {}
   b = b || {}
+  var t = {}
   Object.keys(b).forEach(function (k) {
-    a[k] = b[k]
+    t[k] = b[k]
   })
-  return a
+  Object.keys(a).forEach(function (k) {
+    t[k] = a[k]
+  })
+  return t
 }
 
 minimatch.defaults = function (def) {
   if (!def || !Object.keys(def).length) return minimatch
 
+  var orig = minimatch
+
   var m = function minimatch (p, pattern, options) {
-    return minimatch(p, pattern, ext(ext({}, def), options))
+    return orig.minimatch(p, pattern, ext(def, options))
   }
 
   m.Minimatch = function Minimatch (pattern, options) {
-    return new Minimatch(pattern, ext(ext({}, def), options))
+    return new orig.Minimatch(pattern, ext(def, options))
   }
 
   return m

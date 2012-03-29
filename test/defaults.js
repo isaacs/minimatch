@@ -242,8 +242,8 @@ tap.test("basic tests", function (t) {
         , tapOpts = c[4] || {}
 
       // options.debug = true
-      var Class = options ? mm.defaults(options).Minimatch : mm.Minimatch
-      var m = new Class(pattern, options)
+      var Class = mm.defaults(options).Minimatch
+      var m = new Class(pattern, {})
       var r = m.makeRe()
       tapOpts.re = String(r) || JSON.stringify(r)
       tapOpts.files = JSON.stringify(f)
