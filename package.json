@@ -20,10 +20,8 @@
   "devDependencies": {
     "tap": ""
   },
-  "licenses" : [
-    {
-      "type" : "MIT",
-      "url" : "http://github.com/isaacs/minimatch/raw/master/LICENSE"
-    }
-  ]
+  "license": {
+    "type": "MIT",
+    "url": "http://github.com/isaacs/minimatch/raw/master/LICENSE"
+  }
 }
