@@ -9,7 +9,7 @@
   },
   "main": "minimatch.js",
   "scripts": {
-    "test": "tap test"
+    "test": "tap test/*.js"
   },
   "engines": {
     "node": "*"
