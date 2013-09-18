@@ -859,9 +859,14 @@ function match (f, partial) {
   var set = this.set
   // console.error(this.pattern, "set", set)
 
+  var splitFile = path.basename(f.join("/")).split("/")
+
   for (var i = 0, l = set.length; i < l; i ++) {
-    var pattern = set[i]
-    var hit = this.matchOne(f, pattern, partial)
+    var pattern = set[i], file = f
+    if (options.matchBase && pattern.length === 1) {
+      file = splitFile
+    }
+    var hit = this.matchOne(file, pattern, partial)
     if (hit) {
       if (options.flipNegate) return true
       return !this.negate
@@ -887,10 +892,6 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
                   { "this": this
                   , file: file
                   , pattern: pattern })
-  }
-
-  if (options.matchBase && pattern.length === 1) {
-    file = path.basename(file.join("/")).split("/")
   }
 
   if (options.debug) {
