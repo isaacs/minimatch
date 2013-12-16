@@ -618,6 +618,7 @@ function parse (pattern, isSub) {
           continue
         }
 
+        clearStateChar()
         re += "|"
         continue
 
