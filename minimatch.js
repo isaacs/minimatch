@@ -68,17 +68,6 @@ function charSet (s) {
 // normalizes slashes.
 var slashSplit = /\/+/
 
-minimatch.monkeyPatch = monkeyPatch
-function monkeyPatch () {
-  var desc = Object.getOwnPropertyDescriptor(String.prototype, "match")
-  var orig = desc.value
-  desc.value = function (p) {
-    if (p instanceof Minimatch) return p.match(this)
-    return orig.call(this, p)
-  }
-  Object.defineProperty(String.prototype, desc)
-}
-
 minimatch.filter = filter
 function filter (pattern, options) {
   options = options || {}
