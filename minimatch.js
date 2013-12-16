@@ -605,6 +605,7 @@ function parse (pattern, isSub) {
           continue
         }
 
+        clearStateChar()
         hasMagic = true
         re += ")"
         plType = patternListStack.pop().type
