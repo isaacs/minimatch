@@ -178,6 +178,8 @@ function Minimatch (pattern, options) {
   this.make()
 }
 
+Minimatch.prototype.debug = function() {}
+
 Minimatch.prototype.make = make
 function make () {
   // don't do it more than once.
@@ -202,7 +204,9 @@ function make () {
   // step 2: expand braces
   var set = this.globSet = this.braceExpand()
 
-  if (options.debug) console.error(this.pattern, set)
+  if (options.debug) this.debug = console.error
+
+  this.debug(this.pattern, set)
 
   // step 3: now we have a set, so turn each one into a series of path-portion
   // matching patterns.
@@ -213,21 +217,21 @@ function make () {
     return s.split(slashSplit)
   })
 
-  if (options.debug) console.error(this.pattern, set)
+  this.debug(this.pattern, set)
 
   // glob --> regexps
   set = set.map(function (s, si, set) {
     return s.map(this.parse, this)
   }, this)
 
-  if (options.debug) console.error(this.pattern, set)
+  this.debug(this.pattern, set)
 
   // filter out everything that didn't compile properly.
   set = set.filter(function (s) {
     return -1 === s.indexOf(false)
   })
 
-  if (options.debug) console.error(this.pattern, set)
+  this.debug(this.pattern, set)
 
   this.set = set
 }
@@ -302,11 +306,11 @@ function braceExpand (pattern, options) {
   // So, we pluck that off, and work with the rest,
   // and then prepend it to everything we find.
   if (pattern.charAt(0) !== "{") {
-    // console.error(pattern)
+    // this.debug(pattern)
     var prefix = null
     for (var i = 0, l = pattern.length; i < l; i ++) {
       var c = pattern.charAt(i)
-      // console.error(i, c)
+      // this.debug(i, c)
       if (c === "\\") {
         escaping = !escaping
       } else if (c === "{" && !escaping) {
@@ -317,7 +321,7 @@ function braceExpand (pattern, options) {
 
     // actually no sets, all { were escaped.
     if (prefix === null) {
-      // console.error("no sets")
+      // this.debug("no sets")
       return [pattern]
     }
 
@@ -336,7 +340,7 @@ function braceExpand (pattern, options) {
   // first, handle numeric sets, since they're easier
   var numset = pattern.match(/^\{(-?[0-9]+)\.\.(-?[0-9]+)\}/)
   if (numset) {
-    // console.error("numset", numset[1], numset[2])
+    // this.debug("numset", numset[1], numset[2])
     var suf = braceExpand(pattern.substr(numset[0].length), options)
       , start = +numset[1]
       , end = +numset[2]
@@ -369,10 +373,10 @@ function braceExpand (pattern, options) {
     member = ""
   }
 
-  // console.error("Entering for")
+  // this.debug("Entering for")
   FOR: for (i = 1, l = pattern.length; i < l; i ++) {
     var c = pattern.charAt(i)
-    // console.error("", i, c)
+    // this.debug("", i, c)
 
     if (escaping) {
       escaping = false
@@ -420,22 +424,22 @@ function braceExpand (pattern, options) {
   // pattern.substr(i), or we have *not* closed the set,
   // and need to escape the leading brace
   if (depth !== 0) {
-    // console.error("didn't close", pattern)
+    // this.debug("didn't close", pattern)
     return braceExpand("\\" + pattern, options)
   }
 
   // x{y,z} -> ["xy", "xz"]
-  // console.error("set", set)
-  // console.error("suffix", pattern.substr(i))
+  // this.debug("set", set)
+  // this.debug("suffix", pattern.substr(i))
   var suf = braceExpand(pattern.substr(i), options)
   // ["b", "c{d,e}","{f,g}h"] ->
   //   [["b"], ["cd", "ce"], ["fh", "gh"]]
   var addBraces = set.length === 1
-  // console.error("set pre-expanded", set)
+  // this.debug("set pre-expanded", set)
   set = set.map(function (p) {
     return braceExpand(p, options)
   })
-  // console.error("set expanded", set)
+  // this.debug("set expanded", set)
 
 
   // [["b"], ["cd", "ce"], ["fh", "gh"]] ->
@@ -522,9 +526,7 @@ function parse (pattern, isSub) {
       ; (i < len) && (c = pattern.charAt(i))
       ; i ++ ) {
 
-    if (options.debug) {
-      console.error("%s\t%s %s %j", pattern, i, re, c)
-    }
+    this.debug("%s\t%s %s %j", pattern, i, re, c)
 
     // skip over any that are escaped.
     if (escaping && reSpecials[c]) {
@@ -551,9 +553,7 @@ function parse (pattern, isSub) {
       case "+":
       case "@":
       case "!":
-        if (options.debug) {
-          console.error("%s\t%s %s %j <-- stateChar", pattern, i, re, c)
-        }
+        this.debug("%s\t%s %s %j <-- stateChar", pattern, i, re, c)
 
         // all of those are literals inside a class, except that
         // the glob [!a] means [^a] in regexp
@@ -715,7 +715,7 @@ function parse (pattern, isSub) {
       return $1 + $1 + $2 + "|"
     })
 
-    // console.error("tail=%j\n   %s", tail, tail)
+    // this.debug("tail=%j\n   %s", tail, tail)
     var t = pl.type === "*" ? star
           : pl.type === "?" ? qmark
           : "\\" + pl.type
@@ -829,7 +829,7 @@ minimatch.match = function (list, pattern, options) {
 
 Minimatch.prototype.match = match
 function match (f, partial) {
-  // console.error("match", f, this.pattern)
+  // this.debug("match", f, this.pattern)
   // short-circuit in the case of busted things.
   // comments, etc.
   if (this.comment) return false
@@ -847,9 +847,7 @@ function match (f, partial) {
 
   // treat the test path as a set of pathparts.
   f = f.split(slashSplit)
-  if (options.debug) {
-    console.error(this.pattern, "split", f)
-  }
+  this.debug(this.pattern, "split", f)
 
   // just ONE of the pattern sets in this.set needs to match
   // in order for it to be valid.  If negating, then just one
@@ -857,7 +855,7 @@ function match (f, partial) {
   // Either way, return on the first hit.
 
   var set = this.set
-  // console.error(this.pattern, "set", set)
+  // this.debug(this.pattern, "set", set)
 
   var splitFile = path.basename(f.join("/")).split("/")
 
@@ -887,16 +885,12 @@ function match (f, partial) {
 Minimatch.prototype.matchOne = function (file, pattern, partial) {
   var options = this.options
 
-  if (options.debug) {
-    console.error("matchOne",
-                  { "this": this
-                  , file: file
-                  , pattern: pattern })
-  }
+  this.debug("matchOne",
+              { "this": this
+              , file: file
+              , pattern: pattern })
 
-  if (options.debug) {
-    console.error("matchOne", file.length, pattern.length)
-  }
+  this.debug("matchOne", file.length, pattern.length)
 
   for ( var fi = 0
           , pi = 0
@@ -905,23 +899,18 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
       ; (fi < fl) && (pi < pl)
       ; fi ++, pi ++ ) {
 
-    if (options.debug) {
-      console.error("matchOne loop")
-    }
+    this.debug("matchOne loop")
     var p = pattern[pi]
       , f = file[fi]
 
-    if (options.debug) {
-      console.error(pattern, p, f)
-    }
+    this.debug(pattern, p, f)
 
     // should be impossible.
     // some invalid regexp stuff in the set.
     if (p === false) return false
 
     if (p === GLOBSTAR) {
-      if (options.debug)
-        console.error('GLOBSTAR', [pattern, p, f])
+      this.debug('GLOBSTAR', [pattern, p, f])
 
       // "**"
       // a/**/b/**/c would match the following:
@@ -948,8 +937,7 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
       var fr = fi
         , pr = pi + 1
       if (pr === pl) {
-        if (options.debug)
-          console.error('** at the end')
+        this.debug('** at the end')
         // a ** at the end will just swallow the rest.
         // We have found a match.
         // however, it will not swallow /.x, unless
@@ -967,15 +955,12 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
       WHILE: while (fr < fl) {
         var swallowee = file[fr]
 
-        if (options.debug) {
-          console.error('\nglobstar while',
-                        file, fr, pattern, pr, swallowee)
-        }
+        this.debug('\nglobstar while',
+                    file, fr, pattern, pr, swallowee)
 
         // XXX remove this slice.  Just pass the start index.
         if (this.matchOne(file.slice(fr), pattern.slice(pr), partial)) {
-          if (options.debug)
-            console.error('globstar found match!', fr, fl, swallowee)
+          this.debug('globstar found match!', fr, fl, swallowee)
           // found a match.
           return true
         } else {
@@ -983,14 +968,12 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
           // can only swallow ".foo" when explicitly asked.
           if (swallowee === "." || swallowee === ".." ||
               (!options.dot && swallowee.charAt(0) === ".")) {
-            if (options.debug)
-              console.error("dot detected!", file, fr, pattern, pr)
+            this.debug("dot detected!", file, fr, pattern, pr)
             break WHILE
           }
 
           // ** swallows a segment, and continue.
-          if (options.debug)
-            console.error('globstar swallow a segment, and continue')
+          this.debug('globstar swallow a segment, and continue')
           fr ++
         }
       }
@@ -999,7 +982,7 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
       // If there's more *pattern* left, then 
       if (partial) {
         // ran out of file
-        // console.error("\n>>> no match, partial?", file, fr, pattern, pr)
+        // this.debug("\n>>> no match, partial?", file, fr, pattern, pr)
         if (fr === fl) return true
       }
       return false
@@ -1015,14 +998,10 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
       } else {
         hit = f === p
       }
-      if (options.debug) {
-        console.error("string match", p, f, hit)
-      }
+      this.debug("string match", p, f, hit)
     } else {
       hit = f.match(p)
-      if (options.debug) {
-        console.error("pattern match", p, f, hit)
-      }
+      this.debug("pattern match", p, f, hit)
     }
 
     if (!hit) return false
