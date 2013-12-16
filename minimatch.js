@@ -306,11 +306,11 @@ function braceExpand (pattern, options) {
   // So, we pluck that off, and work with the rest,
   // and then prepend it to everything we find.
   if (pattern.charAt(0) !== "{") {
-    // this.debug(pattern)
+    this.debug(pattern)
     var prefix = null
     for (var i = 0, l = pattern.length; i < l; i ++) {
       var c = pattern.charAt(i)
-      // this.debug(i, c)
+      this.debug(i, c)
       if (c === "\\") {
         escaping = !escaping
       } else if (c === "{" && !escaping) {
@@ -321,11 +321,11 @@ function braceExpand (pattern, options) {
 
     // actually no sets, all { were escaped.
     if (prefix === null) {
-      // this.debug("no sets")
+      this.debug("no sets")
       return [pattern]
     }
 
-    var tail = braceExpand(pattern.substr(i), options)
+   var tail = braceExpand.call(this, pattern.substr(i), options)
     return tail.map(function (t) {
       return prefix + t
     })
@@ -340,8 +340,8 @@ function braceExpand (pattern, options) {
   // first, handle numeric sets, since they're easier
   var numset = pattern.match(/^\{(-?[0-9]+)\.\.(-?[0-9]+)\}/)
   if (numset) {
-    // this.debug("numset", numset[1], numset[2])
-    var suf = braceExpand(pattern.substr(numset[0].length), options)
+    this.debug("numset", numset[1], numset[2])
+    var suf = braceExpand.call(this, pattern.substr(numset[0].length), options)
       , start = +numset[1]
       , end = +numset[2]
       , inc = start > end ? -1 : 1
@@ -373,10 +373,10 @@ function braceExpand (pattern, options) {
     member = ""
   }
 
-  // this.debug("Entering for")
+  this.debug("Entering for")
   FOR: for (i = 1, l = pattern.length; i < l; i ++) {
     var c = pattern.charAt(i)
-    // this.debug("", i, c)
+    this.debug("", i, c)
 
     if (escaping) {
       escaping = false
@@ -424,22 +424,22 @@ function braceExpand (pattern, options) {
   // pattern.substr(i), or we have *not* closed the set,
   // and need to escape the leading brace
   if (depth !== 0) {
-    // this.debug("didn't close", pattern)
-    return braceExpand("\\" + pattern, options)
+    this.debug("didn't close", pattern)
+    return braceExpand.call(this, "\\" + pattern, options)
   }
 
   // x{y,z} -> ["xy", "xz"]
-  // this.debug("set", set)
-  // this.debug("suffix", pattern.substr(i))
-  var suf = braceExpand(pattern.substr(i), options)
+  this.debug("set", set)
+  this.debug("suffix", pattern.substr(i))
+  var suf = braceExpand.call(this, pattern.substr(i), options)
   // ["b", "c{d,e}","{f,g}h"] ->
   //   [["b"], ["cd", "ce"], ["fh", "gh"]]
   var addBraces = set.length === 1
-  // this.debug("set pre-expanded", set)
+  this.debug("set pre-expanded", set)
   set = set.map(function (p) {
-    return braceExpand(p, options)
-  })
-  // this.debug("set expanded", set)
+    return braceExpand.call(this, p, options)
+  }, this)
+  this.debug("set expanded", set)
 
 
   // [["b"], ["cd", "ce"], ["fh", "gh"]] ->
@@ -500,6 +500,7 @@ function parse (pattern, isSub) {
       // not (start or / followed by . or .. followed by / or end)
       : options.dot ? "(?!(?:^|\\\/)\\.{1,2}(?:$|\\\/))"
       : "(?!\\.)"
+    , self = this
 
   function clearStateChar () {
     if (stateChar) {
@@ -518,6 +519,7 @@ function parse (pattern, isSub) {
           re += "\\"+stateChar
           break
       }
+      self.debug('clearStateChar %j %j', stateChar, re)
       stateChar = false
     }
   }
@@ -558,6 +560,7 @@ function parse (pattern, isSub) {
         // all of those are literals inside a class, except that
         // the glob [!a] means [^a] in regexp
         if (inClass) {
+          this.debug('  in class')
           if (c === "!" && i === classStart + 1) c = "^"
           re += c
           continue
@@ -566,6 +569,7 @@ function parse (pattern, isSub) {
         // if we already have a stateChar, then it means
         // that there was something like ** or +? in there.
         // Handle the stateChar, then proceed with this one.
+        self.debug('call clearStateChar %j', stateChar)
         clearStateChar()
         stateChar = c
         // if extglob is disabled, then +(asdf|foo) isn't a thing.
@@ -591,6 +595,7 @@ function parse (pattern, isSub) {
                               , reStart: re.length })
         // negation is (?:(?!js)[^/]*)
         re += stateChar === "!" ? "(?:(?!" : "(?:"
+        this.debug('plType %j %j', stateChar, re)
         stateChar = false
         continue
 
@@ -715,7 +720,7 @@ function parse (pattern, isSub) {
       return $1 + $1 + $2 + "|"
     })
 
-    // this.debug("tail=%j\n   %s", tail, tail)
+    this.debug("tail=%j\n   %s", tail, tail)
     var t = pl.type === "*" ? star
           : pl.type === "?" ? qmark
           : "\\" + pl.type
@@ -829,7 +834,7 @@ minimatch.match = function (list, pattern, options) {
 
 Minimatch.prototype.match = match
 function match (f, partial) {
-  // this.debug("match", f, this.pattern)
+  this.debug("match", f, this.pattern)
   // short-circuit in the case of busted things.
   // comments, etc.
   if (this.comment) return false
@@ -855,7 +860,7 @@ function match (f, partial) {
   // Either way, return on the first hit.
 
   var set = this.set
-  // this.debug(this.pattern, "set", set)
+  this.debug(this.pattern, "set", set)
 
   var splitFile = path.basename(f.join("/")).split("/")
 
@@ -982,7 +987,7 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
       // If there's more *pattern* left, then 
       if (partial) {
         // ran out of file
-        // this.debug("\n>>> no match, partial?", file, fr, pattern, pr)
+        this.debug("\n>>> no match, partial?", file, fr, pattern, pr)
         if (fr === fl) return true
       }
       return false
