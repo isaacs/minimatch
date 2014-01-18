@@ -813,6 +813,7 @@ function makeRe () {
 }
 
 minimatch.match = function (list, pattern, options) {
+  options = options || {}
   var mm = new Minimatch(pattern, options)
   list = list.filter(function (f) {
     return mm.match(f)
