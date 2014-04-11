@@ -853,7 +853,7 @@ function match (f, partial) {
   var set = this.set
   this.debug(this.pattern, "set", set)
 
-  // Find the basename of the path
+  // Find the basename of the path by looking for the last non-empty segment
   var filename;
   for (var i = f.length - 1; i >= 0; i--) {
     filename = f[i]
