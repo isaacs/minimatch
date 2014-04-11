@@ -853,17 +853,17 @@ function match (f, partial) {
   var set = this.set
   this.debug(this.pattern, "set", set)
 
-  // Find the basename of the split file name
-  var splitFile;
+  // Find the basename of the path
+  var filename;
   for (var i = f.length - 1; i >= 0; i--) {
-    splitFile = [f[i]]
-    if (f[i]) break
+    filename = f[i]
+    if (filename) break
   }
 
   for (var i = 0, l = set.length; i < l; i ++) {
     var pattern = set[i], file = f
     if (options.matchBase && pattern.length === 1) {
-      file = splitFile
+      file = [filename]
     }
     var hit = this.matchOne(file, pattern, partial)
     if (hit) {
