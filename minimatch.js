@@ -853,7 +853,12 @@ function match (f, partial) {
   var set = this.set
   this.debug(this.pattern, "set", set)
 
-  var splitFile = path.basename(f.join("/")).split("/")
+  // Find the basename of the split file name
+  var splitFile;
+  for (var i = f.length - 1; i >= 0; i--) {
+    splitFile = [f[i]]
+    if (f[i]) break
+  }
 
   for (var i = 0, l = set.length; i < l; i ++) {
     var pattern = set[i], file = f
@@ -975,7 +980,7 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
       }
       // no match was found.
       // However, in partial mode, we can't say this is necessarily over.
-      // If there's more *pattern* left, then 
+      // If there's more *pattern* left, then
       if (partial) {
         // ran out of file
         this.debug("\n>>> no match, partial?", file, fr, pattern, pr)
