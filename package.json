@@ -16,9 +16,7 @@
     "node": "*"
   },
   "dependencies": {
-    "brace-expansion": "^1.0.0",
-    "lru-cache": "2",
-    "sigmund": "~1.0.0"
+    "brace-expansion": "^1.0.0"
   },
   "devDependencies": {
     "browserify": "^6.3.3",
