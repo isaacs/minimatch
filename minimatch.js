@@ -32,7 +32,7 @@ function charSet (s) {
 }
 
 // normalizes slashes.
-var slashSplit = /\/+/
+var slashSplit = /[\/\\]+/
 
 minimatch.filter = filter
 function filter (pattern, options) {
