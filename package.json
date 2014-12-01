@@ -9,16 +9,19 @@
   },
   "main": "minimatch.js",
   "scripts": {
-    "test": "tap test/*.js"
+    "test": "tap test/*.js",
+    "prepublish": "browserify -o browser.js -e minimatch.js"
   },
   "engines": {
     "node": "*"
   },
   "dependencies": {
+    "brace-expansion": "^1.0.0",
     "lru-cache": "2",
     "sigmund": "~1.0.0"
   },
   "devDependencies": {
+    "browserify": "^6.3.3",
     "tap": ""
   },
   "license": {
