@@ -31,6 +31,11 @@ function charSet (s) {
   }, {})
 }
 
+// returns true if the platform allows backslashes in path names
+function allowsBackslashes () {
+  return typeof(process) === "object" && process.platform !== "win32";
+}
+
 // normalizes slashes.
 var slashSplit = /\/+/
 
@@ -106,6 +111,10 @@ function Minimatch (pattern, options) {
 
   if (!options) options = {}
   pattern = pattern.trim()
+
+  if (!allowsBackslashes()) {
+    pattern = pattern.split("\\").join("/")
+  }
 
   this.options = options
   this.set = []
@@ -619,6 +628,10 @@ function match (f, partial) {
   if (f === "/" && partial) return true
 
   var options = this.options
+
+  if (!allowsBackslashes()) {
+    f = f.split("\\").join("/")
+  }
 
   // treat the test path as a set of pathparts.
   f = f.split(slashSplit)
