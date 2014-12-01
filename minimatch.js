@@ -32,7 +32,7 @@ function charSet (s) {
 }
 
 // returns true if the platform allows backslashes in path names
-function allowsBackslashes () {
+function platformAllowsBackslashes () {
   return typeof(process) === "object" && process.platform !== "win32";
 }
 
@@ -112,7 +112,7 @@ function Minimatch (pattern, options) {
   if (!options) options = {}
   pattern = pattern.trim()
 
-  if (!allowsBackslashes()) {
+  if (!platformAllowsBackslashes()) {
     pattern = pattern.split("\\").join("/")
   }
 
@@ -629,7 +629,7 @@ function match (f, partial) {
 
   var options = this.options
 
-  if (!allowsBackslashes()) {
+  if (!platformAllowsBackslashes()) {
     f = f.split("\\").join("/")
   }
 
