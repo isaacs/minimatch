@@ -1,35 +1,4 @@
-;(function (require, exports, module, platform) {
-
-if (module) module.exports = minimatch
-else exports.minimatch = minimatch
-
-if (!require) {
-  require = function (id) {
-    switch (id) {
-      case "sigmund": return function sigmund (obj) {
-        return JSON.stringify(obj)
-      }
-      case "path": return { basename: function (f) {
-        f = f.split(/[\/\\]/)
-        var e = f.pop()
-        if (!e) e = f.pop()
-        return e
-      }}
-      case "lru-cache": return function LRUCache () {
-        // not quite an LRU, but still space-limited.
-        var cache = {}
-        var cnt = 0
-        this.set = function (k, v) {
-          cnt ++
-          if (cnt >= 100) cache = {}
-          cache[k] = v
-        }
-        this.get = function (k) { return cache[k] }
-      }
-    }
-  }
-}
-
+module.exports = minimatch
 minimatch.Minimatch = Minimatch
 
 var LRU = require("lru-cache")
@@ -37,7 +6,6 @@ var LRU = require("lru-cache")
   , GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
   , sigmund = require("sigmund")
 
-var path = require("path")
   // any single thing other than /
   // don't need to escape / when using new RegExp()
   , qmark = "[^/]"
@@ -140,12 +108,6 @@ function Minimatch (pattern, options) {
 
   if (!options) options = {}
   pattern = pattern.trim()
-
-  // windows: need to use /, not \
-  // On other platforms, \ is a valid (albeit bad) filename char.
-  if (platform === "win32") {
-    pattern = pattern.split("\\").join("/")
-  }
 
   // lru storage.
   // these things aren't particularly big, but walking down the string
@@ -848,12 +810,6 @@ function match (f, partial) {
 
   var options = this.options
 
-  // windows: need to use /, not \
-  // On other platforms, \ is a valid (albeit bad) filename char.
-  if (platform === "win32") {
-    f = f.split("\\").join("/")
-  }
-
   // treat the test path as a set of pathparts.
   f = f.split(slashSplit)
   this.debug(this.pattern, "split", f)
@@ -1065,9 +1021,3 @@ function globUnescape (s) {
 function regExpEscape (s) {
   return s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&")
 }
-
-})( typeof require === "function" ? require : null,
-    this,
-    typeof module === "object" ? module : null,
-    typeof process === "object" ? process.platform : "win32"
-  )
