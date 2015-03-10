@@ -373,7 +373,9 @@ tap.test("basic tests", function (t) {
     var m = new mm.Minimatch(pattern, options)
     var r = m.makeRe()
     var expectRe = regexps[re++]
+    expectRe = '/' + expectRe.slice(1, -1).replace(new RegExp('([^\\\\])/', 'g'), '$1\\\/') + '/'
     tapOpts.re = String(r) || JSON.stringify(r)
+    tapOpts.re = '/' + tapOpts.re.slice(1, -1).replace(new RegExp('([^\\\\])/', 'g'), '$1\\\/') + '/'
     tapOpts.files = JSON.stringify(f)
     tapOpts.pattern = pattern
     tapOpts.set = m.set
@@ -386,7 +388,7 @@ tap.test("basic tests", function (t) {
                 , JSON.stringify(pattern) + " " + JSON.stringify(expect)
                 , tapOpts )
 
-    t.equal(tapOpts.re, String(expectRe) || JSON.stringify(expectRe), null, tapOpts)
+    t.equal(tapOpts.re, expectRe, null, tapOpts)
   })
 
   t.comment("time=" + (Date.now() - start) + "ms")
