@@ -251,7 +251,9 @@ var patterns =
                  , 'a/b/.x/c'
                  , 'a/b/.x/c/d'
                  , 'a/b/.x/c/d/e' ] ]
-
+  , "https://github.com/isaacs/minimatch/issues/59",
+  , ["[z-a]", []]
+  , ["a/[2015-03-10T00:23:08.647Z]/z", []]
   ]
 
 var regexps =
@@ -347,7 +349,10 @@ var regexps =
     '/^(?:(?=.)a[^/]*?)$/',
     '/^(?!^(?:(?=.)\\!a[^/]*?)$).*$/',
     '/^(?:(?!\\.)(?=.)[^/]*?\\.(?:(?!js)[^/]*?))$/',
-    '/^(?:(?:(?!(?:\\/|^)\\.).)*?\\/\\.x\\/(?:(?!(?:\\/|^)\\.).)*?)$/' ]
+    '/^(?:(?:(?!(?:\\/|^)\\.).)*?\\/\\.x\\/(?:(?!(?:\\/|^)\\.).)*?)$/',
+    '/^(?:\\[z\\-a\\])$/',
+    '/^(?:a\\/\\[2015\\-03\\-10T00:23:08\\.647Z\\]\\/z)$/'
+]
 var re = 0;
 
 tap.test("basic tests", function (t) {
@@ -381,7 +386,7 @@ tap.test("basic tests", function (t) {
                 , JSON.stringify(pattern) + " " + JSON.stringify(expect)
                 , tapOpts )
 
-    t.equal(tapOpts.re, expectRe, null, tapOpts)
+    t.equal(tapOpts.re, String(expectRe) || JSON.stringify(expectRe), null, tapOpts)
   })
 
   t.comment("time=" + (Date.now() - start) + "ms")
