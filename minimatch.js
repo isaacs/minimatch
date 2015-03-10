@@ -457,7 +457,7 @@ function parse (pattern, isSub) {
           } catch (er) {
             // not a valid class!
             var sp = this.parse(cs, SUBPARSE)
-            re = re.substr(0, reClassStart) + "\\[" + sp[0]
+            re = re.substr(0, reClassStart) + "\\[" + sp[0] + '\\]'
             hasMagic = hasMagic || sp[1]
             inClass = false
             continue
