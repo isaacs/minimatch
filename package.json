@@ -10,7 +10,7 @@
   "main": "minimatch.js",
   "scripts": {
     "test": "tap test/*.js",
-    "prepublish": "browserify -o browser.js -e minimatch.js"
+    "prepublish": "browserify -o browser.js -e minimatch.js --bare"
   },
   "engines": {
     "node": "*"
@@ -19,11 +19,15 @@
     "brace-expansion": "^1.0.0"
   },
   "devDependencies": {
-    "browserify": "^6.3.3",
+    "browserify": "^9.0.3",
     "tap": ""
   },
   "license": {
     "type": "MIT",
     "url": "http://github.com/isaacs/minimatch/raw/master/LICENSE"
-  }
+  },
+  "files": [
+    "minimatch.js",
+    "browser.js"
+  ]
 }
