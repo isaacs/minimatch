@@ -1,9 +1,7 @@
 module.exports = minimatch
 minimatch.Minimatch = Minimatch
 
-var isWindows = false
-if (typeof process !== 'undefined' && process.platform === 'win32')
-  isWindows = true
+var path = require('path');
 
 var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
   , expand = require("brace-expansion")
@@ -112,7 +110,7 @@ function Minimatch (pattern, options) {
   pattern = pattern.trim()
 
   // windows support: need to use /, not \
-  if (isWindows)
+  if (path.sep === '\\')
     pattern = pattern.split("\\").join("/")
 
   this.options = options
@@ -652,7 +650,7 @@ function match (f, partial) {
   var options = this.options
 
   // windows: need to use /, not \
-  if (isWindows)
+  if (path.sep == '\\')
     f = f.split("\\").join("/")
 
   // treat the test path as a set of pathparts.
