@@ -9,6 +9,7 @@
   },
   "main": "minimatch.js",
   "scripts": {
+    "pretest": "standard minimatch.js test/*.js",
     "test": "tap test/*.js",
     "prepublish": "browserify -o browser.js -e minimatch.js --bare"
   },
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "browserify": "^9.0.3",
+    "standard": "^3.7.2",
     "tap": ""
   },
   "license": {
