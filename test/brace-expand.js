@@ -38,7 +38,6 @@ tap.test("brace expansion", function (t) {
       , expect = tc[1]
     t.equivalent(minimatch.braceExpand(p), expect, p)
   })
-  console.error("ending")
   t.end()
 })
 
