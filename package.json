@@ -24,10 +24,7 @@
     "standard": "^3.7.2",
     "tap": ""
   },
-  "license": {
-    "type": "MIT",
-    "url": "http://github.com/isaacs/minimatch/raw/master/LICENSE"
-  },
+  "license": "ISC",
   "files": [
     "minimatch.js",
     "browser.js"
