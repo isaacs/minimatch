@@ -22,7 +22,7 @@
   "devDependencies": {
     "browserify": "^9.0.3",
     "standard": "^3.7.2",
-    "tap": ""
+    "tap": "^1.2.0"
   },
   "license": "ISC",
   "files": [
