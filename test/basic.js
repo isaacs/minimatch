@@ -53,7 +53,9 @@ tap.test('basic tests', function (t) {
 })
 
 tap.test('global leak test', function (t) {
-  var globalAfter = Object.keys(global)
+  var globalAfter = Object.keys(global).filter(function (k) {
+    return (k !== '__coverage__')
+  })
   t.equivalent(globalAfter, globalBefore, 'no new globals, please')
   t.end()
 })
