@@ -11,7 +11,7 @@
   "scripts": {
     "pretest": "standard minimatch.js test/*.js",
     "test": "tap test/*.js",
-    "prepublish": "browserify -o browser.js -e minimatch.js --bare"
+    "prepublish": "browserify -o browser.js -e minimatch.js -s minimatch --bare"
   },
   "engines": {
     "node": "*"
