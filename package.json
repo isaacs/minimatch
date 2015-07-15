@@ -9,7 +9,7 @@
   },
   "main": "minimatch.js",
   "scripts": {
-    "pretest": "standard minimatch.js test/*.js",
+    "posttest": "standard minimatch.js test/*.js",
     "test": "tap test/*.js",
     "prepublish": "browserify -o browser.js -e minimatch.js -s minimatch --bare"
   },
