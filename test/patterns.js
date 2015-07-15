@@ -231,14 +231,15 @@ module.exports = [
     files = [
       'foo.js',
       'foo.bar',
-      // can't match this one without negative lookbehind.
       'foo.js.js',
       'blar.js',
       'foo.',
       'boo.js.boo'
     ]
   },
-  ['*.!(js)', ['foo.bar', 'foo.', 'boo.js.boo'] ],
+  // last one is tricky! * matches foo, . matches ., and 'js.js' != 'js'
+  // copy bash 4.3 behavior on this.
+  ['*.!(js)', ['foo.bar', 'foo.', 'boo.js.boo', 'foo.js.js'] ],
 
   'https://github.com/isaacs/minimatch/issues/5',
   function () {
