@@ -72,6 +72,27 @@ var cases = {
 
   'foo.js.js': {
     '*.!(js)': true
+  },
+
+  'testjson.json': {
+    '*(*.json|!(*.js))': true,
+    '+(*.json|!(*.js))': true,
+    '@(*.json|!(*.js))': true,
+    '?(*.json|!(*.js))': true
+  },
+
+  'foojs.js': {
+    '*(*.json|!(*.js))': false, // XXX bash 4.3 disagrees!
+    '+(*.json|!(*.js))': false, // XXX bash 4.3 disagrees!
+    '@(*.json|!(*.js))': false,
+    '?(*.json|!(*.js))': false
+  },
+
+  'other.bar': {
+    '*(*.json|!(*.js))': true,
+    '+(*.json|!(*.js))': true,
+    '@(*.json|!(*.js))': true,
+    '?(*.json|!(*.js))': true
   }
 
 }

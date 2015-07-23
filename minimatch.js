@@ -570,11 +570,24 @@ function parse (pattern, isSub) {
     var nlFirst = re.slice(nl.reStart, nl.reEnd - 8)
     var nlLast = re.slice(nl.reEnd - 8, nl.reEnd)
     var nlAfter = re.slice(nl.reEnd)
+
+    nlLast += nlAfter
+
+    // Handle nested stuff like *(*.js|!(*.json)), where open parens
+    // mean that we should *not* include the ) in the bit that is considered
+    // "after" the negated section.
+    var openParensBefore = nlBefore.split('(').length - 1
+    var cleanAfter = nlAfter
+    for (i = 0; i < openParensBefore; i++) {
+      cleanAfter = cleanAfter.replace(/\)[+*?]?/, '')
+    }
+    nlAfter = cleanAfter
+
     var dollar = ''
     if (nlAfter === '' && isSub !== SUBPARSE) {
       dollar = '$'
     }
-    var newRe = nlBefore + nlFirst + nlAfter + dollar + nlLast + nlAfter
+    var newRe = nlBefore + nlFirst + nlAfter + dollar + nlLast
     re = newRe
   }
 
