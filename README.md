@@ -37,7 +37,7 @@ See:
 
 ## Minimatch Class
 
-Create a minimatch object by instanting the `minimatch.Minimatch` class.
+Create a minimatch object by instantiating the `minimatch.Minimatch` class.
 
 ```javascript
 var Minimatch = require("minimatch").Minimatch
