@@ -10,8 +10,7 @@
   "main": "minimatch.js",
   "scripts": {
     "posttest": "standard minimatch.js test/*.js",
-    "test": "tap test/*.js",
-    "prepublish": "browserify -o browser.js -e minimatch.js -s minimatch --bare"
+    "test": "tap test/*.js"
   },
   "engines": {
     "node": "*"
@@ -20,13 +19,11 @@
     "brace-expansion": "^1.0.0"
   },
   "devDependencies": {
-    "browserify": "^9.0.3",
     "standard": "^3.7.2",
     "tap": "^1.2.0"
   },
   "license": "ISC",
   "files": [
-    "minimatch.js",
-    "browser.js"
+    "minimatch.js"
   ]
 }
