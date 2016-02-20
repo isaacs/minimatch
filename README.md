@@ -82,13 +82,6 @@ var mm = new Minimatch(pattern, options)
 
 All other methods are internal, and will be called as necessary.
 
-## Functions
-
-The top-level exported function has a `cache` property, which is an LRU
-cache set to store 100 items.  So, calling these methods repeatedly
-with the same pattern and options will use the same Minimatch object,
-saving the cost of parsing it multiple times.
-
 ### minimatch(path, pattern, options)
 
 Main export.  Tests a path against the pattern using the options.
