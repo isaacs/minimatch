@@ -13,16 +13,15 @@ var re = 0
 tap.test('basic tests', function (t) {
   var start = Date.now()
 
-  // [ pattern, [matches], MM opts, files, TAP opts]
   patterns.forEach(function (c) {
     if (typeof c === 'function') return c()
     if (typeof c === 'string') return t.comment(c)
 
-    var pattern = c[0]
-    var expect = c[1].sort(alpha)
-    var options = c[2] || {}
-    var f = c[3] || patterns.files
-    var tapOpts = c[4] || {}
+    var pattern = c.pattern
+    var expect = c.matches.sort(alpha)
+    var options = c.mmOpts
+    var f = c.files || patterns.files
+    var tapOpts = c.tapOpts || {}
 
     // options.debug = true
     var m = new mm.Minimatch(pattern, options)

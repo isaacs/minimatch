@@ -11,144 +11,428 @@ var files = [
 
 module.exports = [
   'http://www.bashcookbook.com/bashinfo/source/bash-1.14.7/tests/glob-test',
-  ['a*', ['a', 'abc', 'abd', 'abe']],
-  ['X*', ['X*'], {nonull: true}],
+  {
+    pattern: 'a*',
+    matches: ['a', 'abc', 'abd', 'abe']
+  },
+  {
+    pattern: 'X*',
+    matches: ['X*'],
+    mmOpts: {nonull: true}
+  },
 
   // allow null glob expansion
-  ['X*', []],
+  {
+    pattern: 'X*',
+    matches: []
+  },
 
   // isaacs: Slightly different than bash/sh/ksh
   // \\* is not un-escaped to literal "*" in a failed match,
   // but it does make it get treated as a literal star
-  ['\\*', ['\\*'], {nonull: true}],
-  ['\\**', ['\\**'], {nonull: true}],
-  ['\\*\\*', ['\\*\\*'], {nonull: true}],
+  {
+    pattern: '\\*',
+    matches: ['\\*'],
+    mmOpts: {nonull: true}
+  },
+  {
+    pattern: '\\**',
+    matches: ['\\**'],
+    mmOpts: {nonull: true}
+  },
+  {
+    pattern: '\\*\\*',
+    matches: ['\\*\\*'],
+    mmOpts: {nonull: true}
+  },
 
-  ['b*/', ['bdir/']],
-  ['c*', ['c', 'ca', 'cb']],
-  ['**', files],
+  {
+    pattern: 'b*/',
+    matches: ['bdir/']
+  },
+  {
+    pattern: 'c*',
+    matches: ['c', 'ca', 'cb']
+  },
+  {
+    pattern: '**',
+    matches: files
+  },
 
-  ['\\.\\./*/', ['\\.\\./*/'], {nonull: true}],
-  ['s/\\..*//', ['s/\\..*//'], {nonull: true}],
+  {
+    pattern: '\\.\\./*/',
+    matches: ['\\.\\./*/'],
+    mmOpts: {nonull: true}
+  },
+  {
+    pattern: 's/\\..*//',
+    matches: ['s/\\..*//'],
+    mmOpts: {nonull: true}
+  },
 
   'legendary larry crashes bashes',
-  ['/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\\1/',
-    ['/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\\1/'], {nonull: true}],
-  ['/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\u0001/',
-    ['/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\u0001/'], {nonull: true}],
+  {
+    pattern: '/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\\1/',
+    matches: ['/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\\1/'],
+    mmOpts: {nonull: true}
+  },
+  {
+    pattern: '/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\u0001/',
+    matches: ['/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\u0001/'],
+    mmOpts: {nonull: true}
+  },
 
   'character classes',
-  ['[a-c]b*', ['abc', 'abd', 'abe', 'bb', 'cb']],
-  ['[a-y]*[^c]', ['abd', 'abe', 'bb', 'bcd',
-    'bdir/', 'ca', 'cb', 'dd', 'de']],
-  ['a*[^c]', ['abd', 'abe']],
+  {
+    pattern: '[a-c]b*',
+    matches: ['abc', 'abd', 'abe', 'bb', 'cb']
+  },
+  {
+    pattern: '[a-y]*[^c]',
+    matches: ['abd', 'abe', 'bb', 'bcd', 'bdir/', 'ca', 'cb', 'dd', 'de']
+  },
+  {
+    pattern: 'a*[^c]',
+    matches: ['abd', 'abe']
+  },
   function () { files.push('a-b', 'aXb') },
-  ['a[X-]b', ['a-b', 'aXb']],
+  {
+    pattern: 'a[X-]b',
+    matches: ['a-b', 'aXb']
+  },
   function () { files.push('.x', '.y') },
-  ['[^a-c]*', ['d', 'dd', 'de']],
+  {
+    pattern: '[^a-c]*',
+    matches: ['d', 'dd', 'de']
+  },
   function () { files.push('a*b/', 'a*b/ooo') },
-  ['a\\*b/*', ['a*b/ooo']],
-  ['a\\*?/*', ['a*b/ooo']],
-  ['*\\\\!*', [], {null: true}, ['echo !7']],
-  ['*\\!*', ['echo !7'], null, ['echo !7']],
-  ['*.\\*', ['r.*'], null, ['r.*']],
-  ['a[b]c', ['abc']],
-  ['a[\\b]c', ['abc']],
-  ['a?c', ['abc']],
-  ['a\\*c', [], {null: true}, ['abc']],
-  ['', [''], { null: true }, ['']],
-
-  'http://www.opensource.apple.com/source/bash/bash-23/' +
-  'bash/tests/glob-test',
+  {
+    pattern: 'a\\*b/*',
+    matches: ['a*b/ooo']
+  },
+  {
+    pattern: 'a\\*?/*',
+    matches: ['a*b/ooo']
+  },
+  {
+    pattern: '*\\\\!*',
+    matches: [],
+    mmOpts: {null: true},
+    files: ['echo !7']
+  },
+  {
+    pattern: '*\\!*',
+    matches: ['echo !7'],
+    files: ['echo !7']
+  },
+  {
+    pattern: '*.\\*',
+    matches: ['r.*'],
+    files: ['r.*']
+  },
+  {
+    pattern: 'a[b]c',
+    matches: ['abc']
+  },
+  {
+    pattern: 'a[\\b]c',
+    matches: ['abc']
+  },
+  {
+    pattern: 'a?c',
+    matches: ['abc']
+  },
+  {
+    pattern: 'a\\*c',
+    matches: [],
+    mmOpts: {null: true},
+    files: ['abc']
+  },
+  {
+    pattern: '',
+    matches: [''],
+    mmOpts: {null: true},
+    files: ['']
+  },
+  'http://www.opensource.apple.com/source/bash/bash-23/bash/tests/glob-test',
   function () { files.push('man/', 'man/man1/', 'man/man1/bash.1') },
-  ['*/man*/bash.*', ['man/man1/bash.1']],
-  ['man/man1/bash.1', ['man/man1/bash.1']],
-  ['a***c', ['abc'], null, ['abc']],
-  ['a*****?c', ['abc'], null, ['abc']],
-  ['?*****??', ['abc'], null, ['abc']],
-  ['*****??', ['abc'], null, ['abc']],
-  ['?*****?c', ['abc'], null, ['abc']],
-  ['?***?****c', ['abc'], null, ['abc']],
-  ['?***?****?', ['abc'], null, ['abc']],
-  ['?***?****', ['abc'], null, ['abc']],
-  ['*******c', ['abc'], null, ['abc']],
-  ['*******?', ['abc'], null, ['abc']],
-  ['a*cd**?**??k', ['abcdecdhjk'], null, ['abcdecdhjk']],
-  ['a**?**cd**?**??k', ['abcdecdhjk'], null, ['abcdecdhjk']],
-  ['a**?**cd**?**??k***', ['abcdecdhjk'], null, ['abcdecdhjk']],
-  ['a**?**cd**?**??***k', ['abcdecdhjk'], null, ['abcdecdhjk']],
-  ['a**?**cd**?**??***k**', ['abcdecdhjk'], null, ['abcdecdhjk']],
-  ['a****c**?**??*****', ['abcdecdhjk'], null, ['abcdecdhjk']],
-  ['[-abc]', ['-'], null, ['-']],
-  ['[abc-]', ['-'], null, ['-']],
-  ['\\', ['\\'], null, ['\\']],
-  ['[\\\\]', ['\\'], null, ['\\']],
-  ['[[]', ['['], null, ['[']],
-  ['[', ['['], null, ['[']],
-  ['[*', ['[abc'], null, ['[abc']],
+  {
+    pattern: '*/man*/bash.*',
+    matches: ['man/man1/bash.1']
+  },
+  {
+    pattern: 'man/man1/bash.1',
+    matches: ['man/man1/bash.1']
+  },
+  {
+    pattern: 'a***c',
+    matches: ['abc'],
+    files: ['abc']
+  },
+  {
+    pattern: 'a*****?c',
+    matches: ['abc'],
+    files: ['abc']
+  },
+  {
+    pattern: '?*****??',
+    matches: ['abc'],
+    files: ['abc']
+  },
+  {
+    pattern: '*****??',
+    matches: ['abc'],
+    files: ['abc']
+  },
+  {
+    pattern: '?*****?c',
+    matches: ['abc'],
+    files: ['abc']
+  },
+  {
+    pattern: '?***?****c',
+    matches: ['abc'],
+    files: ['abc']
+  },
+  {
+    pattern: '?***?****?',
+    matches: ['abc'],
+    files: ['abc']
+  },
+  {
+    pattern: '?***?****',
+    matches: ['abc'],
+    files: ['abc']
+  },
+  {
+    pattern: '*******c',
+    matches: ['abc'],
+    files: ['abc']
+  },
+  {
+    pattern: '*******?',
+    matches: ['abc'],
+    files: ['abc']
+  },
+  {
+    pattern: 'a*cd**?**??k',
+    matches: ['abcdecdhjk'],
+    files: ['abcdecdhjk']
+  },
+  {
+    pattern: 'a**?**cd**?**??k',
+    matches: ['abcdecdhjk'],
+    files: ['abcdecdhjk']
+  },
+  {
+    pattern: 'a**?**cd**?**??k***',
+    matches: ['abcdecdhjk'],
+    files: ['abcdecdhjk']
+  },
+  {
+    pattern: 'a**?**cd**?**??***k',
+    matches: ['abcdecdhjk'],
+    files: ['abcdecdhjk']
+  },
+  {
+    pattern: 'a**?**cd**?**??***k**',
+    matches: ['abcdecdhjk'],
+    files: ['abcdecdhjk']
+  },
+  {
+    pattern: 'a****c**?**??*****',
+    matches: ['abcdecdhjk'],
+    files: ['abcdecdhjk']
+  },
+  {
+    pattern: '[-abc]',
+    matches: ['-'],
+    files: ['-']
+  },
+  {
+    pattern: '[abc-]',
+    matches: ['-'],
+    files: ['-']
+  },
+  {
+    pattern: '\\',
+    matches: ['\\'],
+    files: ['\\']
+  },
+  {
+    pattern: '[\\\\]',
+    matches: ['\\'],
+    files: ['\\']
+  },
+  {
+    pattern: '[[]',
+    matches: ['['],
+    files: ['[']
+  },
+  {
+    pattern: '[',
+    matches: ['['],
+    files: ['[']
+  },
+  {
+    pattern: '[*',
+    matches: ['[abc'],
+    files: ['[abc']
+  },
 
   'a right bracket shall lose its special meaning and\n' +
   'represent itself in a bracket expression if it occurs\n' +
   'first in the list.  -- POSIX.2 2.8.3.2',
-  ['[]]', [']'], null, [']']],
-  ['[]-]', [']'], null, [']']],
-  ['[a-\z]', ['p'], null, ['p']],
-  ['??**********?****?', [], { null: true }, ['abc']],
-  ['??**********?****c', [], { null: true }, ['abc']],
-  ['?************c****?****', [], { null: true }, ['abc']],
-  ['*c*?**', [], { null: true }, ['abc']],
-  ['a*****c*?**', [], { null: true }, ['abc']],
-  ['a********???*******', [], { null: true }, ['abc']],
-  ['[]', [], { null: true }, ['a']],
-  ['[abc', [], { null: true }, ['[']],
+  {
+    pattern: '[]]',
+    matches: [']'],
+    files: [']']
+  },
+  {
+    pattern: '[]-]',
+    matches: [']'],
+    files: [']']
+  },
+  {
+    pattern: '[a-\z]',
+    matches: ['p'],
+    files: ['p']
+  },
+  {
+    pattern: '??**********?****?',
+    matches: [],
+    mmOpts: {null: true},
+    files: ['abc']
+  },
+  {
+    pattern: '??**********?****c',
+    matches: [],
+    mmOpts: {null: true},
+    files: ['abc']
+  },
+  {
+    pattern: '?************c****?****',
+    matches: [],
+    mmOpts: {null: true},
+    files: ['abc']
+  },
+  {
+    pattern: '*c*?**',
+    matches: [],
+    mmOpts: {null: true},
+    files: ['abc']
+  },
+  {
+    pattern: 'a*****c*?**',
+    matches: [],
+    mmOpts: {null: true},
+    files: ['abc']
+  },
+  {
+    pattern: 'a********???*******',
+    matches: [],
+    mmOpts: {null: true},
+    files: ['abc']
+  },
+  {
+    pattern: '[]',
+    matches: [],
+    mmOpts: {null: true},
+    files: ['a']
+  },
+  {
+    pattern: '[abc',
+    matches: [],
+    mmOpts: {null: true},
+    files: ['[']
+  },
 
   'nocase tests',
-  ['XYZ', ['xYz'], { nocase: true, null: true },
-    ['xYz', 'ABC', 'IjK']],
-  [
-    'ab*',
-    ['ABC'],
-    { nocase: true, null: true },
-    ['xYz', 'ABC', 'IjK']
-  ],
-  [
-    '[ia]?[ck]',
-    ['ABC', 'IjK'],
-    { nocase: true, null: true },
-    ['xYz', 'ABC', 'IjK']
-  ],
+  {
+    pattern: 'XYZ',
+    matches: ['xYz'],
+    mmOpts: { nocase: true, null: true },
+    files: ['xYz', 'ABC', 'IjK']
+  },
+  {
+    pattern: 'ab*',
+    matches: ['ABC'],
+    mmOpts: { nocase: true, null: true },
+    files: ['xYz', 'ABC', 'IjK']
+  },
+  {
+    pattern: '[ia]?[ck]',
+    matches: ['ABC', 'IjK'],
+    mmOpts: { nocase: true, null: true },
+    files: ['xYz', 'ABC', 'IjK']
+  },
 
   // [ pattern, [matches], MM opts, files, TAP opts]
   'onestar/twostar',
-  ['{/*,*}', [], {null: true}, ['/asdf/asdf/asdf']],
-  ['{/?,*}', ['/a', 'bb'], {null: true},
-    ['/a', '/b/b', '/a/b/c', 'bb']],
+  {
+    pattern: '{/*,*}',
+    matches: [],
+    mmOpts: {null: true},
+    files: ['/asdf/asdf/asdf']
+  },
+  {
+    pattern: '{/?,*}',
+    matches: ['/a', 'bb'],
+    mmOpts: {null: true},
+    files: ['/a', '/b/b', '/a/b/c', 'bb']
+  },
 
   'dots should not match unless requested',
-  ['**', ['a/b'], {}, ['a/b', 'a/.d', '.a/.d']],
+  {
+    pattern: '**',
+    matches: ['a/b'],
+    mmOpts: {},
+    files: ['a/b', 'a/.d', '.a/.d']
+  },
 
   // .. and . can only match patterns starting with .,
   // even when options.dot is set.
   function () {
     files = ['a/./b', 'a/../b', 'a/c/b', 'a/.d/b']
   },
-  ['a/*/b', ['a/c/b', 'a/.d/b'], {dot: true}],
-  ['a/.*/b', ['a/./b', 'a/../b', 'a/.d/b'], {dot: true}],
-  ['a/*/b', ['a/c/b'], {dot: false}],
-  ['a/.*/b', ['a/./b', 'a/../b', 'a/.d/b'], {dot: false}],
+  {
+    pattern: 'a/*/b',
+    matches: ['a/c/b', 'a/.d/b'],
+    mmOpts: {dot: true}
+  },
+  {
+    pattern: 'a/.*/b',
+    matches: ['a/./b', 'a/../b', 'a/.d/b'],
+    mmOpts: {dot: true}
+  },
+  {
+    pattern: 'a/*/b',
+    matches: ['a/c/b'],
+    mmOpts: {dot: false}
+  },
+  {
+    pattern: 'a/.*/b',
+    matches: ['a/./b', 'a/../b', 'a/.d/b'],
+    mmOpts: {dot: false}
+  },
 
   // this also tests that changing the options needs
   // to change the cache key, even if the pattern is
   // the same!
-  [
-    '**',
-    ['a/b', 'a/.d', '.a/.d'],
-    { dot: true },
-    [ '.a/.d', 'a/.d', 'a/b']
-  ],
+  {
+    pattern: '**',
+    matches: ['a/b', 'a/.d', '.a/.d'],
+    mmOpts: { dot: true },
+    files: ['.a/.d', 'a/.d', 'a/b']
+  },
 
   'paren sets cannot contain slashes',
-  ['*(a/b)', ['*(a/b)'], {nonull: true}, ['a/b']],
+  {
+    pattern: '*(a/b)',
+    matches: ['*(a/b)'],
+    mmOpts: {nonull: true},
+    files: ['a/b']
+  },
 
   // brace sets trump all else.
   //
@@ -164,19 +448,34 @@ module.exports = [
   // bash/bsdglob says this:
   // , ["*(a|{b),c)}", ["*(a|{b),c)}"], {}, ["a", "ab", "ac", "ad"]]
   // but we do this instead:
-  ['*(a|{b),c)}', ['a', 'ab', 'ac'], {}, ['a', 'ab', 'ac', 'ad']],
+  {
+    pattern: '*(a|{b),c)}',
+    matches: ['a', 'ab', 'ac'],
+    mmOpts: {},
+    files: ['a', 'ab', 'ac', 'ad']
+  },
 
   // test partial parsing in the presence of comment/negation chars
-  ['[!a*', ['[!ab'], {}, ['[!ab', '[ab']],
-  ['[#a*', ['[#ab'], {}, ['[#ab', '[ab']],
+  {
+    pattern: '[!a*',
+    matches: ['[!ab'],
+    mmOpts: {},
+    files: ['[!ab', '[ab']
+  },
+  {
+    pattern: '[#a*',
+    matches: ['[#ab'],
+    mmOpts: {},
+    files: ['[#ab', '[ab']
+  },
 
   // like: {a,b|c\\,d\\\|e} except it's unclosed, so it has to be escaped.
-  [
-    '+(a|*\\|c\\\\|d\\\\\\|e\\\\\\\\|f\\\\\\\\\\|g',
-    ['+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g'],
-    {},
-    ['+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g', 'a', 'b\\c']
-  ],
+  {
+    pattern: '+(a|*\\|c\\\\|d\\\\\\|e\\\\\\\\|f\\\\\\\\\\|g',
+    matches: ['+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g'],
+    mmOpts: {},
+    files: ['+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g', 'a', 'b\\c']
+  },
 
   // crazy nested {,,} and *(||) tests.
   function () {
@@ -186,27 +485,44 @@ module.exports = [
       'x(a|b|c)', 'x(a|c)', '(a|b|c)', '(a|c)'
     ]
   },
-  ['*(a|{b,c})', ['a', 'b', 'c', 'ab', 'ac']],
-  ['{a,*(b|c,d)}', ['a', '(b|c', '*(b|c', 'd)']],
+  {
+    pattern: '*(a|{b,c})',
+    matches: ['a', 'b', 'c', 'ab', 'ac']
+  },
+  {
+    pattern: '{a,*(b|c,d)}',
+    matches: ['a', '(b|c', '*(b|c', 'd)']
+  },
   // a
   // *(b|c)
   // *(b|d)
-  ['{a,*(b|{c,d})}', ['a', 'b', 'bc', 'cb', 'c', 'd']],
-  ['*(a|{b|c,c})', ['a', 'b', 'c', 'ab', 'ac', 'bc', 'cb']],
+  {
+    pattern: '{a,*(b|{c,d})}',
+    matches: ['a', 'b', 'bc', 'cb', 'c', 'd']
+  },
+  {
+    pattern: '*(a|{b|c,c})',
+    matches: ['a', 'b', 'c', 'ab', 'ac', 'bc', 'cb']
+  },
 
   // test various flag settings.
-  [
-    '*(a|{b|c,c})',
-    ['x(a|b|c)', 'x(a|c)', '(a|b|c)', '(a|c)'],
-    { noext: true }
-  ],
-  [
-    'a?b',
-    ['x/y/acb', 'acb/'],
-    {matchBase: true},
-    ['x/y/acb', 'acb/', 'acb/d/e', 'x/y/acb/d']
-  ],
-  ['#*', ['#a', '#b'], {nocomment: true}, ['#a', '#b', 'c#d']],
+  {
+    pattern: '*(a|{b|c,c})',
+    matches: ['x(a|b|c)', 'x(a|c)', '(a|b|c)', '(a|c)'],
+    mmOpts: {noext: true}
+  },
+  {
+    pattern: 'a?b',
+    matches: ['x/y/acb', 'acb/'],
+    mmOpts: {matchBase: true},
+    files: ['x/y/acb', 'acb/', 'acb/d/e', 'x/y/acb/d']
+  },
+  {
+    pattern: '#*',
+    matches: ['#a', '#b'],
+    mmOpts: {nocomment: true},
+    files: ['#a', '#b', 'c#d']
+  },
 
   // begin channelling Boole and deMorgan...
   'negation tests',
@@ -215,16 +531,29 @@ module.exports = [
   },
 
   // anything that is NOT a* matches.
-  ['!a*', ['\\!a', 'd', 'e', '!ab', '!abc']],
+  {
+    pattern: '!a*',
+    matches: ['\\!a', 'd', 'e', '!ab', '!abc']
+  },
 
   // anything that IS !a* matches.
-  ['!a*', ['!ab', '!abc'], {nonegate: true}],
+  {
+    pattern: '!a*',
+    matches: ['!ab', '!abc'],
+    mmOpts: {nonegate: true}
+  },
 
   // anything that IS a* matches
-  ['!!a*', ['a!b']],
+  {
+    pattern: '!!a*',
+    matches: ['a!b']
+  },
 
   // anything that is NOT !a* matches
-  ['!\\!a*', ['a!b', 'd', 'e', '\\!a']],
+  {
+    pattern: '!\\!a*',
+    matches: ['a!b', 'd', 'e', '\\!a']
+  },
 
   // negation nestled within a pattern
   function () {
@@ -239,7 +568,10 @@ module.exports = [
   },
   // last one is tricky! * matches foo, . matches ., and 'js.js' != 'js'
   // copy bash 4.3 behavior on this.
-  ['*.!(js)', ['foo.bar', 'foo.', 'boo.js.boo', 'foo.js.js'] ],
+  {
+    pattern: '*.!(js)',
+    matches: ['foo.bar', 'foo.', 'boo.js.boo', 'foo.js.js']
+  },
 
   'https://github.com/isaacs/minimatch/issues/5',
   function () {
@@ -248,18 +580,24 @@ module.exports = [
       'a/.x/b', '.x', '.x/', '.x/a', '.x/a/b', 'a/.x/b/.x/c', '.x/.x'
     ]
   },
-  [
-    '**/.x/**',
-    [
-      '.x/', '.x/a', '.x/a/b', 'a/.x/b', 'a/b/.x/', 'a/b/.x/c',
-      'a/b/.x/c/d', 'a/b/.x/c/d/e'
-    ]
-  ],
+  {
+    pattern: '**/.x/**',
+    matches: ['.x/', '.x/a', '.x/a/b', 'a/.x/b', 'a/b/.x/', 'a/b/.x/c', 'a/b/.x/c/d', 'a/b/.x/c/d/e']
+  },
 
   'https://github.com/isaacs/minimatch/issues/59',
-  ['[z-a]', []],
-  ['a/[2015-03-10T00:23:08.647Z]/z', []],
-  ['[a-0][a-\u0100]', []]
+  {
+    pattern: '[z-a]',
+    matches: []
+  },
+  {
+    pattern: 'a/[2015-03-10T00:23:08.647Z]/z',
+    matches: []
+  },
+  {
+    pattern: '[a-0][a-\u0100]',
+    matches: []
+  }
 ]
 
 module.exports.regexps = [
