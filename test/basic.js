@@ -7,8 +7,6 @@ var tap = require('tap')
 var globalBefore = Object.keys(global)
 var mm = require('../')
 var patterns = require('./patterns.js')
-var regexps = patterns.regexps
-var re = 0
 
 tap.test('basic tests', function (t) {
   var start = Date.now()
@@ -26,7 +24,7 @@ tap.test('basic tests', function (t) {
     // options.debug = true
     var m = new mm.Minimatch(pattern, options)
     var r = m.makeRe()
-    var expectRe = regexps[re++]
+    var expectRe = c.regexp
     expectRe = '/' + expectRe.slice(1, -1).replace(new RegExp('([^\\\\])/', 'g'), '$1\\\/') + '/'
     tapOpts.re = String(r) || JSON.stringify(r)
     tapOpts.re = '/' + tapOpts.re.slice(1, -1).replace(new RegExp('([^\\\\])/', 'g'), '$1\\\/') + '/'

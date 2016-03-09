@@ -13,18 +13,21 @@ module.exports = [
   'http://www.bashcookbook.com/bashinfo/source/bash-1.14.7/tests/glob-test',
   {
     pattern: 'a*',
-    matches: ['a', 'abc', 'abd', 'abe']
+    matches: ['a', 'abc', 'abd', 'abe'],
+    regexp: '/^(?:(?=.)a[^/]*?)$/'
   },
   {
     pattern: 'X*',
     matches: ['X*'],
-    mmOpts: {nonull: true}
+    mmOpts: {nonull: true},
+    regexp: '/^(?:(?=.)X[^/]*?)$/'
   },
 
   // allow null glob expansion
   {
     pattern: 'X*',
-    matches: []
+    matches: [],
+    regexp: '/^(?:(?=.)X[^/]*?)$/'
   },
 
   // isaacs: Slightly different than bash/sh/ksh
@@ -33,251 +36,301 @@ module.exports = [
   {
     pattern: '\\*',
     matches: ['\\*'],
-    mmOpts: {nonull: true}
+    mmOpts: {nonull: true},
+    regexp: '/^(?:\\*)$/'
   },
   {
     pattern: '\\**',
     matches: ['\\**'],
-    mmOpts: {nonull: true}
+    mmOpts: {nonull: true},
+    regexp: '/^(?:(?=.)\\*[^/]*?)$/'
   },
   {
     pattern: '\\*\\*',
     matches: ['\\*\\*'],
-    mmOpts: {nonull: true}
+    mmOpts: {nonull: true},
+    regexp: '/^(?:\\*\\*)$/'
   },
 
   {
     pattern: 'b*/',
-    matches: ['bdir/']
+    matches: ['bdir/'],
+    regexp: '/^(?:(?=.)b[^/]*?\\/)$/'
   },
   {
     pattern: 'c*',
-    matches: ['c', 'ca', 'cb']
+    matches: ['c', 'ca', 'cb'],
+    regexp: '/^(?:(?=.)c[^/]*?)$/'
   },
   {
     pattern: '**',
-    matches: files
+    matches: files,
+    regexp: '/^(?:(?:(?!(?:\\/|^)\\.).)*?)$/'
   },
 
   {
     pattern: '\\.\\./*/',
     matches: ['\\.\\./*/'],
-    mmOpts: {nonull: true}
+    mmOpts: {nonull: true},
+    regexp: '/^(?:\\.\\.\\/(?!\\.)(?=.)[^/]*?\\/)$/'
   },
   {
     pattern: 's/\\..*//',
     matches: ['s/\\..*//'],
-    mmOpts: {nonull: true}
+    mmOpts: {nonull: true},
+    regexp: '/^(?:s\\/(?=.)\\.\\.[^/]*?\\/)$/'
   },
 
   'legendary larry crashes bashes',
   {
     pattern: '/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\\1/',
     matches: ['/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\\1/'],
-    mmOpts: {nonull: true}
+    mmOpts: {nonull: true},
+    regexp: '/^(?:\\/\\^root:\\/\\{s\\/(?=.)\\^[^:][^/]*?:[^:][^/]*?:\\([^:]\\)[^/]*?\\.[^/]*?\\$\\/1\\/)$/'
   },
   {
     pattern: '/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\u0001/',
     matches: ['/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\u0001/'],
-    mmOpts: {nonull: true}
+    mmOpts: {nonull: true},
+    regexp: '/^(?:\\/\\^root:\\/\\{s\\/(?=.)\\^[^:][^/]*?:[^:][^/]*?:\\([^:]\\)[^/]*?\\.[^/]*?\\$\\/\u0001\\/)$/'
   },
 
   'character classes',
   {
     pattern: '[a-c]b*',
-    matches: ['abc', 'abd', 'abe', 'bb', 'cb']
+    matches: ['abc', 'abd', 'abe', 'bb', 'cb'],
+    regexp: '/^(?:(?!\\.)(?=.)[a-c]b[^/]*?)$/'
   },
   {
     pattern: '[a-y]*[^c]',
-    matches: ['abd', 'abe', 'bb', 'bcd', 'bdir/', 'ca', 'cb', 'dd', 'de']
+    matches: ['abd', 'abe', 'bb', 'bcd', 'bdir/', 'ca', 'cb', 'dd', 'de'],
+    regexp: '/^(?:(?!\\.)(?=.)[a-y][^/]*?[^c])$/'
   },
   {
     pattern: 'a*[^c]',
-    matches: ['abd', 'abe']
+    matches: ['abd', 'abe'],
+    regexp: '/^(?:(?=.)a[^/]*?[^c])$/'
   },
   function () { files.push('a-b', 'aXb') },
   {
     pattern: 'a[X-]b',
-    matches: ['a-b', 'aXb']
+    matches: ['a-b', 'aXb'],
+    regexp: '/^(?:(?=.)a[X-]b)$/'
   },
   function () { files.push('.x', '.y') },
   {
     pattern: '[^a-c]*',
-    matches: ['d', 'dd', 'de']
+    matches: ['d', 'dd', 'de'],
+    regexp: '/^(?:(?!\\.)(?=.)[^a-c][^/]*?)$/'
   },
   function () { files.push('a*b/', 'a*b/ooo') },
   {
     pattern: 'a\\*b/*',
-    matches: ['a*b/ooo']
+    matches: ['a*b/ooo'],
+    regexp: '/^(?:a\\*b\\/(?!\\.)(?=.)[^/]*?)$/'
   },
   {
     pattern: 'a\\*?/*',
-    matches: ['a*b/ooo']
+    matches: ['a*b/ooo'],
+    regexp: '/^(?:(?=.)a\\*[^/]\\/(?!\\.)(?=.)[^/]*?)$/'
   },
   {
     pattern: '*\\\\!*',
     matches: [],
     mmOpts: {null: true},
-    files: ['echo !7']
+    files: ['echo !7'],
+    regexp: '/^(?:(?!\\.)(?=.)[^/]*?\\\\\\![^/]*?)$/'
   },
   {
     pattern: '*\\!*',
     matches: ['echo !7'],
-    files: ['echo !7']
+    files: ['echo !7'],
+    regexp: '/^(?:(?!\\.)(?=.)[^/]*?\\![^/]*?)$/'
   },
   {
     pattern: '*.\\*',
     matches: ['r.*'],
-    files: ['r.*']
+    files: ['r.*'],
+    regexp: '/^(?:(?!\\.)(?=.)[^/]*?\\.\\*)$/'
   },
   {
     pattern: 'a[b]c',
-    matches: ['abc']
+    matches: ['abc'],
+    regexp: '/^(?:(?=.)a[b]c)$/'
   },
   {
     pattern: 'a[\\b]c',
-    matches: ['abc']
+    matches: ['abc'],
+    regexp: '/^(?:(?=.)a[b]c)$/'
   },
   {
     pattern: 'a?c',
-    matches: ['abc']
+    matches: ['abc'],
+    regexp: '/^(?:(?=.)a[^/]c)$/'
   },
   {
     pattern: 'a\\*c',
     matches: [],
     mmOpts: {null: true},
-    files: ['abc']
+    files: ['abc'],
+    regexp: '/^(?:a\\*c)$/'
   },
   {
     pattern: '',
     matches: [''],
     mmOpts: {null: true},
-    files: ['']
+    files: [''],
+    regexp: 'false'
   },
   'http://www.opensource.apple.com/source/bash/bash-23/bash/tests/glob-test',
   function () { files.push('man/', 'man/man1/', 'man/man1/bash.1') },
   {
     pattern: '*/man*/bash.*',
-    matches: ['man/man1/bash.1']
+    matches: ['man/man1/bash.1'],
+    regexp: '/^(?:(?!\\.)(?=.)[^/]*?\\/(?=.)man[^/]*?\\/(?=.)bash\\.[^/]*?)$/'
   },
   {
     pattern: 'man/man1/bash.1',
-    matches: ['man/man1/bash.1']
+    matches: ['man/man1/bash.1'],
+    regexp: '/^(?:man\\/man1\\/bash\\.1)$/'
   },
   {
     pattern: 'a***c',
     matches: ['abc'],
-    files: ['abc']
+    files: ['abc'],
+    regexp: '/^(?:(?=.)a[^/]*?[^/]*?[^/]*?c)$/'
   },
   {
     pattern: 'a*****?c',
     matches: ['abc'],
-    files: ['abc']
+    files: ['abc'],
+    regexp: '/^(?:(?=.)a[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]c)$/'
   },
   {
     pattern: '?*****??',
     matches: ['abc'],
-    files: ['abc']
+    files: ['abc'],
+    regexp: '/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/])$/'
   },
   {
     pattern: '*****??',
     matches: ['abc'],
-    files: ['abc']
+    files: ['abc'],
+    regexp: '/^(?:(?!\\.)(?=.)[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/])$/'
   },
   {
     pattern: '?*****?c',
     matches: ['abc'],
-    files: ['abc']
+    files: ['abc'],
+    regexp: '/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]c)$/'
   },
   {
     pattern: '?***?****c',
     matches: ['abc'],
-    files: ['abc']
+    files: ['abc'],
+    regexp: '/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?c)$/'
   },
   {
     pattern: '?***?****?',
     matches: ['abc'],
-    files: ['abc']
+    files: ['abc'],
+    regexp: '/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/])$/'
   },
   {
     pattern: '?***?****',
     matches: ['abc'],
-    files: ['abc']
+    files: ['abc'],
+    regexp: '/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?)$/'
   },
   {
     pattern: '*******c',
     matches: ['abc'],
-    files: ['abc']
+    files: ['abc'],
+    regexp: '/^(?:(?!\\.)(?=.)[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?c)$/'
   },
   {
     pattern: '*******?',
     matches: ['abc'],
-    files: ['abc']
+    files: ['abc'],
+    regexp: '/^(?:(?!\\.)(?=.)[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/])$/'
   },
   {
     pattern: 'a*cd**?**??k',
     matches: ['abcdecdhjk'],
-    files: ['abcdecdhjk']
+    files: ['abcdecdhjk'],
+    regexp: '/^(?:(?=.)a[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/]k)$/'
   },
   {
     pattern: 'a**?**cd**?**??k',
     matches: ['abcdecdhjk'],
-    files: ['abcdecdhjk']
+    files: ['abcdecdhjk'],
+    regexp: '/^(?:(?=.)a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/]k)$/'
   },
   {
     pattern: 'a**?**cd**?**??k***',
     matches: ['abcdecdhjk'],
-    files: ['abcdecdhjk']
+    files: ['abcdecdhjk'],
+    regexp: '/^(?:(?=.)a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/]k[^/]*?[^/]*?[^/]*?)$/'
   },
   {
     pattern: 'a**?**cd**?**??***k',
     matches: ['abcdecdhjk'],
-    files: ['abcdecdhjk']
+    files: ['abcdecdhjk'],
+    regexp: '/^(?:(?=.)a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/][^/]*?[^/]*?[^/]*?k)$/'
   },
   {
     pattern: 'a**?**cd**?**??***k**',
     matches: ['abcdecdhjk'],
-    files: ['abcdecdhjk']
+    files: ['abcdecdhjk'],
+    regexp: '/^(?:(?=.)a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/][^/]*?[^/]*?[^/]*?k[^/]*?[^/]*?)$/'
   },
   {
     pattern: 'a****c**?**??*****',
     matches: ['abcdecdhjk'],
-    files: ['abcdecdhjk']
+    files: ['abcdecdhjk'],
+    regexp: '/^(?:(?=.)a[^/]*?[^/]*?[^/]*?[^/]*?c[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?)$/'
   },
   {
     pattern: '[-abc]',
     matches: ['-'],
-    files: ['-']
+    files: ['-'],
+    regexp: '/^(?:(?!\\.)(?=.)[-abc])$/'
   },
   {
     pattern: '[abc-]',
     matches: ['-'],
-    files: ['-']
+    files: ['-'],
+    regexp: '/^(?:(?!\\.)(?=.)[abc-])$/'
   },
   {
     pattern: '\\',
     matches: ['\\'],
-    files: ['\\']
+    files: ['\\'],
+    regexp: '/^(?:\\\\)$/'
   },
   {
     pattern: '[\\\\]',
     matches: ['\\'],
-    files: ['\\']
+    files: ['\\'],
+    regexp: '/^(?:(?!\\.)(?=.)[\\\\])$/'
   },
   {
     pattern: '[[]',
     matches: ['['],
-    files: ['[']
+    files: ['['],
+    regexp: '/^(?:(?!\\.)(?=.)[\\[])$/'
   },
   {
     pattern: '[',
     matches: ['['],
-    files: ['[']
+    files: ['['],
+    regexp: '/^(?:\\[)$/'
   },
   {
     pattern: '[*',
     matches: ['[abc'],
-    files: ['[abc']
+    files: ['[abc'],
+    regexp: '/^(?:(?=.)\\[(?!\\.)(?=.)[^/]*?)$/'
   },
 
   'a right bracket shall lose its special meaning and\n' +
@@ -286,65 +339,76 @@ module.exports = [
   {
     pattern: '[]]',
     matches: [']'],
-    files: [']']
+    files: [']'],
+    regexp: '/^(?:(?!\\.)(?=.)[\\]])$/'
   },
   {
     pattern: '[]-]',
     matches: [']'],
-    files: [']']
+    files: [']'],
+    regexp: '/^(?:(?!\\.)(?=.)[\\]-])$/'
   },
   {
     pattern: '[a-\z]',
     matches: ['p'],
-    files: ['p']
+    files: ['p'],
+    regexp: '/^(?:(?!\\.)(?=.)[a-z])$/'
   },
   {
     pattern: '??**********?****?',
     matches: [],
     mmOpts: {null: true},
-    files: ['abc']
+    files: ['abc'],
+    regexp: '/^(?:(?!\\.)(?=.)[^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/])$/'
   },
   {
     pattern: '??**********?****c',
     matches: [],
     mmOpts: {null: true},
-    files: ['abc']
+    files: ['abc'],
+    regexp: '/^(?:(?!\\.)(?=.)[^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?c)$/'
   },
   {
     pattern: '?************c****?****',
     matches: [],
     mmOpts: {null: true},
-    files: ['abc']
+    files: ['abc'],
+    regexp: '/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?c[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?)$/'
   },
   {
     pattern: '*c*?**',
     matches: [],
     mmOpts: {null: true},
-    files: ['abc']
+    files: ['abc'],
+    regexp: '/^(?:(?!\\.)(?=.)[^/]*?c[^/]*?[^/][^/]*?[^/]*?)$/'
   },
   {
     pattern: 'a*****c*?**',
     matches: [],
     mmOpts: {null: true},
-    files: ['abc']
+    files: ['abc'],
+    regexp: '/^(?:(?=.)a[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?c[^/]*?[^/][^/]*?[^/]*?)$/'
   },
   {
     pattern: 'a********???*******',
     matches: [],
     mmOpts: {null: true},
-    files: ['abc']
+    files: ['abc'],
+    regexp: '/^(?:(?=.)a[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?)$/'
   },
   {
     pattern: '[]',
     matches: [],
     mmOpts: {null: true},
-    files: ['a']
+    files: ['a'],
+    regexp: '/^(?:\\[\\])$/'
   },
   {
     pattern: '[abc',
     matches: [],
     mmOpts: {null: true},
-    files: ['[']
+    files: ['['],
+    regexp: '/^(?:\\[abc)$/'
   },
 
   'nocase tests',
@@ -352,19 +416,22 @@ module.exports = [
     pattern: 'XYZ',
     matches: ['xYz'],
     mmOpts: { nocase: true, null: true },
-    files: ['xYz', 'ABC', 'IjK']
+    files: ['xYz', 'ABC', 'IjK'],
+    regexp: '/^(?:(?=.)XYZ)$/i'
   },
   {
     pattern: 'ab*',
     matches: ['ABC'],
     mmOpts: { nocase: true, null: true },
-    files: ['xYz', 'ABC', 'IjK']
+    files: ['xYz', 'ABC', 'IjK'],
+    regexp: '/^(?:(?=.)ab[^/]*?)$/i'
   },
   {
     pattern: '[ia]?[ck]',
     matches: ['ABC', 'IjK'],
     mmOpts: { nocase: true, null: true },
-    files: ['xYz', 'ABC', 'IjK']
+    files: ['xYz', 'ABC', 'IjK'],
+    regexp: '/^(?:(?!\\.)(?=.)[ia][^/][ck])$/i'
   },
 
   // [ pattern, [matches], MM opts, files, TAP opts]
@@ -373,13 +440,15 @@ module.exports = [
     pattern: '{/*,*}',
     matches: [],
     mmOpts: {null: true},
-    files: ['/asdf/asdf/asdf']
+    files: ['/asdf/asdf/asdf'],
+    regexp: '/^(?:\\/(?!\\.)(?=.)[^/]*?|(?!\\.)(?=.)[^/]*?)$/'
   },
   {
     pattern: '{/?,*}',
     matches: ['/a', 'bb'],
     mmOpts: {null: true},
-    files: ['/a', '/b/b', '/a/b/c', 'bb']
+    files: ['/a', '/b/b', '/a/b/c', 'bb'],
+    regexp: '/^(?:\\/(?!\\.)(?=.)[^/]|(?!\\.)(?=.)[^/]*?)$/'
   },
 
   'dots should not match unless requested',
@@ -387,7 +456,8 @@ module.exports = [
     pattern: '**',
     matches: ['a/b'],
     mmOpts: {},
-    files: ['a/b', 'a/.d', '.a/.d']
+    files: ['a/b', 'a/.d', '.a/.d'],
+    regexp: '/^(?:(?:(?!(?:\\/|^)\\.).)*?)$/'
   },
 
   // .. and . can only match patterns starting with .,
@@ -398,22 +468,26 @@ module.exports = [
   {
     pattern: 'a/*/b',
     matches: ['a/c/b', 'a/.d/b'],
-    mmOpts: {dot: true}
+    mmOpts: {dot: true},
+    regexp: '/^(?:a\\/(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]*?\\/b)$/'
   },
   {
     pattern: 'a/.*/b',
     matches: ['a/./b', 'a/../b', 'a/.d/b'],
-    mmOpts: {dot: true}
+    mmOpts: {dot: true},
+    regexp: '/^(?:a\\/(?=.)\\.[^/]*?\\/b)$/'
   },
   {
     pattern: 'a/*/b',
     matches: ['a/c/b'],
-    mmOpts: {dot: false}
+    mmOpts: {dot: false},
+    regexp: '/^(?:a\\/(?!\\.)(?=.)[^/]*?\\/b)$/'
   },
   {
     pattern: 'a/.*/b',
     matches: ['a/./b', 'a/../b', 'a/.d/b'],
-    mmOpts: {dot: false}
+    mmOpts: {dot: false},
+    regexp: '/^(?:a\\/(?=.)\\.[^/]*?\\/b)$/'
   },
 
   // this also tests that changing the options needs
@@ -423,7 +497,8 @@ module.exports = [
     pattern: '**',
     matches: ['a/b', 'a/.d', '.a/.d'],
     mmOpts: { dot: true },
-    files: ['.a/.d', 'a/.d', 'a/b']
+    files: ['.a/.d', 'a/.d', 'a/b'],
+    regexp: '/^(?:(?:(?!(?:\\/|^)(?:\\.{1,2})($|\\/)).)*?)$/'
   },
 
   'paren sets cannot contain slashes',
@@ -431,7 +506,8 @@ module.exports = [
     pattern: '*(a/b)',
     matches: ['*(a/b)'],
     mmOpts: {nonull: true},
-    files: ['a/b']
+    files: ['a/b'],
+    regexp: '/^(?:(?!\\.)(?=.)[^/]*?\\(a\\/b\\))$/'
   },
 
   // brace sets trump all else.
@@ -452,7 +528,8 @@ module.exports = [
     pattern: '*(a|{b),c)}',
     matches: ['a', 'ab', 'ac'],
     mmOpts: {},
-    files: ['a', 'ab', 'ac', 'ad']
+    files: ['a', 'ab', 'ac', 'ad'],
+    regexp: '/^(?:(?!\\.)(?=.)(?:a|b)*|(?!\\.)(?=.)(?:a|c)*)$/'
   },
 
   // test partial parsing in the presence of comment/negation chars
@@ -460,13 +537,15 @@ module.exports = [
     pattern: '[!a*',
     matches: ['[!ab'],
     mmOpts: {},
-    files: ['[!ab', '[ab']
+    files: ['[!ab', '[ab'],
+    regexp: '/^(?:(?=.)\\[(?=.)\\!a[^/]*?)$/'
   },
   {
     pattern: '[#a*',
     matches: ['[#ab'],
     mmOpts: {},
-    files: ['[#ab', '[ab']
+    files: ['[#ab', '[ab'],
+    regexp: '/^(?:(?=.)\\[(?=.)#a[^/]*?)$/'
   },
 
   // like: {a,b|c\\,d\\\|e} except it's unclosed, so it has to be escaped.
@@ -474,7 +553,8 @@ module.exports = [
     pattern: '+(a|*\\|c\\\\|d\\\\\\|e\\\\\\\\|f\\\\\\\\\\|g',
     matches: ['+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g'],
     mmOpts: {},
-    files: ['+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g', 'a', 'b\\c']
+    files: ['+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g', 'a', 'b\\c'],
+    regexp: '/^(?:(?=.)\\+\\(a\\|[^/]*?\\|c\\\\\\\\\\|d\\\\\\\\\\|e\\\\\\\\\\\\\\\\\\|f\\\\\\\\\\\\\\\\\\|g)$/'
   },
 
   // crazy nested {,,} and *(||) tests.
@@ -487,41 +567,48 @@ module.exports = [
   },
   {
     pattern: '*(a|{b,c})',
-    matches: ['a', 'b', 'c', 'ab', 'ac']
+    matches: ['a', 'b', 'c', 'ab', 'ac'],
+    regexp: '/^(?:(?!\\.)(?=.)(?:a|b)*|(?!\\.)(?=.)(?:a|c)*)$/'
   },
   {
     pattern: '{a,*(b|c,d)}',
-    matches: ['a', '(b|c', '*(b|c', 'd)']
+    matches: ['a', '(b|c', '*(b|c', 'd)'],
+    regexp: '/^(?:a|(?!\\.)(?=.)[^/]*?\\(b\\|c|d\\))$/'
   },
   // a
   // *(b|c)
   // *(b|d)
   {
     pattern: '{a,*(b|{c,d})}',
-    matches: ['a', 'b', 'bc', 'cb', 'c', 'd']
+    matches: ['a', 'b', 'bc', 'cb', 'c', 'd'],
+    regexp: '/^(?:a|(?!\\.)(?=.)(?:b|c)*|(?!\\.)(?=.)(?:b|d)*)$/'
   },
   {
     pattern: '*(a|{b|c,c})',
-    matches: ['a', 'b', 'c', 'ab', 'ac', 'bc', 'cb']
+    matches: ['a', 'b', 'c', 'ab', 'ac', 'bc', 'cb'],
+    regexp: '/^(?:(?!\\.)(?=.)(?:a|b|c)*|(?!\\.)(?=.)(?:a|c)*)$/'
   },
 
   // test various flag settings.
   {
     pattern: '*(a|{b|c,c})',
     matches: ['x(a|b|c)', 'x(a|c)', '(a|b|c)', '(a|c)'],
-    mmOpts: {noext: true}
+    mmOpts: {noext: true},
+    regexp: '/^(?:(?!\\.)(?=.)[^/]*?\\(a\\|b\\|c\\)|(?!\\.)(?=.)[^/]*?\\(a\\|c\\))$/'
   },
   {
     pattern: 'a?b',
     matches: ['x/y/acb', 'acb/'],
     mmOpts: {matchBase: true},
-    files: ['x/y/acb', 'acb/', 'acb/d/e', 'x/y/acb/d']
+    files: ['x/y/acb', 'acb/', 'acb/d/e', 'x/y/acb/d'],
+    regexp: '/^(?:(?=.)a[^/]b)$/'
   },
   {
     pattern: '#*',
     matches: ['#a', '#b'],
     mmOpts: {nocomment: true},
-    files: ['#a', '#b', 'c#d']
+    files: ['#a', '#b', 'c#d'],
+    regexp: '/^(?:(?=.)#[^/]*?)$/'
   },
 
   // begin channelling Boole and deMorgan...
@@ -533,26 +620,30 @@ module.exports = [
   // anything that is NOT a* matches.
   {
     pattern: '!a*',
-    matches: ['\\!a', 'd', 'e', '!ab', '!abc']
+    matches: ['\\!a', 'd', 'e', '!ab', '!abc'],
+    regexp: '/^(?!^(?:(?=.)a[^/]*?)$).*$/'
   },
 
   // anything that IS !a* matches.
   {
     pattern: '!a*',
     matches: ['!ab', '!abc'],
-    mmOpts: {nonegate: true}
+    mmOpts: {nonegate: true},
+    regexp: '/^(?:(?=.)\\!a[^/]*?)$/'
   },
 
   // anything that IS a* matches
   {
     pattern: '!!a*',
-    matches: ['a!b']
+    matches: ['a!b'],
+    regexp: '/^(?:(?=.)a[^/]*?)$/'
   },
 
   // anything that is NOT !a* matches
   {
     pattern: '!\\!a*',
-    matches: ['a!b', 'd', 'e', '\\!a']
+    matches: ['a!b', 'd', 'e', '\\!a'],
+    regexp: '/^(?!^(?:(?=.)\\!a[^/]*?)$).*$/'
   },
 
   // negation nestled within a pattern
@@ -570,7 +661,8 @@ module.exports = [
   // copy bash 4.3 behavior on this.
   {
     pattern: '*.!(js)',
-    matches: ['foo.bar', 'foo.', 'boo.js.boo', 'foo.js.js']
+    matches: ['foo.bar', 'foo.', 'boo.js.boo', 'foo.js.js'],
+    regexp: '/^(?:(?!\\.)(?=.)[^\\/]*?\\.(?:(?!(?:js)$)[^\\/]*?))$/'
   },
 
   'https://github.com/isaacs/minimatch/issues/5',
@@ -582,121 +674,26 @@ module.exports = [
   },
   {
     pattern: '**/.x/**',
-    matches: ['.x/', '.x/a', '.x/a/b', 'a/.x/b', 'a/b/.x/', 'a/b/.x/c', 'a/b/.x/c/d', 'a/b/.x/c/d/e']
+    matches: ['.x/', '.x/a', '.x/a/b', 'a/.x/b', 'a/b/.x/', 'a/b/.x/c', 'a/b/.x/c/d', 'a/b/.x/c/d/e'],
+    regexp: '/^(?:(?:(?!(?:\\/|^)\\.).)*?\\/\\.x\\/(?:(?!(?:\\/|^)\\.).)*?)$/'
   },
 
   'https://github.com/isaacs/minimatch/issues/59',
   {
     pattern: '[z-a]',
-    matches: []
+    matches: [],
+    regexp: '/^(?:\\[z\\-a\\])$/'
   },
   {
     pattern: 'a/[2015-03-10T00:23:08.647Z]/z',
-    matches: []
+    matches: [],
+    regexp: '/^(?:a\\/\\[2015\\-03\\-10T00:23:08\\.647Z\\]\\/z)$/'
   },
   {
     pattern: '[a-0][a-\u0100]',
-    matches: []
+    matches: [],
+    regexp: '/^(?:(?=.)\\[a-0\\][a-Ā])$/'
   }
-]
-
-module.exports.regexps = [
-  '/^(?:(?=.)a[^/]*?)$/',
-  '/^(?:(?=.)X[^/]*?)$/',
-  '/^(?:(?=.)X[^/]*?)$/',
-  '/^(?:\\*)$/',
-  '/^(?:(?=.)\\*[^/]*?)$/',
-  '/^(?:\\*\\*)$/',
-  '/^(?:(?=.)b[^/]*?\\/)$/',
-  '/^(?:(?=.)c[^/]*?)$/',
-  '/^(?:(?:(?!(?:\\/|^)\\.).)*?)$/',
-  '/^(?:\\.\\.\\/(?!\\.)(?=.)[^/]*?\\/)$/',
-  '/^(?:s\\/(?=.)\\.\\.[^/]*?\\/)$/',
-  '/^(?:\\/\\^root:\\/\\{s\\/(?=.)\\^[^:][^/]*?:[^:][^/]*?:\\([^:]\\)[^/]*?\\.[^/]*?\\$\\/1\\/)$/',
-  '/^(?:\\/\\^root:\\/\\{s\\/(?=.)\\^[^:][^/]*?:[^:][^/]*?:\\([^:]\\)[^/]*?\\.[^/]*?\\$\\/\u0001\\/)$/',
-  '/^(?:(?!\\.)(?=.)[a-c]b[^/]*?)$/',
-  '/^(?:(?!\\.)(?=.)[a-y][^/]*?[^c])$/',
-  '/^(?:(?=.)a[^/]*?[^c])$/',
-  '/^(?:(?=.)a[X-]b)$/',
-  '/^(?:(?!\\.)(?=.)[^a-c][^/]*?)$/',
-  '/^(?:a\\*b\\/(?!\\.)(?=.)[^/]*?)$/',
-  '/^(?:(?=.)a\\*[^/]\\/(?!\\.)(?=.)[^/]*?)$/',
-  '/^(?:(?!\\.)(?=.)[^/]*?\\\\\\![^/]*?)$/',
-  '/^(?:(?!\\.)(?=.)[^/]*?\\![^/]*?)$/',
-  '/^(?:(?!\\.)(?=.)[^/]*?\\.\\*)$/',
-  '/^(?:(?=.)a[b]c)$/',
-  '/^(?:(?=.)a[b]c)$/',
-  '/^(?:(?=.)a[^/]c)$/',
-  '/^(?:a\\*c)$/',
-  'false',
-  '/^(?:(?!\\.)(?=.)[^/]*?\\/(?=.)man[^/]*?\\/(?=.)bash\\.[^/]*?)$/',
-  '/^(?:man\\/man1\\/bash\\.1)$/',
-  '/^(?:(?=.)a[^/]*?[^/]*?[^/]*?c)$/',
-  '/^(?:(?=.)a[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]c)$/',
-  '/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/])$/',
-  '/^(?:(?!\\.)(?=.)[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/])$/',
-  '/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]c)$/',
-  '/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?c)$/',
-  '/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/])$/',
-  '/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?)$/',
-  '/^(?:(?!\\.)(?=.)[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?c)$/',
-  '/^(?:(?!\\.)(?=.)[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/])$/',
-  '/^(?:(?=.)a[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/]k)$/',
-  '/^(?:(?=.)a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/]k)$/',
-  '/^(?:(?=.)a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/]k[^/]*?[^/]*?[^/]*?)$/',
-  '/^(?:(?=.)a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/][^/]*?[^/]*?[^/]*?k)$/',
-  '/^(?:(?=.)a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/][^/]*?[^/]*?[^/]*?k[^/]*?[^/]*?)$/',
-  '/^(?:(?=.)a[^/]*?[^/]*?[^/]*?[^/]*?c[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?)$/',
-  '/^(?:(?!\\.)(?=.)[-abc])$/',
-  '/^(?:(?!\\.)(?=.)[abc-])$/',
-  '/^(?:\\\\)$/',
-  '/^(?:(?!\\.)(?=.)[\\\\])$/',
-  '/^(?:(?!\\.)(?=.)[\\[])$/',
-  '/^(?:\\[)$/',
-  '/^(?:(?=.)\\[(?!\\.)(?=.)[^/]*?)$/',
-  '/^(?:(?!\\.)(?=.)[\\]])$/',
-  '/^(?:(?!\\.)(?=.)[\\]-])$/',
-  '/^(?:(?!\\.)(?=.)[a-z])$/',
-  '/^(?:(?!\\.)(?=.)[^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/])$/',
-  '/^(?:(?!\\.)(?=.)[^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?c)$/',
-  '/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?c[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?)$/',
-  '/^(?:(?!\\.)(?=.)[^/]*?c[^/]*?[^/][^/]*?[^/]*?)$/',
-  '/^(?:(?=.)a[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?c[^/]*?[^/][^/]*?[^/]*?)$/',
-  '/^(?:(?=.)a[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?)$/',
-  '/^(?:\\[\\])$/',
-  '/^(?:\\[abc)$/',
-  '/^(?:(?=.)XYZ)$/i',
-  '/^(?:(?=.)ab[^/]*?)$/i',
-  '/^(?:(?!\\.)(?=.)[ia][^/][ck])$/i',
-  '/^(?:\\/(?!\\.)(?=.)[^/]*?|(?!\\.)(?=.)[^/]*?)$/',
-  '/^(?:\\/(?!\\.)(?=.)[^/]|(?!\\.)(?=.)[^/]*?)$/',
-  '/^(?:(?:(?!(?:\\/|^)\\.).)*?)$/',
-  '/^(?:a\\/(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]*?\\/b)$/',
-  '/^(?:a\\/(?=.)\\.[^/]*?\\/b)$/',
-  '/^(?:a\\/(?!\\.)(?=.)[^/]*?\\/b)$/',
-  '/^(?:a\\/(?=.)\\.[^/]*?\\/b)$/',
-  '/^(?:(?:(?!(?:\\/|^)(?:\\.{1,2})($|\\/)).)*?)$/',
-  '/^(?:(?!\\.)(?=.)[^/]*?\\(a\\/b\\))$/',
-  '/^(?:(?!\\.)(?=.)(?:a|b)*|(?!\\.)(?=.)(?:a|c)*)$/',
-  '/^(?:(?=.)\\[(?=.)\\!a[^/]*?)$/',
-  '/^(?:(?=.)\\[(?=.)#a[^/]*?)$/',
-  '/^(?:(?=.)\\+\\(a\\|[^/]*?\\|c\\\\\\\\\\|d\\\\\\\\\\|e\\\\\\\\\\\\\\\\\\|f\\\\\\\\\\\\\\\\\\|g)$/',
-  '/^(?:(?!\\.)(?=.)(?:a|b)*|(?!\\.)(?=.)(?:a|c)*)$/',
-  '/^(?:a|(?!\\.)(?=.)[^/]*?\\(b\\|c|d\\))$/',
-  '/^(?:a|(?!\\.)(?=.)(?:b|c)*|(?!\\.)(?=.)(?:b|d)*)$/',
-  '/^(?:(?!\\.)(?=.)(?:a|b|c)*|(?!\\.)(?=.)(?:a|c)*)$/',
-  '/^(?:(?!\\.)(?=.)[^/]*?\\(a\\|b\\|c\\)|(?!\\.)(?=.)[^/]*?\\(a\\|c\\))$/',
-  '/^(?:(?=.)a[^/]b)$/',
-  '/^(?:(?=.)#[^/]*?)$/',
-  '/^(?!^(?:(?=.)a[^/]*?)$).*$/',
-  '/^(?:(?=.)\\!a[^/]*?)$/',
-  '/^(?:(?=.)a[^/]*?)$/',
-  '/^(?!^(?:(?=.)\\!a[^/]*?)$).*$/',
-  '/^(?:(?!\\.)(?=.)[^\\/]*?\\.(?:(?!(?:js)$)[^\\/]*?))$/',
-  '/^(?:(?:(?!(?:\\/|^)\\.).)*?\\/\\.x\\/(?:(?!(?:\\/|^)\\.).)*?)$/',
-  '/^(?:\\[z\\-a\\])$/',
-  '/^(?:a\\/\\[2015\\-03\\-10T00:23:08\\.647Z\\]\\/z)$/',
-  '/^(?:(?=.)\\[a-0\\][a-Ā])$/'
 ]
 
 Object.defineProperty(module.exports, 'files', {
