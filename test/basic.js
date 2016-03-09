@@ -18,11 +18,11 @@ tap.test('basic tests', function (t) {
     if (typeof c === 'function') return c()
     if (typeof c === 'string') return t.comment(c)
 
-    var pattern = c[0],
-      expect = c[1].sort(alpha),
-      options = c[2] || {},
-      f = c[3] || patterns.files,
-      tapOpts = c[4] || {}
+    var pattern = c[0]
+    var expect = c[1].sort(alpha)
+    var options = c[2] || {}
+    var f = c[3] || patterns.files
+    var tapOpts = c[4] || {}
 
     // options.debug = true
     var m = new mm.Minimatch(pattern, options)
@@ -40,7 +40,8 @@ tap.test('basic tests', function (t) {
     actual.sort(alpha)
 
     t.equivalent(
-      actual, expect,
+      actual,
+      expect,
       JSON.stringify(pattern) + ' ' + JSON.stringify(expect),
       tapOpts
     )

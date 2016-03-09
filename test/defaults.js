@@ -6,7 +6,6 @@
 var tap = require('tap')
 var globalBefore = Object.keys(global)
 var mm = require('../')
-
 var patterns = require('./patterns.js')
 
 tap.test('basic tests', function (t) {
