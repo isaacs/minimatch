@@ -2,6 +2,7 @@ if (module === require.main) {
   console.log('1..1\nok')
 }
 
+var testCases = []
 var files = [
   'a', 'b', 'c', 'd', 'abc',
   'abd', 'abe', 'bb', 'bcd',
@@ -9,17 +10,19 @@ var files = [
   'bdir/', 'bdir/cfile'
 ]
 
-module.exports = [
+testCases.push(
   'http://www.bashcookbook.com/bashinfo/source/bash-1.14.7/tests/glob-test',
   {
     pattern: 'a*',
     matches: ['a', 'abc', 'abd', 'abe'],
+    files: files,
     regexp: '/^(?:(?=.)a[^/]*?)$/'
   },
   {
     pattern: 'X*',
     matches: ['X*'],
     mmOpts: {nonull: true},
+    files: files,
     regexp: '/^(?:(?=.)X[^/]*?)$/'
   },
 
@@ -27,6 +30,7 @@ module.exports = [
   {
     pattern: 'X*',
     matches: [],
+    files: files,
     regexp: '/^(?:(?=.)X[^/]*?)$/'
   },
 
@@ -37,34 +41,40 @@ module.exports = [
     pattern: '\\*',
     matches: ['\\*'],
     mmOpts: {nonull: true},
+    files: files,
     regexp: '/^(?:\\*)$/'
   },
   {
     pattern: '\\**',
     matches: ['\\**'],
     mmOpts: {nonull: true},
+    files: files,
     regexp: '/^(?:(?=.)\\*[^/]*?)$/'
   },
   {
     pattern: '\\*\\*',
     matches: ['\\*\\*'],
     mmOpts: {nonull: true},
+    files: files,
     regexp: '/^(?:\\*\\*)$/'
   },
 
   {
     pattern: 'b*/',
     matches: ['bdir/'],
+    files: files,
     regexp: '/^(?:(?=.)b[^/]*?\\/)$/'
   },
   {
     pattern: 'c*',
     matches: ['c', 'ca', 'cb'],
+    files: files,
     regexp: '/^(?:(?=.)c[^/]*?)$/'
   },
   {
     pattern: '**',
     matches: files,
+    files: files,
     regexp: '/^(?:(?:(?!(?:\\/|^)\\.).)*?)$/'
   },
 
@@ -72,12 +82,14 @@ module.exports = [
     pattern: '\\.\\./*/',
     matches: ['\\.\\./*/'],
     mmOpts: {nonull: true},
+    files: files,
     regexp: '/^(?:\\.\\.\\/(?!\\.)(?=.)[^/]*?\\/)$/'
   },
   {
     pattern: 's/\\..*//',
     matches: ['s/\\..*//'],
     mmOpts: {nonull: true},
+    files: files,
     regexp: '/^(?:s\\/(?=.)\\.\\.[^/]*?\\/)$/'
   },
 
@@ -86,12 +98,14 @@ module.exports = [
     pattern: '/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\\1/',
     matches: ['/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\\1/'],
     mmOpts: {nonull: true},
+    files: files,
     regexp: '/^(?:\\/\\^root:\\/\\{s\\/(?=.)\\^[^:][^/]*?:[^:][^/]*?:\\([^:]\\)[^/]*?\\.[^/]*?\\$\\/1\\/)$/'
   },
   {
     pattern: '/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\u0001/',
     matches: ['/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\u0001/'],
     mmOpts: {nonull: true},
+    files: files,
     regexp: '/^(?:\\/\\^root:\\/\\{s\\/(?=.)\\^[^:][^/]*?:[^:][^/]*?:\\([^:]\\)[^/]*?\\.[^/]*?\\$\\/\u0001\\/)$/'
   },
 
@@ -99,39 +113,58 @@ module.exports = [
   {
     pattern: '[a-c]b*',
     matches: ['abc', 'abd', 'abe', 'bb', 'cb'],
+    files: files,
     regexp: '/^(?:(?!\\.)(?=.)[a-c]b[^/]*?)$/'
   },
   {
     pattern: '[a-y]*[^c]',
     matches: ['abd', 'abe', 'bb', 'bcd', 'bdir/', 'ca', 'cb', 'dd', 'de'],
+    files: files,
     regexp: '/^(?:(?!\\.)(?=.)[a-y][^/]*?[^c])$/'
   },
   {
     pattern: 'a*[^c]',
     matches: ['abd', 'abe'],
+    files: files,
     regexp: '/^(?:(?=.)a[^/]*?[^c])$/'
-  },
-  function () { files.push('a-b', 'aXb') },
+  }
+)
+
+files = files.concat('a-b', 'aXb')
+
+testCases.push(
   {
     pattern: 'a[X-]b',
     matches: ['a-b', 'aXb'],
+    files: files,
     regexp: '/^(?:(?=.)a[X-]b)$/'
-  },
-  function () { files.push('.x', '.y') },
+  }
+)
+
+files = files.concat('.x', '.y')
+
+testCases.push(
   {
     pattern: '[^a-c]*',
     matches: ['d', 'dd', 'de'],
+    files: files,
     regexp: '/^(?:(?!\\.)(?=.)[^a-c][^/]*?)$/'
-  },
-  function () { files.push('a*b/', 'a*b/ooo') },
+  }
+)
+
+files = files.concat('a*b/', 'a*b/ooo')
+
+testCases.push(
   {
     pattern: 'a\\*b/*',
     matches: ['a*b/ooo'],
+    files: files,
     regexp: '/^(?:a\\*b\\/(?!\\.)(?=.)[^/]*?)$/'
   },
   {
     pattern: 'a\\*?/*',
     matches: ['a*b/ooo'],
+    files: files,
     regexp: '/^(?:(?=.)a\\*[^/]\\/(?!\\.)(?=.)[^/]*?)$/'
   },
   {
@@ -156,16 +189,19 @@ module.exports = [
   {
     pattern: 'a[b]c',
     matches: ['abc'],
+    files: files,
     regexp: '/^(?:(?=.)a[b]c)$/'
   },
   {
     pattern: 'a[\\b]c',
     matches: ['abc'],
+    files: files,
     regexp: '/^(?:(?=.)a[b]c)$/'
   },
   {
     pattern: 'a?c',
     matches: ['abc'],
+    files: files,
     regexp: '/^(?:(?=.)a[^/]c)$/'
   },
   {
@@ -181,17 +217,23 @@ module.exports = [
     mmOpts: {null: true},
     files: [''],
     regexp: 'false'
-  },
+  }
+)
+
+files = files.concat('man/', 'man/man1/', 'man/man1/bash.1')
+
+testCases.push(
   'http://www.opensource.apple.com/source/bash/bash-23/bash/tests/glob-test',
-  function () { files.push('man/', 'man/man1/', 'man/man1/bash.1') },
   {
     pattern: '*/man*/bash.*',
     matches: ['man/man1/bash.1'],
+    files: files,
     regexp: '/^(?:(?!\\.)(?=.)[^/]*?\\/(?=.)man[^/]*?\\/(?=.)bash\\.[^/]*?)$/'
   },
   {
     pattern: 'man/man1/bash.1',
     matches: ['man/man1/bash.1'],
+    files: files,
     regexp: '/^(?:man\\/man1\\/bash\\.1)$/'
   },
   {
@@ -458,35 +500,40 @@ module.exports = [
     mmOpts: {},
     files: ['a/b', 'a/.d', '.a/.d'],
     regexp: '/^(?:(?:(?!(?:\\/|^)\\.).)*?)$/'
-  },
+  }
+)
 
-  // .. and . can only match patterns starting with .,
-  // even when options.dot is set.
-  function () {
-    files = ['a/./b', 'a/../b', 'a/c/b', 'a/.d/b']
-  },
+files = ['a/./b', 'a/../b', 'a/c/b', 'a/.d/b']
+
+// .. and . can only match patterns starting with .,
+// even when options.dot is set.
+testCases.push(
   {
     pattern: 'a/*/b',
     matches: ['a/c/b', 'a/.d/b'],
     mmOpts: {dot: true},
+    files: files,
     regexp: '/^(?:a\\/(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]*?\\/b)$/'
   },
   {
     pattern: 'a/.*/b',
     matches: ['a/./b', 'a/../b', 'a/.d/b'],
     mmOpts: {dot: true},
+    files: files,
     regexp: '/^(?:a\\/(?=.)\\.[^/]*?\\/b)$/'
   },
   {
     pattern: 'a/*/b',
     matches: ['a/c/b'],
     mmOpts: {dot: false},
+    files: files,
     regexp: '/^(?:a\\/(?!\\.)(?=.)[^/]*?\\/b)$/'
   },
   {
     pattern: 'a/.*/b',
     matches: ['a/./b', 'a/../b', 'a/.d/b'],
     mmOpts: {dot: false},
+    files: files,
     regexp: '/^(?:a\\/(?=.)\\.[^/]*?\\/b)$/'
   },
 
@@ -555,24 +602,27 @@ module.exports = [
     mmOpts: {},
     files: ['+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g', 'a', 'b\\c'],
     regexp: '/^(?:(?=.)\\+\\(a\\|[^/]*?\\|c\\\\\\\\\\|d\\\\\\\\\\|e\\\\\\\\\\\\\\\\\\|f\\\\\\\\\\\\\\\\\\|g)$/'
-  },
+  }
+)
 
-  // crazy nested {,,} and *(||) tests.
-  function () {
-    files = [
-      'a', 'b', 'c', 'd', 'ab', 'ac', 'ad', 'bc', 'cb', 'bc,d',
-      'c,db', 'c,d', 'd)', '(b|c', '*(b|c', 'b|c', 'b|cc', 'cb|c',
-      'x(a|b|c)', 'x(a|c)', '(a|b|c)', '(a|c)'
-    ]
-  },
+files = [
+  'a', 'b', 'c', 'd', 'ab', 'ac', 'ad', 'bc', 'cb', 'bc,d',
+  'c,db', 'c,d', 'd)', '(b|c', '*(b|c', 'b|c', 'b|cc', 'cb|c',
+  'x(a|b|c)', 'x(a|c)', '(a|b|c)', '(a|c)'
+]
+
+// crazy nested {,,} and *(||) tests.
+testCases.push(
   {
     pattern: '*(a|{b,c})',
     matches: ['a', 'b', 'c', 'ab', 'ac'],
+    files: files,
     regexp: '/^(?:(?!\\.)(?=.)(?:a|b)*|(?!\\.)(?=.)(?:a|c)*)$/'
   },
   {
     pattern: '{a,*(b|c,d)}',
     matches: ['a', '(b|c', '*(b|c', 'd)'],
+    files: files,
     regexp: '/^(?:a|(?!\\.)(?=.)[^/]*?\\(b\\|c|d\\))$/'
   },
   // a
@@ -581,11 +631,13 @@ module.exports = [
   {
     pattern: '{a,*(b|{c,d})}',
     matches: ['a', 'b', 'bc', 'cb', 'c', 'd'],
+    files: files,
     regexp: '/^(?:a|(?!\\.)(?=.)(?:b|c)*|(?!\\.)(?=.)(?:b|d)*)$/'
   },
   {
     pattern: '*(a|{b|c,c})',
     matches: ['a', 'b', 'c', 'ab', 'ac', 'bc', 'cb'],
+    files: files,
     regexp: '/^(?:(?!\\.)(?=.)(?:a|b|c)*|(?!\\.)(?=.)(?:a|c)*)$/'
   },
 
@@ -594,6 +646,7 @@ module.exports = [
     pattern: '*(a|{b|c,c})',
     matches: ['x(a|b|c)', 'x(a|c)', '(a|b|c)', '(a|c)'],
     mmOpts: {noext: true},
+    files: files,
     regexp: '/^(?:(?!\\.)(?=.)[^/]*?\\(a\\|b\\|c\\)|(?!\\.)(?=.)[^/]*?\\(a\\|c\\))$/'
   },
   {
@@ -609,18 +662,20 @@ module.exports = [
     mmOpts: {nocomment: true},
     files: ['#a', '#b', 'c#d'],
     regexp: '/^(?:(?=.)#[^/]*?)$/'
-  },
+  }
+)
 
+files = ['d', 'e', '!ab', '!abc', 'a!b', '\\!a']
+
+testCases.push(
   // begin channelling Boole and deMorgan...
   'negation tests',
-  function () {
-    files = ['d', 'e', '!ab', '!abc', 'a!b', '\\!a']
-  },
 
   // anything that is NOT a* matches.
   {
     pattern: '!a*',
     matches: ['\\!a', 'd', 'e', '!ab', '!abc'],
+    files: files,
     regexp: '/^(?!^(?:(?=.)a[^/]*?)$).*$/'
   },
 
@@ -629,6 +684,7 @@ module.exports = [
     pattern: '!a*',
     matches: ['!ab', '!abc'],
     mmOpts: {nonegate: true},
+    files: files,
     regexp: '/^(?:(?=.)\\!a[^/]*?)$/'
   },
 
@@ -636,6 +692,7 @@ module.exports = [
   {
     pattern: '!!a*',
     matches: ['a!b'],
+    files: files,
     regexp: '/^(?:(?=.)a[^/]*?)$/'
   },
 
@@ -643,38 +700,33 @@ module.exports = [
   {
     pattern: '!\\!a*',
     matches: ['a!b', 'd', 'e', '\\!a'],
+    files: files,
     regexp: '/^(?!^(?:(?=.)\\!a[^/]*?)$).*$/'
   },
 
   // negation nestled within a pattern
-  function () {
-    files = [
-      'foo.js',
-      'foo.bar',
-      'foo.js.js',
-      'blar.js',
-      'foo.',
-      'boo.js.boo'
-    ]
-  },
+
   // last one is tricky! * matches foo, . matches ., and 'js.js' != 'js'
   // copy bash 4.3 behavior on this.
   {
     pattern: '*.!(js)',
     matches: ['foo.bar', 'foo.', 'boo.js.boo', 'foo.js.js'],
+    files: ['foo.js', 'foo.bar', 'foo.js.js', 'blar.js', 'foo.', 'boo.js.boo'],
     regexp: '/^(?:(?!\\.)(?=.)[^\\/]*?\\.(?:(?!(?:js)$)[^\\/]*?))$/'
-  },
+  }
+)
 
+files = [
+  'a/b/.x/c', 'a/b/.x/c/d', 'a/b/.x/c/d/e', 'a/b/.x', 'a/b/.x/',
+  'a/.x/b', '.x', '.x/', '.x/a', '.x/a/b', 'a/.x/b/.x/c', '.x/.x'
+]
+
+testCases.push(
   'https://github.com/isaacs/minimatch/issues/5',
-  function () {
-    files = [
-      'a/b/.x/c', 'a/b/.x/c/d', 'a/b/.x/c/d/e', 'a/b/.x', 'a/b/.x/',
-      'a/.x/b', '.x', '.x/', '.x/a', '.x/a/b', 'a/.x/b/.x/c', '.x/.x'
-    ]
-  },
   {
     pattern: '**/.x/**',
     matches: ['.x/', '.x/a', '.x/a/b', 'a/.x/b', 'a/b/.x/', 'a/b/.x/c', 'a/b/.x/c/d', 'a/b/.x/c/d/e'],
+    files: files,
     regexp: '/^(?:(?:(?!(?:\\/|^)\\.).)*?\\/\\.x\\/(?:(?!(?:\\/|^)\\.).)*?)$/'
   },
 
@@ -682,22 +734,21 @@ module.exports = [
   {
     pattern: '[z-a]',
     matches: [],
+    files: files,
     regexp: '/^(?:\\[z\\-a\\])$/'
   },
   {
     pattern: 'a/[2015-03-10T00:23:08.647Z]/z',
     matches: [],
+    files: files,
     regexp: '/^(?:a\\/\\[2015\\-03\\-10T00:23:08\\.647Z\\]\\/z)$/'
   },
   {
     pattern: '[a-0][a-\u0100]',
     matches: [],
+    files: files,
     regexp: '/^(?:(?=.)\\[a-0\\][a-Ā])$/'
   }
-]
+)
 
-Object.defineProperty(module.exports, 'files', {
-  get: function () {
-    return files
-  }
-})
+module.exports = testCases
