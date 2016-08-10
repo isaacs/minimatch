@@ -19,8 +19,8 @@
     "brace-expansion": "^1.0.0"
   },
   "devDependencies": {
-    "standard": "^3.7.2",
-    "tap": "^5.6.0"
+    "standard": "^7.1.2",
+    "tap": "^6.2.0"
   },
   "license": "ISC",
   "files": [
