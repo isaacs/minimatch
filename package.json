@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "standard": "^3.7.2",
-    "tap": "^5.6.0"
+    "tap": "^7.1.0"
   },
   "license": "ISC",
   "files": [
