@@ -187,6 +187,12 @@ minimatch('/a/b', '/**/d', { partial: true })     // true, might be /a/b/.../d
 minimatch('/x/y/z', '/a/**/z', { partial: true }) // false, because x !== a
 ```
 
+### allowWindowsEscape
+
+Windows path separator `\` is by default converted to `/`, which
+prohibits the usage of `\` as a escape character. This flag skips that
+behavior and allows using the escape character.
+
 ## Comparisons to other fnmatch/glob implementations
 
 While strict compliance with the existing standards is a worthwhile
