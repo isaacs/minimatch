@@ -120,7 +120,7 @@ function Minimatch (pattern, options) {
   pattern = pattern.trim()
 
   // windows support: need to use /, not \
-  if (path.sep !== '/') {
+  if (!options.allowWindowsEscape && path.sep !== '/') {
     pattern = pattern.split(path.sep).join('/')
   }
 
@@ -709,7 +709,7 @@ function match (f, partial) {
   var options = this.options
 
   // windows: need to use /, not \
-  if (path.sep !== '/') {
+  if (!options.allowWindowsEscape && path.sep !== '/') {
     f = f.split(path.sep).join('/')
   }
 

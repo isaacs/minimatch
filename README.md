@@ -171,6 +171,11 @@ Suppress the behavior of treating a leading `!` character as negation.
 Returns from negate expressions the same as if they were not negated.
 (Ie, true on a hit, false on a miss.)
 
+### allowWindowsEscape
+
+Windows path separator `\` is by default converted to `/`, which
+prohibits the usage of `\` as a escape character. This flag skips that
+behavior and allows using the escape character.
 
 ## Comparisons to other fnmatch/glob implementations
 
