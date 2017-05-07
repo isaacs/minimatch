@@ -9,8 +9,10 @@
   },
   "main": "minimatch.js",
   "scripts": {
-    "posttest": "standard minimatch.js test/*.js",
-    "test": "tap test/*.js"
+    "test": "tap test/*.js --cov",
+    "preversion": "npm test",
+    "postversion": "npm publish",
+    "postpublish": "git push origin --all; git push origin --tags"
   },
   "engines": {
     "node": "*"
@@ -19,8 +21,7 @@
     "brace-expansion": "^1.0.0"
   },
   "devDependencies": {
-    "standard": "^3.7.2",
-    "tap": "^5.6.0"
+    "tap": "^10.3.2"
   },
   "license": "ISC",
   "files": [
