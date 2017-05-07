@@ -1,7 +1,9 @@
-sudo: false
 language: node_js
+sudo: false
 node_js:
-  - '0.10'
-  - '0.12'
-  - '4'
-  - '5'
+  - 7
+  - 6
+  - 4
+cache:
+  directories:
+    - $HOME/.npm
