@@ -35,6 +35,15 @@ See:
 * `man 3 fnmatch`
 * `man 5 gitignore`
 
+## Windows
+
+**Please only use forward-slashes in glob expressions.**
+
+Though windows uses either `/` or `\` as its path separator, only `/`
+characters are used by this glob implementation.  You must use
+forward-slashes **only** in glob expressions.  Back-slashes will always
+be interpreted as escape characters, not path separators.
+
 ## Minimatch Class
 
 Create a minimatch object by instantiating the `minimatch.Minimatch` class.
