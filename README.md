@@ -35,6 +35,20 @@ See:
 * `man 3 fnmatch`
 * `man 5 gitignore`
 
+## Windows
+
+**Please only use forward-slashes in glob expressions.**
+
+Though windows uses either `/` or `\` as its path separator, only `/`
+characters are used by this glob implementation.  You must use
+forward-slashes **only** in glob expressions.  Back-slashes in patterns
+will always be interpreted as escape characters, not path separators.
+
+Note that `\` or `/` _will_ be interpreted as path separators in paths on
+Windows, and will match against `/` in glob expressions.
+
+So just always use `/` in patterns.
+
 ## Minimatch Class
 
 Create a minimatch object by instantiating the `minimatch.Minimatch` class.
@@ -186,12 +200,6 @@ minimatch('/a/b', '/a/*/c/d', { partial: true })  // true, might be /a/b/c/d
 minimatch('/a/b', '/**/d', { partial: true })     // true, might be /a/b/.../d
 minimatch('/x/y/z', '/a/**/z', { partial: true }) // false, because x !== a
 ```
-
-### allowWindowsEscape
-
-Windows path separator `\` is by default converted to `/`, which
-prohibits the usage of `\` as a escape character. This flag skips that
-behavior and allows using the escape character.
 
 ## Comparisons to other fnmatch/glob implementations
 

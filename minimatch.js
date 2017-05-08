@@ -167,11 +167,6 @@ class Minimatch {
 
     if (!options) options = {}
 
-    // windows support: need to use /, not \
-    if (!options.allowWindowsEscape && path.sep !== '/') {
-      pattern = pattern.split(path.sep).join('/')
-    }
-
     this.options = options
     this.set = []
     this.pattern = pattern
