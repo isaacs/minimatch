@@ -207,3 +207,8 @@ other interpretation of the glob pattern.  Thus, a pattern like
 `+(a|{b),c)}`, which would not be valid in bash or zsh, is expanded
 **first** into the set of `+(a|b)` and `+(a|c)`, and those patterns are
 checked for validity.  Since those two are valid, matching proceeds.
+
+
+## Related
+
+Checkout [multimatch](https://github.com/sindresorhus/multimatch) if you want to use multiple patterns with `minimatch.match()`.
