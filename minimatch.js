@@ -172,6 +172,7 @@ function make () {
   // set to the GLOBSTAR object for globstar behavior,
   // and will not contain any / characters
   set = this.globParts = set.map(function (s) {
+    if (options.fnmatchGlobStar) s = s.replace("**", "*/**/*")
     return s.split(slashSplit)
   })
 
