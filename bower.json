@@ -1,0 +1,24 @@
+{
+  "name": "minimatch",
+  "main": "minimatch.js",
+  "version": "0.2.14",
+  "homepage": "https://github.com/isaacs/minimatch",
+  "authors": [
+    "Isaac Z. Schlueter <i@izs.me>"
+  ],
+  "description": "A minimal matching utility. (globs)",
+  "keywords": [
+    "glob",
+    "match",
+    "js",
+    "node"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
