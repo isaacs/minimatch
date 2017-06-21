@@ -325,15 +325,21 @@ function parse (pattern, isSub) {
     this.debug('%s\t%s %s %j', pattern, i, re, c)
 
     // skip over any that are escaped.
-    if (escaping && reSpecials[c]) {
-      re += '\\' + c
+    if (escaping) {
+      if (c === '/') { // completely not allowed, even escaped.
+        return false
+      }
+
+      if (reSpecials[c]) {
+        re += '\\'
+      }
+      re += c
       escaping = false
       continue
     }
 
     switch (c) {
       case '/':
-        // completely not allowed, even escaped.
         // Should already be path-split by now.
         return false
 
@@ -415,9 +421,8 @@ function parse (pattern, isSub) {
       continue
 
       case '|':
-        if (inClass || !patternListStack.length || escaping) {
+        if (inClass || !patternListStack.length) {
           re += '\\|'
-          escaping = false
           continue
         }
 
@@ -448,7 +453,6 @@ function parse (pattern, isSub) {
         //  first in the list.  -- POSIX.2 2.8.3.2
         if (i === classStart + 1 || !inClass) {
           re += '\\' + c
-          escaping = false
           continue
         }
 
@@ -485,16 +489,11 @@ function parse (pattern, isSub) {
         // swallow any state char that wasn't consumed
         clearStateChar()
 
-        if (escaping) {
-          // no need
-          escaping = false
-        } else if (reSpecials[c]
-          && !(c === '^' && inClass)) {
+        if (reSpecials[c] && !(c === '^' && inClass)) {
           re += '\\'
         }
 
         re += c
-
     } // switch
   } // for
 
