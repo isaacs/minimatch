@@ -472,8 +472,16 @@ class Minimatch {
       this.debug('%s\t%s %s %j', pattern, i, re, c)
 
       // skip over any that are escaped.
-      if (escaping && reSpecials[c]) {
-        re += '\\' + c
+      if (escaping) {
+        /* istanbul ignore next - completely not allowed, even escaped. */
+        if (c === '/') {
+          return false
+        }
+
+        if (reSpecials[c]) {
+          re += '\\'
+        }
+        re += c
         escaping = false
         continue
       }
@@ -481,7 +489,6 @@ class Minimatch {
       switch (c) {
         /* istanbul ignore next */
         case '/': {
-          // completely not allowed, even escaped.
           // Should already be path-split by now.
           return false
         }
@@ -564,9 +571,8 @@ class Minimatch {
         continue
 
         case '|':
-          if (inClass || !patternListStack.length || escaping) {
+          if (inClass || !patternListStack.length) {
             re += '\\|'
-            escaping = false
             continue
           }
 
@@ -597,7 +603,6 @@ class Minimatch {
           //  first in the list.  -- POSIX.2 2.8.3.2
           if (i === classStart + 1 || !inClass) {
             re += '\\' + c
-            escaping = false
             continue
           }
 
@@ -632,15 +637,12 @@ class Minimatch {
           // swallow any state char that wasn't consumed
           clearStateChar()
 
-          if (escaping) {
-            // no need
-            escaping = false
-          } else if (reSpecials[c]
-            && !(c === '^' && inClass)) {
+          if (reSpecials[c] && !(c === '^' && inClass)) {
             re += '\\'
           }
 
           re += c
+          break
 
       } // switch
     } // for
@@ -670,6 +672,7 @@ class Minimatch {
       this.debug('setting tail', re, pl)
       // maybe some even number of \, then maybe 1 \, followed by a |
       tail = tail.replace(/((?:\\{2}){0,64})(\\?)\|/g, (_, $1, $2) => {
+        /* istanbul ignore else - should already be done */
         if (!$2) {
           // the | isn't already escaped, so escape it.
           $2 = '\\'
