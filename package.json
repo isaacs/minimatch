@@ -15,7 +15,7 @@
     "postpublish": "git push origin --all; git push origin --tags"
   },
   "engines": {
-    "node": "*"
+    "node": ">=4"
   },
   "dependencies": {
     "brace-expansion": "^1.1.7"
