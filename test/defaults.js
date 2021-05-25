@@ -44,6 +44,9 @@ tap.test('basic tests', function (t) {
     )
   })
 
+  var m = mm.defaults({ test: true })
+  t.equivalent(m('hi', 'h*'), true)
+
   t.comment('time=' + (Date.now() - start) + 'ms')
   t.end()
 })
