@@ -1,0 +1,2 @@
+- name: Labeler
+  uses: actions/labeler@v3
