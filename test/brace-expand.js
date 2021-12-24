@@ -61,7 +61,15 @@ tap.test('brace expansion', function (t) {
         'a{b{cefxh',
         'a{b{cefy{}gh'
       ]
-    ]
+    ],
+     [
+       '{a,b}${c}${d}',
+       ['a${c}${d}','b${c}${d}']
+     ],
+     [
+       '${a}${b}{c,d}',
+       ['${a}${b}c','${a}${b}d']
+     ],
   ]
   patterns.forEach(function (tc) {
     var p = tc[0],
