@@ -66,7 +66,7 @@ tap.test('brace expansion', function (t) {
   patterns.forEach(function (tc) {
     var p = tc[0],
       expect = tc[1]
-    t.equivalent(minimatch.braceExpand(p), expect, p)
+    t.same(minimatch.braceExpand(p), expect, p)
   })
   t.end()
 })
