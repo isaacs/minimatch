@@ -264,6 +264,8 @@ function braceExpand (pattern, options) {
 
   assertValidPattern(pattern)
 
+  // Thanks to Yeting Li <https://github.com/yetingli> for
+  // improving this regexp to avoid a ReDOS vulnerability.
   if (options.nobrace || !/\{(?:(?!\{).)*\}/.test(pattern)) {
     // shortcut. no need to expand.
     return [pattern]
