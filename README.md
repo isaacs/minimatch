@@ -171,7 +171,6 @@ Suppress the behavior of treating a leading `!` character as negation.
 Returns from negate expressions the same as if they were not negated.
 (Ie, true on a hit, false on a miss.)
 
-
 ## Comparisons to other fnmatch/glob implementations
 
 While strict compliance with the existing standards is a worthwhile

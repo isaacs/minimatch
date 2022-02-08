@@ -56,7 +56,6 @@ function filter (pattern, options) {
 }
 
 function ext (a, b) {
-  a = a || {}
   b = b || {}
   const t = {}
   Object.keys(a).forEach(function (k) {
@@ -123,9 +122,6 @@ function minimatch (p, pattern, options) {
     return false
   }
 
-  // "" only matches ""
-  if (pattern.trim() === '') return p === ''
-
   return new Minimatch(pattern, options).match(p)
 }
 
@@ -137,7 +133,6 @@ function Minimatch (pattern, options) {
   assertValidPattern(pattern)
 
   if (!options) options = {}
-  pattern = pattern.trim()
 
   // windows support: need to use /, not \
   if (path.sep !== '/') {
@@ -160,9 +155,6 @@ Minimatch.prototype.debug = function () {}
 
 Minimatch.prototype.make = make
 function make () {
-  // don't do it more than once.
-  if (this._made) return
-
   var pattern = this.pattern
   var options = this.options
 
@@ -182,7 +174,7 @@ function make () {
   // step 2: expand braces
   var set = this.globSet = this.braceExpand()
 
-  if (options.debug) this.debug = console.error
+  if (options.debug) this.debug = (...args) => console.error(...args)
 
   this.debug(this.pattern, set)
 
@@ -304,7 +296,12 @@ function parse (pattern, isSub) {
   var options = this.options
 
   // shortcuts
-  if (!options.noglobstar && pattern === '**') return GLOBSTAR
+  if (pattern === '**') {
+    if (!options.noglobstar)
+      return GLOBSTAR
+    else
+      pattern = '*'
+  }
   if (pattern === '') return ''
 
   var re = ''
@@ -360,7 +357,8 @@ function parse (pattern, isSub) {
     }
 
     switch (c) {
-      case '/': /* istanbul ignore next */ {
+      /* istanbul ignore next */
+      case '/': {
         // completely not allowed, even escaped.
         // Should already be path-split by now.
         return false
@@ -483,25 +481,23 @@ function parse (pattern, isSub) {
 
         // handle the case where we left a class open.
         // "[z-a]" is valid, equivalent to "\[z-a\]"
-        if (inClass) {
-          // split where the last [ was, make sure we don't have
-          // an invalid re. if so, re-walk the contents of the
-          // would-be class to re-translate any characters that
-          // were passed through as-is
-          // TODO: It would probably be faster to determine this
-          // without a try/catch and a new RegExp, but it's tricky
-          // to do safely.  For now, this is safe and works.
-          var cs = pattern.substring(classStart + 1, i)
-          try {
-            RegExp('[' + cs + ']')
-          } catch (er) {
-            // not a valid class!
-            var sp = this.parse(cs, SUBPARSE)
-            re = re.substr(0, reClassStart) + '\\[' + sp[0] + '\\]'
-            hasMagic = hasMagic || sp[1]
-            inClass = false
-            continue
-          }
+        // split where the last [ was, make sure we don't have
+        // an invalid re. if so, re-walk the contents of the
+        // would-be class to re-translate any characters that
+        // were passed through as-is
+        // TODO: It would probably be faster to determine this
+        // without a try/catch and a new RegExp, but it's tricky
+        // to do safely.  For now, this is safe and works.
+        var cs = pattern.substring(classStart + 1, i)
+        try {
+          RegExp('[' + cs + ']')
+        } catch (er) {
+          // not a valid class!
+          var sp = this.parse(cs, SUBPARSE)
+          re = re.substr(0, reClassStart) + '\\[' + sp[0] + '\\]'
+          hasMagic = hasMagic || sp[1]
+          inClass = false
+          continue
         }
 
         // finish up the class.
@@ -585,9 +581,7 @@ function parse (pattern, isSub) {
   // something that could conceivably capture a dot
   var addPatternStart = false
   switch (re.charAt(0)) {
-    case '.':
-    case '[':
-    case '(': addPatternStart = true
+    case '[': case '.': case '(': addPatternStart = true
   }
 
   // Hack to work around lack of negative lookbehind in JS
@@ -725,15 +719,12 @@ minimatch.match = function (list, pattern, options) {
   return list
 }
 
-Minimatch.prototype.match = match
-function match (f, partial) {
+Minimatch.prototype.match = function match (f) {
   this.debug('match', f, this.pattern)
   // short-circuit in the case of busted things.
   // comments, etc.
   if (this.comment) return false
   if (this.empty) return f === ''
-
-  if (f === '/' && partial) return true
 
   var options = this.options
 
@@ -768,7 +759,7 @@ function match (f, partial) {
     if (options.matchBase && pattern.length === 1) {
       file = [filename]
     }
-    var hit = this.matchOne(file, pattern, partial)
+    var hit = this.matchOne(file, pattern, false)
     if (hit) {
       if (options.flipNegate) return true
       return !this.negate

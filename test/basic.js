@@ -3,14 +3,14 @@
 // TODO: Some of these tests do very bad things with backslashes, and will
 // most likely fail badly on windows.  They should probably be skipped.
 
-var tap = require('tap')
-var globalBefore = Object.keys(global)
-var mm = require('../')
-var patterns = require('./patterns.js')
-var regexps = patterns.regexps
-var re = 0
+const t = require('tap')
+const globalBefore = Object.keys(global)
+const mm = require('../')
+const patterns = require('./patterns.js')
+const regexps = patterns.regexps
+let re = 0
 
-tap.test('basic tests', function (t) {
+t.test('basic tests', function (t) {
   var start = Date.now()
 
   // [ pattern, [matches], MM opts, files, TAP opts]
@@ -58,7 +58,7 @@ tap.test('basic tests', function (t) {
   t.end()
 })
 
-tap.test('global leak test', function (t) {
+t.test('global leak test', function (t) {
   var globalAfter = Object.keys(global).filter(function (k) {
     return (k !== '__coverage__' && k !== '__core-js_shared__')
   })
@@ -66,7 +66,7 @@ tap.test('global leak test', function (t) {
   t.end()
 })
 
-tap.test('invalid patterns', t => {
+t.test('invalid patterns', t => {
   const toolong = 'x'.repeat(64 * 1024) + 'y'
   const expectTooLong = { message: 'pattern is too long' }
   t.throws(() => mm.braceExpand(toolong), expectTooLong)
@@ -95,19 +95,75 @@ tap.test('invalid patterns', t => {
   t.end()
 })
 
-tap.test('ctor is generator', t => {
+t.test('ctor is generator', t => {
   const m = mm.Minimatch('asdf')
   t.type(m, mm.Minimatch)
   t.equal(m.pattern, 'asdf')
   t.end()
 })
 
-tap.test('nocomment matches nothing', t => {
+t.test('nocomment matches nothing', t => {
   t.equal(mm('#comment', '#comment', { nocomment: false }), false)
   t.equal(mm('#comment', '#comment', { nocomment: true }), true)
   t.end()
 })
 
+t.test('filter function', t => {
+  t.same(['a', 'b', 'c'].filter(mm.filter('@(a|b)')), ['a', 'b'])
+  t.end()
+})
+
+t.test('whitespace handling', t => {
+  t.equal(mm('x/y', 'y'), false)
+  t.equal(mm('x/y', 'y', { matchBase: true }), true)
+  t.equal(mm('x/ ', ' '), false)
+  t.equal(mm('x/ ', ' ', { matchBase: true }), true)
+  t.equal(mm('x/', ''), false)
+  t.equal(mm('x/', '', { matchBase: true }), false)
+  t.equal(mm('', ''), true)
+  t.equal(mm(' ', ''), false)
+  t.equal(mm('', ' '), false)
+  t.equal(mm(' ', ' '), true)
+  t.end()
+})
+
+t.test('mm debug', t => {
+  const { error } = console
+  t.teardown(() => console.error = error)
+  const errs = []
+  console.error = (...msg) => errs.push(msg)
+  t.equal(mm('a/b/c', 'a/**/@(b|c)/**', { debug: true }), true)
+  t.not(errs.length, 0)
+  t.end()
+})
+
+t.test('makeRe repeated', t => {
+  const mmRE = mm.makeRe('a/*/*')
+  const m = new mm.Minimatch('a/*/*')
+  const mRE = m.makeRe()
+  const mRE2 = m.makeRe()
+  t.equal(mRE, mRE2)
+  t.same(mmRE, mRE)
+  t.end()
+})
+
+t.test('in noglobstar mode, ** is equivalent to *', t => {
+  const re2s = mm.makeRe('**', { noglobstar: true })
+  const re1s = mm.makeRe('*', { noglobstar: true })
+  t.same(re2s, re1s)
+  t.end()
+})
+
+t.test('flipNegate', t => {
+  t.equal(mm('x', '!x', { flipNegate: true }), true)
+  t.equal(mm('x', '!!x', { flipNegate: true }), true)
+  t.equal(mm('x', 'x', { flipNegate: true }), true)
+
+  t.equal(mm('x', '!y', { flipNegate: true }), false)
+  t.equal(mm('x', '!!y', { flipNegate: true }), false)
+  t.equal(mm('x', 'y', { flipNegate: true }), false)
+  t.end()
+})
 
 function alpha (a, b) {
   return a > b ? 1 : -1
