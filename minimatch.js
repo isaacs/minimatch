@@ -146,6 +146,7 @@ function Minimatch (pattern, options) {
   this.negate = false
   this.comment = false
   this.empty = false
+  this.partial = !!options.partial
 
   // make the set of regexps etc.
   this.make()
@@ -719,12 +720,14 @@ minimatch.match = function (list, pattern, options) {
   return list
 }
 
-Minimatch.prototype.match = function match (f) {
+Minimatch.prototype.match = function match (f, partial = this.partial) {
   this.debug('match', f, this.pattern)
   // short-circuit in the case of busted things.
   // comments, etc.
   if (this.comment) return false
   if (this.empty) return f === ''
+
+  if (f === '/' && partial) return true
 
   var options = this.options
 
@@ -759,7 +762,7 @@ Minimatch.prototype.match = function match (f) {
     if (options.matchBase && pattern.length === 1) {
       file = [filename]
     }
-    var hit = this.matchOne(file, pattern, false)
+    var hit = this.matchOne(file, pattern, partial)
     if (hit) {
       if (options.flipNegate) return true
       return !this.negate
