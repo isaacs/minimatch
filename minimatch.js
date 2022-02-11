@@ -1,15 +1,15 @@
 module.exports = minimatch
 minimatch.Minimatch = Minimatch
 
-const path = (() => { try { return require('path') } catch (e) {}})() || {
+var path = (function () { try { return require('path') } catch (e) {}}()) || {
   sep: '/'
 }
 minimatch.sep = path.sep
 
-const GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
-const expand = require('brace-expansion')
+var GLOBSTAR = minimatch.GLOBSTAR = Minimatch.GLOBSTAR = {}
+var expand = require('brace-expansion')
 
-const plTypes = {
+var plTypes = {
   '!': { open: '(?:(?!(?:', close: '))[^/]*?)'},
   '?': { open: '(?:', close: ')?' },
   '+': { open: '(?:', close: ')+' },
@@ -19,22 +19,22 @@ const plTypes = {
 
 // any single thing other than /
 // don't need to escape / when using new RegExp()
-const qmark = '[^/]'
+var qmark = '[^/]'
 
 // * => any number of characters
-const star = qmark + '*?'
+var star = qmark + '*?'
 
 // ** when dots are allowed.  Anything goes, except .. and .
 // not (^ or / followed by one or two dots followed by $ or /),
 // followed by anything, any number of times.
-const twoStarDot = '(?:(?!(?:\\\/|^)(?:\\.{1,2})($|\\\/)).)*?'
+var twoStarDot = '(?:(?!(?:\\\/|^)(?:\\.{1,2})($|\\\/)).)*?'
 
 // not a ^ or / followed by a dot,
 // followed by anything, any number of times.
-const twoStarNoDot = '(?:(?!(?:\\\/|^)\\.).)*?'
+var twoStarNoDot = '(?:(?!(?:\\\/|^)\\.).)*?'
 
 // characters that need to be escaped in RegExp.
-const reSpecials = charSet('().*{}+?[]^$\\!')
+var reSpecials = charSet('().*{}+?[]^$\\!')
 
 // "abc" -> { a:true, b:true, c:true }
 function charSet (s) {
@@ -45,7 +45,7 @@ function charSet (s) {
 }
 
 // normalizes slashes.
-const slashSplit = /\/+/
+var slashSplit = /\/+/
 
 minimatch.filter = filter
 function filter (pattern, options) {
@@ -57,7 +57,7 @@ function filter (pattern, options) {
 
 function ext (a, b) {
   b = b || {}
-  const t = {}
+  var t = {}
   Object.keys(a).forEach(function (k) {
     t[k] = a[k]
   })
@@ -72,16 +72,16 @@ minimatch.defaults = function (def) {
     return minimatch
   }
 
-  const orig = minimatch
+  var orig = minimatch
 
-  const m = function minimatch (p, pattern, options) {
+  var m = function minimatch (p, pattern, options) {
     return orig(p, pattern, ext(def, options))
   }
 
   m.Minimatch = function Minimatch (pattern, options) {
     return new orig.Minimatch(pattern, ext(def, options))
   }
-  m.Minimatch.defaults = options => {
+  m.Minimatch.defaults = function defaults (options) {
     return orig.defaults(ext(def, options)).Minimatch
   }
 
@@ -175,7 +175,7 @@ function make () {
   // step 2: expand braces
   var set = this.globSet = this.braceExpand()
 
-  if (options.debug) this.debug = (...args) => console.error(...args)
+  if (options.debug) this.debug = function debug() { console.error.apply(console, arguments) }
 
   this.debug(this.pattern, set)
 
@@ -267,8 +267,8 @@ function braceExpand (pattern, options) {
   return expand(pattern)
 }
 
-const MAX_PATTERN_LENGTH = 1024 * 64
-const assertValidPattern = pattern => {
+var MAX_PATTERN_LENGTH = 1024 * 64
+var assertValidPattern = function (pattern) {
   if (typeof pattern !== 'string') {
     throw new TypeError('invalid pattern')
   }
@@ -290,7 +290,7 @@ const assertValidPattern = pattern => {
 // of * is equivalent to a single *.  Globstar behavior is enabled by
 // default, and can be disabled by setting options.noglobstar.
 Minimatch.prototype.parse = parse
-const SUBPARSE = {}
+var SUBPARSE = {}
 function parse (pattern, isSub) {
   assertValidPattern(pattern)
 
@@ -710,7 +710,7 @@ function makeRe () {
 
 minimatch.match = function (list, pattern, options) {
   options = options || {}
-  const mm = new Minimatch(pattern, options)
+  var mm = new Minimatch(pattern, options)
   list = list.filter(function (f) {
     return mm.match(f)
   })
@@ -720,7 +720,8 @@ minimatch.match = function (list, pattern, options) {
   return list
 }
 
-Minimatch.prototype.match = function match (f, partial = this.partial) {
+Minimatch.prototype.match = function match (f, partial) {
+  if (typeof partial === 'undefined') partial = this.partial
   this.debug('match', f, this.pattern)
   // short-circuit in the case of busted things.
   // comments, etc.
