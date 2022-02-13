@@ -3,6 +3,9 @@
   "name": "minimatch",
   "description": "a glob matcher in javascript",
   "version": "3.0.6",
+  "publishConfig": {
+    "tag": "v3.0-legacy"
+  },
   "repository": {
     "type": "git",
     "url": "git://github.com/isaacs/minimatch.git"
