@@ -306,7 +306,7 @@ function parse (pattern, isSub) {
   if (pattern === '') return ''
 
   var re = ''
-  var hasMagic = false
+  var hasMagic = !!options.nocase
   var escaping = false
   // ? => one single character
   var patternListStack = []
@@ -891,11 +891,7 @@ Minimatch.prototype.matchOne = function (file, pattern, partial) {
     // patterns with magic have been turned into regexps.
     var hit
     if (typeof p === 'string') {
-      if (options.nocase) {
-        hit = f.toLowerCase() === p.toLowerCase()
-      } else {
-        hit = f === p
-      }
+      hit = f === p
       this.debug('string match', p, f, hit)
     } else {
       hit = f.match(p)
