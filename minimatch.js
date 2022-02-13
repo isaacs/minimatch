@@ -17,6 +17,7 @@ const path = (() => { try { return require('path') } catch (e) {}})() || {
 minimatch.sep = path.sep
 
 const GLOBSTAR = Symbol('globstar **')
+minimatch.GLOBSTAR = GLOBSTAR
 const expand = require('brace-expansion')
 
 const plTypes = {

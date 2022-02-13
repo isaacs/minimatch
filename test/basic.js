@@ -161,3 +161,8 @@ t.test('flipNegate', t => {
 function alpha (a, b) {
   return a > b ? 1 : -1
 }
+
+t.test('GLOBSTAR marker exposed', t => {
+  t.match(mm.GLOBSTAR, Symbol)
+  t.end()
+})
