@@ -95,13 +95,6 @@ t.test('invalid patterns', t => {
   t.end()
 })
 
-t.test('ctor is generator', t => {
-  const m = mm.Minimatch('asdf')
-  t.type(m, mm.Minimatch)
-  t.equal(m.pattern, 'asdf')
-  t.end()
-})
-
 t.test('nocomment matches nothing', t => {
   t.equal(mm('#comment', '#comment', { nocomment: false }), false)
   t.equal(mm('#comment', '#comment', { nocomment: true }), true)
