@@ -363,11 +363,7 @@ class Minimatch {
       // patterns with magic have been turned into regexps.
       var hit
       if (typeof p === 'string') {
-        if (options.nocase) {
-          hit = f.toLowerCase() === p.toLowerCase()
-        } else {
-          hit = f === p
-        }
+        hit = f === p
         this.debug('string match', p, f, hit)
       } else {
         hit = f.match(p)
@@ -430,7 +426,7 @@ class Minimatch {
     if (pattern === '') return ''
 
     let re = ''
-    let hasMagic = false
+    let hasMagic = !!options.nocase
     let escaping = false
     // ? => one single character
     const patternListStack = []
