@@ -81,8 +81,8 @@ module.exports = [
   ['a****c**?**??*****', ['abcdecdhjk'], null, ['abcdecdhjk']],
   ['[-abc]', ['-'], null, ['-']],
   ['[abc-]', ['-'], null, ['-']],
-  ['\\', ['\\'], null, ['\\']],
-  ['[\\\\]', ['\\'], null, ['\\']],
+  ['\\', ['\\'], null, ['\\'], { skip: process.platform === 'win32' }],
+  ['[\\\\]', ['\\'], null, ['\\'], { skip: process.platform === 'win32' }],
   ['[[]', ['['], null, ['[']],
   ['[', ['['], null, ['[']],
   ['[*', ['[abc'], null, ['[abc']],
@@ -175,7 +175,8 @@ module.exports = [
     '+(a|*\\|c\\\\|d\\\\\\|e\\\\\\\\|f\\\\\\\\\\|g',
     ['+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g'],
     {},
-    ['+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g', 'a', 'b\\c']
+    ['+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g', 'a', 'b\\c'],
+    {skip: process.platform === 'win32'},
   ],
 
   // crazy nested {,,} and *(||) tests.
