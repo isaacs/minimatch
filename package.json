@@ -10,6 +10,7 @@
   "main": "minimatch.js",
   "scripts": {
     "test": "tap",
+    "snap": "tap",
     "preversion": "npm test",
     "postversion": "npm publish",
     "prepublishOnly": "git push origin --follow-tags"

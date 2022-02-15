@@ -7,8 +7,6 @@ const t = require('tap')
 const globalBefore = Object.keys(global)
 const mm = require('../')
 const patterns = require('./patterns.js')
-const regexps = patterns.regexps
-let re = 0
 
 t.test('basic tests', function (t) {
   var start = Date.now()
@@ -29,14 +27,7 @@ t.test('basic tests', function (t) {
     var r = m.makeRe()
     var r2 = mm.makeRe(pattern, options)
     t.equal(String(r), String(r2), 'same results from both makeRe fns')
-    var expectRe = regexps[re++]
-    if (expectRe !== false) {
-      expectRe = '/' + expectRe.slice(1, -1).replace(new RegExp('([^\\\\])/', 'g'), '$1\\\/') + '/'
-      tapOpts.re = String(r) || JSON.stringify(r)
-      tapOpts.re = '/' + tapOpts.re.slice(1, -1).replace(new RegExp('([^\\\\])/', 'g'), '$1\\\/') + '/'
-    } else {
-      tapOpts.re = r
-    }
+    tapOpts.re = r
     tapOpts.files = JSON.stringify(f)
     tapOpts.pattern = pattern
     tapOpts.set = m.set
@@ -51,7 +42,7 @@ t.test('basic tests', function (t) {
       tapOpts
     )
 
-    t.equal(tapOpts.re, expectRe, null, tapOpts)
+    t.matchSnapshot(tapOpts.re, 'makeRe ' + pattern, tapOpts)
   })
 
   t.comment('time=' + (Date.now() - start) + 'ms')
@@ -164,5 +155,70 @@ function alpha (a, b) {
 
 t.test('GLOBSTAR marker exposed', t => {
   t.match(mm.GLOBSTAR, Symbol)
+  t.end()
+})
+
+t.test('globstar re matches zero or more path portions', t => {
+  const cases = {
+    'path/**/*.html': {
+      'path/x.html': true,
+      'path/x/y.html': true,
+      'path/x/y/z.html': true,
+      'path//x.html': true,
+      'path//x//y.html': true,
+      'path//x//y//z.html': true,
+      'path.html': false,
+      'pathx.html': false,
+      'pathx/y.html': false,
+      'pathx/y/z.html': false,
+    },
+    'path/**/**/*.html': {
+      'path/x.html': true,
+      'path/x/y.html': true,
+      'path/x/y/z.html': true,
+      'path//x.html': true,
+      'path//x//y.html': true,
+      'path//x//y//z.html': true,
+      'path.html': false,
+      'pathx.html': false,
+      'pathx/y.html': false,
+      'pathx/y/z.html': false,
+    },
+    '**/*.html': {
+      'path/x.html': true,
+      'path/x/y.html': true,
+      'path/x/y/z.html': true,
+      'path//x.html': true,
+      'path//x//y.html': true,
+      'path//x//y//z.html': true,
+      'path.html': true,
+      'pathx.html': true,
+      'pathx/y.html': true,
+      'pathx/y/z.html': true,
+      '/z.html': true,
+    },
+    '**/**/*.html': {
+      'path/x.html': true,
+      'path/x/y.html': true,
+      'path/x/y/z.html': true,
+      'path//x.html': true,
+      'path//x//y.html': true,
+      'path//x//y//z.html': true,
+      'path.html': true,
+      'pathx.html': true,
+      'pathx/y.html': true,
+      'pathx/y/z.html': true,
+      '/z.html': true,
+    },
+  }
+  for (const [pattern, set] of Object.entries(cases)) {
+    t.test(pattern, t => {
+      const re = mm.makeRe(pattern)
+      for (const [path, res] of Object.entries(set)) {
+        t.equal(re.test(path), res, path, { re, pattern })
+      }
+      t.end()
+    })
+  }
   t.end()
 })
