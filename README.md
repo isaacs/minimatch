@@ -236,3 +236,9 @@ other interpretation of the glob pattern.  Thus, a pattern like
 `+(a|{b),c)}`, which would not be valid in bash or zsh, is expanded
 **first** into the set of `+(a|b)` and `+(a|c)`, and those patterns are
 checked for validity.  Since those two are valid, matching proceeds.
+
+Note that `fnmatch(3)` in libc is an extremely naive string comparison
+matcher, which does not do anything special for slashes.  This library is
+designed to be used in glob searching and file walkers, and so it does do
+special things with `/`.  Thus, `foo*` will not match `foo/bar` in this
+library, even though it would in `fnmatch(3)`.
