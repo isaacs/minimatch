@@ -117,13 +117,13 @@ t.test('whitespace handling', t => {
   t.equal(mm('x/y', 'y'), false)
   t.equal(mm('x/y', 'y', { matchBase: true }), true)
   t.equal(mm('x/ ', ' '), false)
-  t.equal(mm('x/ ', ' ', { matchBase: true }), true)
+  t.equal(mm('x/ ', ' ', { matchBase: true }), false)
   t.equal(mm('x/', ''), false)
   t.equal(mm('x/', '', { matchBase: true }), false)
   t.equal(mm('', ''), true)
   t.equal(mm(' ', ''), false)
-  t.equal(mm('', ' '), false)
-  t.equal(mm(' ', ' '), true)
+  t.equal(mm('', ' '), true)
+  t.equal(mm(' ', ' '), false)
   t.end()
 })
 
@@ -162,6 +162,11 @@ t.test('flipNegate', t => {
   t.equal(mm('x', '!y', { flipNegate: true }), false)
   t.equal(mm('x', '!!y', { flipNegate: true }), false)
   t.equal(mm('x', 'y', { flipNegate: true }), false)
+  t.end()
+})
+
+t.test('pattern should be trimmed', t => {
+  t.equal(mm('x', ' x '), true)
   t.end()
 })
 
