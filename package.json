@@ -26,6 +26,7 @@
   },
   "license": "ISC",
   "files": [
-    "minimatch.js"
+    "minimatch.js",
+    "lib"
   ]
 }

@@ -11,9 +11,7 @@ const minimatch = module.exports = (p, pattern, options = {}) => {
 
 module.exports = minimatch
 
-const path = (() => { try { return require('path') } catch (e) {}})() || {
-  sep: '/'
-}
+const path = require('./lib/path.js')
 minimatch.sep = path.sep
 
 const GLOBSTAR = Symbol('globstar **')
