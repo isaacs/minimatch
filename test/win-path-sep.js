@@ -1,4 +1,12 @@
 const t = require('tap')
+t.test('path separator /', t => {
+  const mm = t.mock('../', { path: { sep: '/' }})
+
+  t.equal(mm('x/y/z', 'x/y/*/z'), false)
+  t.equal(mm('x/y/w/z', 'x/y/*/z'), true)
+  t.end()
+})
+
 t.test('path separator \\', t => {
   const mm = t.mock('../', { path: { sep: '\\' }})
 
