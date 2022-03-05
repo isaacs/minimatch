@@ -120,7 +120,7 @@ files, in the style of fnmatch or glob.  If nothing is matched, and
 options.nonull is set, then return a list containing the pattern itself.
 
 ```javascript
-var javascripts = minimatch.match(fileList, "*.js", {matchBase: true}))
+var javascripts = minimatch.match(fileList, "*.js", {matchBase: true})
 ```
 
 ### minimatch.makeRe(pattern, options)
