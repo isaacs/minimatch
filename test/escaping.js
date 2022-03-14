@@ -10,7 +10,7 @@ var pre = 'x'  // prepended to the testable character
 var post = 'y' // appended to the testable character
 
 function escapeChar (cc) {
-  return '"\\u' + ('000' + cc.toString(16).toUpperCase()).substr(-4) + '"'
+  return '"\\u' + ('000' + cc.toString(16).toUpperCase()).slice(-4) + '"'
 }
 
 tap.test('escaping tests', function (t) {
