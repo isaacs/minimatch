@@ -158,6 +158,7 @@ minimatch.match = (list, pattern, options = {}) => {
 // replace stuff like \* with *
 const globUnescape = s => s.replace(/\\(.)/g, '$1')
 const regExpEscape = s => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
+const braExpEscape = s => s.replace(/[[\]\\]/g, '\\$&')
 
 class Minimatch {
   constructor (pattern, options) {
@@ -615,7 +616,7 @@ class Minimatch {
           // to do safely.  For now, this is safe and works.
           cs = pattern.substring(classStart + 1, i)
           try {
-            RegExp('[' + cs + ']')
+            RegExp('[' + braExpEscape(globUnescape(cs)) + ']')
           } catch (er) {
             // not a valid class!
             sp = this.parse(cs, SUBPARSE)
