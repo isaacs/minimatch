@@ -201,6 +201,21 @@ minimatch('/a/b', '/**/d', { partial: true })     // true, might be /a/b/.../d
 minimatch('/x/y/z', '/a/**/z', { partial: true }) // false, because x !== a
 ```
 
+### windowsPathsNoEscape
+
+Use `\\` as a path separator _only_, and _never_ as an escape
+character.  If set, all `\\` characters are replaced with `/` in
+the pattern.  Note that this makes it **impossible** to match
+against paths containing literal glob pattern characters, but
+allows matching with patterns constructed using `path.join()` and
+`path.resolve()` on Windows platforms, mimicking the (buggy!)
+behavior of earlier versions on Windows.  Please use with
+caution, and be mindful of [the caveat about Windows
+paths](#windows).
+
+For legacy reasons, this is also set if
+`options.allowWindowsEscape` is set to the exact value `false`.
+
 ## Comparisons to other fnmatch/glob implementations
 
 While strict compliance with the existing standards is a worthwhile

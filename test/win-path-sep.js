@@ -39,3 +39,35 @@ t.test('posix default', t => {
   global.process = proc
   t.end()
 })
+
+t.test('override with options', t => {
+  const mm = t.mock('../', { '../lib/path.js': {sep: '\\'}})
+
+  Object.defineProperty(process, 'platform', {
+    value: 'win32',
+    configurable: true,
+    enumerable: true,
+    writable: true,
+  })
+  require('path').sep = '\\'
+
+  t.equal(mm('c:\\foo\\bar', 'c:\\foo\\*', {
+    windowsPathsNoEscape: true,
+  }), true)
+
+  t.equal(mm('c:\\foo\\bar', 'c:\\foo\\*', {
+    windowsPathsNoEscape: 'hamburger',
+  }), true)
+
+  t.equal(mm('c:\\foo\\bar', 'c:\\foo\\*', {
+    allowWindowsEscape: false,
+  }), true)
+
+  t.equal(mm('c:\\foo\\bar', 'c:\\foo\\*', {}), false)
+
+  t.equal(mm('c:\\foo\\bar', 'c:\\foo\\*', {
+    allowWindowsEscape: null,
+  }), false)
+
+  t.end()
+})
