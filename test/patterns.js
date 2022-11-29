@@ -266,6 +266,11 @@ module.exports = [
 
   'comments match nothing',
   ['# ignore this', []],
+
+  'escape regex properly within classes',
+  ['[\\z-a]', []],
+  ['[\\b-a]', []],
+  ['[]+*]', []],
 ]
 
 Object.defineProperty(module.exports, 'files', {
