@@ -271,6 +271,8 @@ module.exports = [
   ['[\\z-a]', []],
   ['[\\b-a]', []],
   ['[]+*]', []],
+  ['[z\\-a]', []],
+  ['[\\-\\]]', []],
 ]
 
 Object.defineProperty(module.exports, 'files', {

@@ -157,6 +157,7 @@ minimatch.match = (list, pattern, options = {}) => {
 
 // replace stuff like \* with *
 const globUnescape = s => s.replace(/\\(.)/g, '$1')
+const charUnescape = s => s.replace(/\\([^-\]])/g, '$1')
 const regExpEscape = s => s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
 const braExpEscape = s => s.replace(/[[\]\\]/g, '\\$&')
 
@@ -493,6 +494,11 @@ class Minimatch {
         }
 
         case '\\':
+          if (inClass && pattern.charAt(i + 1) === '-') {
+            re += c
+            continue
+          }
+
           clearStateChar()
           escaping = true
         continue
@@ -616,7 +622,7 @@ class Minimatch {
           // to do safely.  For now, this is safe and works.
           cs = pattern.substring(classStart + 1, i)
           try {
-            RegExp('[' + braExpEscape(globUnescape(cs)) + ']')
+            RegExp('[' + braExpEscape(charUnescape(cs)) + ']')
           } catch (er) {
             // not a valid class!
             sp = this.parse(cs, SUBPARSE)
