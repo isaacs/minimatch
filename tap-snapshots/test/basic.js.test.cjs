@@ -198,11 +198,11 @@ exports[`test/basic.js TAP basic tests > makeRe [\\\\] 1`] = `
 `
 
 exports[`test/basic.js TAP basic tests > makeRe [\\b-a] 1`] = `
-/^(?:\\[b\\-a\\])$/
+/^(?:(?!\\.)(?=.)(?:$.))$/
 `
 
 exports[`test/basic.js TAP basic tests > makeRe [\\z-a] 1`] = `
-/^(?:\\[z\\-a\\])$/
+/^(?:(?!\\.)(?=.)(?:$.))$/
 `
 
 exports[`test/basic.js TAP basic tests > makeRe [] 1`] = `
@@ -226,7 +226,11 @@ exports[`test/basic.js TAP basic tests > makeRe [^a-c]* 1`] = `
 `
 
 exports[`test/basic.js TAP basic tests > makeRe [a-0][a-Ā] 1`] = `
-/^(?:(?=.)\\[a-0\\][a-Ā])$/
+/^(?:(?!\\.)(?=.)(?:$.)[a-Ā])$/
+`
+
+exports[`test/basic.js TAP basic tests > makeRe [a-b-c] 1`] = `
+/^(?:(?!\\.)(?=.)[a-b-c])$/
 `
 
 exports[`test/basic.js TAP basic tests > makeRe [a-c]b* 1`] = `
@@ -254,7 +258,7 @@ exports[`test/basic.js TAP basic tests > makeRe [ia]?[ck] 1`] = `
 `
 
 exports[`test/basic.js TAP basic tests > makeRe [z-a] 1`] = `
-/^(?:\\[z\\-a\\])$/
+/^(?:(?!\\.)(?=.)(?:$.))$/
 `
 
 exports[`test/basic.js TAP basic tests > makeRe [z\\-a] 1`] = `
@@ -345,8 +349,12 @@ exports[`test/basic.js TAP basic tests > makeRe a/.*/b 2`] = `
 /^(?:a\\/(?=.)\\.[^/]*?\\/b)$/
 `
 
-exports[`test/basic.js TAP basic tests > makeRe a/[2015-03-10T00:23:08.647Z]/z 1`] = `
+exports[`test/basic.js TAP basic tests > makeRe a/[2015-03-10T00:23:08.647Z\\]/z 1`] = `
 /^(?:a\\/\\[2015\\-03\\-10T00:23:08\\.647Z\\]\\/z)$/
+`
+
+exports[`test/basic.js TAP basic tests > makeRe a/[2015-03-10T00:23:08.647Z]/z 1`] = `
+/^(?:a\\/(?!\\.)(?=.)(?:$.)\\/z)$/
 `
 
 exports[`test/basic.js TAP basic tests > makeRe a?b 1`] = `

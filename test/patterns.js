@@ -262,6 +262,7 @@ module.exports = [
   'https://github.com/isaacs/minimatch/issues/59',
   ['[z-a]', []],
   ['a/[2015-03-10T00:23:08.647Z]/z', []],
+  ['a/[2015-03-10T00:23:08.647Z\\]/z', []],
   ['[a-0][a-\u0100]', []],
 
   'comments match nothing',
@@ -273,6 +274,7 @@ module.exports = [
   ['[]+*]', []],
   ['[z\\-a]', []],
   ['[\\-\\]]', []],
+  ['[a-b-c]', []],
 ]
 
 Object.defineProperty(module.exports, 'files', {
