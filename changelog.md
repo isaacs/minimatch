@@ -3,6 +3,10 @@
 ## 5.1
 
 - use windowsPathNoEscape/allowWindowsEscape opts
+- make character classes more faithful to bash glob behavior
+    - fix handling of escapes
+    - treat invalid character classes as non-matching pattern
+      rather than escaped literals
 
 ## 5.0
 
