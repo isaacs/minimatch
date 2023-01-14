@@ -162,7 +162,7 @@ exports[`test/basic.js TAP basic tests > makeRe X* 2`] = `
 `
 
 exports[`test/basic.js TAP basic tests > makeRe XYZ 1`] = `
-/^(?:(?=.)XYZ)$/i
+/^(?:XYZ)$/i
 `
 
 exports[`test/basic.js TAP basic tests > makeRe [ 1`] = `
