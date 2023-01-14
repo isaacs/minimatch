@@ -86,7 +86,7 @@ exports[`test/basic.js TAP basic tests > makeRe **/.x/** 2`] = `
 `
 
 exports[`test/basic.js TAP basic tests > makeRe *.!(js) 1`] = `
-/^(?:(?!\\.)(?=.)[^/]*?\\.(?:(?!(?:js)$)[^/]*?))$/
+/^(?:(?!\\.)(?=.)[^/]*?\\.(?:(?!(?:js)(?:$|\\/))[^/]*?))$/
 `
 
 exports[`test/basic.js TAP basic tests > makeRe *.\\* 1`] = `
