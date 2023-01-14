@@ -5,7 +5,7 @@
 
 var tap = require('tap')
 var globalBefore = Object.keys(global)
-var mm = require('../')
+var mm = require('../').default
 
 var patterns = require('./patterns.js')
 
@@ -57,8 +57,8 @@ tap.test('global leak test', function (t) {
 })
 
 tap.test('empty defaults obj returns original ctor', t => {
-  for (const empty of [{}, undefined, null, false, 1234, 'xyz']) {
-    const defmm = mm.defaults({})
+  for (const empty of [{}, undefined]) {
+    const defmm = mm.defaults(empty)
     t.equal(defmm, mm)
     const Class = mm.Minimatch.defaults({})
     t.equal(Class, mm.Minimatch)

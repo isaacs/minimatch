@@ -1,5 +1,5 @@
 var t = require('tap')
-var mm = require('../')
+var mm = require('../').default
 
 var types = '!?+*@'.split('')
 

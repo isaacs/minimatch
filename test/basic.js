@@ -5,7 +5,7 @@
 
 const t = require('tap')
 const globalBefore = Object.keys(global)
-const mm = require('../')
+const mm = require('../').default
 const patterns = require('./patterns.js')
 
 t.test('basic tests', function (t) {

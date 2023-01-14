@@ -1,5 +1,5 @@
 var t = require('tap')
-var minimatch = require('../')
+var minimatch = require('../').default
 var cases = {
   'bar.min.js': {
     '*.!(js|css)': true,

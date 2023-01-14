@@ -2,9 +2,6 @@
 
 A minimal matching utility.
 
-[![Build Status](https://travis-ci.org/isaacs/minimatch.svg?branch=master)](http://travis-ci.org/isaacs/minimatch)
-
-
 This is the matching library used internally by npm.
 
 It works by converting glob expressions into JavaScript `RegExp`
@@ -12,8 +9,11 @@ objects.
 
 ## Usage
 
-```javascript
-var minimatch = require("minimatch")
+```js
+// hybrid module, load with require() or import
+import minimatch from 'minimatch'
+// or:
+const minimatch = require("minimatch").default
 
 minimatch("bar.foo", "*.foo") // true!
 minimatch("bar.foo", "*.bar") // false!

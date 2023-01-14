@@ -1,5 +1,5 @@
 const t = require('tap')
-const { Minimatch } = require('../')
+const { Minimatch } = require('../').default
 
 const nomagic = '../1/2/3'
 const yesmagic = '../x'

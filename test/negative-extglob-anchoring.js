@@ -1,5 +1,5 @@
 const t = require('tap')
-const mm = require('../')
+const mm = require('../').default
 const pattern = 'a/b/*/!(bar)/*'
 const nope = 'a/b/c/bar/x'
 const yup = 'a/b/c/baz/x'

@@ -1,5 +1,10 @@
 # change log
 
+## 6.0
+
+- hybrid module supporting both `require()` and `import`
+- exported types
+
 ## 5.1
 
 - use windowsPathNoEscape/allowWindowsEscape opts
