@@ -309,12 +309,24 @@ export class Minimatch {
     // These will be regexps, except in the case of "**", which is
     // set to the GLOBSTAR object for globstar behavior,
     // and will not contain any / characters
-    const globParts = (this.globParts = globSet.map(s => s.split(slashSplit)))
+    const rawGlobParts = globSet.map(s => s.split(slashSplit))
 
-    this.debug(this.pattern, globParts)
+    // consecutive globstars are an unncessary perf killer
+    this.globParts = this.options.noglobstar
+      ? rawGlobParts
+      : rawGlobParts.map(parts =>
+          parts.reduce((set: string[], part) => {
+            if (part !== '**' || set[set.length - 1] !== '**') {
+              set.push(part)
+            }
+            return set
+          }, [])
+        )
+
+    this.debug(this.pattern, this.globParts)
 
     // glob --> regexps
-    let set = globParts.map((s, _, __) => s.map(ss => this.parse(ss)))
+    let set = this.globParts.map((s, _, __) => s.map(ss => this.parse(ss)))
 
     this.debug(this.pattern, set)
 
@@ -921,32 +933,21 @@ export class Minimatch {
       : twoStarNoDot
     const flags = options.nocase ? 'i' : ''
 
-    // coalesce globstars and regexpify non-globstar patterns
-    // if it's the only item, then we just do one twoStar
-    // if it's the first, and there are more, prepend (\/|twoStar\/)? to next
-    // if it's the last, append (\/twoStar|) to previous
-    // if it's in the middle, append (\/|\/twoStar\/) to previous
+    // regexpify non-globstar patterns
+    // if ** is only item, then we just do one twoStar
+    // if ** is first, and there are more, prepend (\/|twoStar\/)? to next
+    // if ** is last, append (\/twoStar|) to previous
+    // if ** is in the middle, append (\/|\/twoStar\/) to previous
     // then filter out GLOBSTAR symbols
     let re = set
       .map(pattern => {
-        const pp: (string | typeof GLOBSTAR)[] = pattern
-          .map(p =>
-            typeof p === 'string'
-              ? regExpEscape(p)
-              : p === GLOBSTAR
-              ? GLOBSTAR
-              : p._src
-          )
-          .reduce((set: (string | typeof GLOBSTAR)[], p) => {
-            if (
-              (set[set.length - 1] === GLOBSTAR && p === GLOBSTAR) ||
-              p === undefined
-            ) {
-              return set
-            }
-            set.push(p)
-            return set
-          }, [])
+        const pp: (string | typeof GLOBSTAR)[] = pattern.map(p =>
+          typeof p === 'string'
+            ? regExpEscape(p)
+            : p === GLOBSTAR
+            ? GLOBSTAR
+            : p._src
+        ) as (string | typeof GLOBSTAR)[]
         pp.forEach((p, i) => {
           const next = pp[i + 1]
           const prev = pp[i - 1]
