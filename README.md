@@ -11,9 +11,9 @@ objects.
 
 ```js
 // hybrid module, load with require() or import
-import minimatch from 'minimatch'
+import { minimatch } from 'minimatch'
 // or:
-const minimatch = require("minimatch").default
+const { minimatch } = require("minimatch")
 
 minimatch("bar.foo", "*.foo") // true!
 minimatch("bar.foo", "*.bar") // false!
