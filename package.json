@@ -13,12 +13,12 @@
   "exports": {
     ".": {
       "import": {
-        "default": "./dist/mjs/index.js",
-        "types": "./dist/mjs/index.d.ts"
+        "types": "./dist/mjs/index.d.ts",
+        "default": "./dist/mjs/index.js"
       },
       "require": {
-        "default": "./dist/cjs/index.js",
-        "types": "./dist/cjs/index.d.ts"
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
       }
     }
   },
