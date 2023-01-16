@@ -249,8 +249,8 @@ export class Minimatch {
   comment: boolean
   empty: boolean
   partial: boolean
-  globSet?: string[]
-  globParts?: string[][]
+  globSet: string[]
+  globParts: string[][]
 
   regexp: false | null | MMRegExp
   constructor(pattern: string, options: MinimatchOptions = {}) {
@@ -258,7 +258,6 @@ export class Minimatch {
 
     options = options || {}
     this.options = options
-    this.set = []
     this.pattern = pattern
     this.windowsPathsNoEscape =
       !!options.windowsPathsNoEscape || options.allowWindowsEscape === false
@@ -271,6 +270,10 @@ export class Minimatch {
     this.comment = false
     this.empty = false
     this.partial = !!options.partial
+
+    this.globSet = []
+    this.globParts = []
+    this.set = []
 
     // make the set of regexps etc.
     this.make()
@@ -287,6 +290,7 @@ export class Minimatch {
       this.comment = true
       return
     }
+
     if (!pattern) {
       this.empty = true
       return
@@ -296,20 +300,20 @@ export class Minimatch {
     this.parseNegate()
 
     // step 2: expand braces
-    const globSet = (this.globSet = this.braceExpand())
+    this.globSet = this.braceExpand()
 
     if (options.debug) {
       this.debug = (...args: any[]) => console.error(...args)
     }
 
-    this.debug(this.pattern, globSet)
+    this.debug(this.pattern, this.globSet)
 
     // step 3: now we have a set, so turn each one into a series of path-portion
     // matching patterns.
     // These will be regexps, except in the case of "**", which is
     // set to the GLOBSTAR object for globstar behavior,
     // and will not contain any / characters
-    const rawGlobParts = globSet.map(s => s.split(slashSplit))
+    const rawGlobParts = this.globSet.map(s => s.split(slashSplit))
 
     // consecutive globstars are an unncessary perf killer
     this.globParts = this.options.noglobstar
