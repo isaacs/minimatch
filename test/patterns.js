@@ -339,6 +339,9 @@ module.exports = [
   () => files=['a(b', 'ab', 'a)b'],
   ['@(a|a[(])b', ['a(b', 'ab']],
   ['@(a|a[)])b', ['a)b', 'ab']],
+
+  // TODO: recursive descent parser for extglobs, to do this properly
+  // ['@(+(.*))', ['.a', '.a.js', '.js']],
 ]
 
 Object.defineProperty(module.exports, 'files', {
