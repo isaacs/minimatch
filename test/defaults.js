@@ -50,7 +50,7 @@ tap.test('basic tests', function (t) {
 
 tap.test('global leak test', function (t) {
   var globalAfter = Object.keys(global).filter(function (k) {
-    return (k !== '__coverage__')
+    return k !== '__coverage__'
   })
   t.same(globalAfter, globalBefore, 'no new globals, please')
   t.end()
@@ -80,13 +80,13 @@ tap.test('call defaults mm function', t => {
   t.same(unmm.options, { nocomment: false })
 
   const f = defmm.filter('#nc')
-  t.same(['x','#nc', 'y'].filter(f), ['#nc'])
-  t.same(defmm.match(['x','#nc', 'y'], '#nc'), ['#nc'])
+  t.same(['x', '#nc', 'y'].filter(f), ['#nc'])
+  t.same(defmm.match(['x', '#nc', 'y'], '#nc'), ['#nc'])
   t.same(defmm.braceExpand('# {a,b}'), ['# a', '# b'])
   t.same(defmm.makeRe('# {a,b}'), /^(?:\#\ a|\#\ b)$/)
   t.end()
 })
 
-function alpha (a, b) {
+function alpha(a, b) {
   return a > b ? 1 : -1
 }

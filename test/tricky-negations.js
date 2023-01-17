@@ -4,7 +4,7 @@ var cases = {
   'bar.min.js': {
     '*.!(js|css)': true,
     '!*.+(js|css)': false,
-    '*.+(js|css)': true
+    '*.+(js|css)': true,
   },
 
   'a-integration-test.js': {
@@ -25,76 +25,75 @@ var cases = {
     '*i!(ntegration-)test.js': true,
     '*te!(gration-te)st.js': true,
     '*-!(integration)?test.js': false,
-    '*?!(integration)?test.js': true
+    '*?!(integration)?test.js': true,
   },
 
   'foo-integration-test.js': {
     'foo-integration-test.js': true,
-    '!(*-integration-test.js)': false
+    '!(*-integration-test.js)': false,
   },
 
   'foo.jszzz.js': {
-    '*.!(js).js': true
+    '*.!(js).js': true,
   },
 
   'asd.jss': {
-    '*.!(js)': true
+    '*.!(js)': true,
   },
 
   'asd.jss.xyz': {
-    '*.!(js).!(xy)': true
+    '*.!(js).!(xy)': true,
   },
 
   'asd.jss.xy': {
-    '*.!(js).!(xy)': false
+    '*.!(js).!(xy)': false,
   },
 
   'asd.js.xyz': {
-    '*.!(js).!(xy)': false
+    '*.!(js).!(xy)': false,
   },
 
   'asd.js.xy': {
-    '*.!(js).!(xy)': false
+    '*.!(js).!(xy)': false,
   },
 
   'asd.sjs.zxy': {
-    '*.!(js).!(xy)': true
+    '*.!(js).!(xy)': true,
   },
 
   'asd..xyz': {
-    '*.!(js).!(xy)': true
+    '*.!(js).!(xy)': true,
   },
 
   'asd..xy': {
     '*.!(js).!(xy)': false,
-    '*.!(js|x).!(xy)': false
+    '*.!(js|x).!(xy)': false,
   },
 
   'foo.js.js': {
-    '*.!(js)': true
+    '*.!(js)': true,
   },
 
   'testjson.json': {
     '*(*.json|!(*.js))': true,
     '+(*.json|!(*.js))': true,
     '@(*.json|!(*.js))': true,
-    '?(*.json|!(*.js))': true
+    '?(*.json|!(*.js))': true,
   },
 
   'foojs.js': {
     '*(*.json|!(*.js))': false, // XXX bash 4.3 disagrees!
     '+(*.json|!(*.js))': false, // XXX bash 4.3 disagrees!
     '@(*.json|!(*.js))': false,
-    '?(*.json|!(*.js))': false
+    '?(*.json|!(*.js))': false,
   },
 
   'other.bar': {
     '*(*.json|!(*.js))': true,
     '+(*.json|!(*.js))': true,
     '@(*.json|!(*.js))': true,
-    '?(*.json|!(*.js))': true
-  }
-
+    '?(*.json|!(*.js))': true,
+  },
 }
 
 var options = { nonegate: true }

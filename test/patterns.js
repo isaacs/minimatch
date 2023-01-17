@@ -3,16 +3,27 @@ if (module === require.main) {
 }
 
 var files = [
-  'a', 'b', 'c', 'd', 'abc',
-  'abd', 'abe', 'bb', 'bcd',
-  'ca', 'cb', 'dd', 'de',
-  'bdir/', 'bdir/cfile'
+  'a',
+  'b',
+  'c',
+  'd',
+  'abc',
+  'abd',
+  'abe',
+  'bb',
+  'bcd',
+  'ca',
+  'cb',
+  'dd',
+  'de',
+  'bdir/',
+  'bdir/cfile',
 ]
 
 module.exports = [
   'http://www.bashcookbook.com/bashinfo/source/bash-1.14.7/tests/glob-test',
   ['a*', ['a', 'abc', 'abd', 'abe']],
-  ['X*', ['X*'], {nonull: true}],
+  ['X*', ['X*'], { nonull: true }],
 
   // allow null glob expansion
   ['X*', []],
@@ -20,47 +31,60 @@ module.exports = [
   // isaacs: Slightly different than bash/sh/ksh
   // \\* is not un-escaped to literal "*" in a failed match,
   // but it does make it get treated as a literal star
-  ['\\*', ['\\*'], {nonull: true}],
-  ['\\**', ['\\**'], {nonull: true}],
-  ['\\*\\*', ['\\*\\*'], {nonull: true}],
+  ['\\*', ['\\*'], { nonull: true }],
+  ['\\**', ['\\**'], { nonull: true }],
+  ['\\*\\*', ['\\*\\*'], { nonull: true }],
 
   ['b*/', ['bdir/']],
   ['c*', ['c', 'ca', 'cb']],
   ['**', files],
 
-  ['\\.\\./*/', ['\\.\\./*/'], {nonull: true}],
-  ['s/\\..*//', ['s/\\..*//'], {nonull: true}],
+  ['\\.\\./*/', ['\\.\\./*/'], { nonull: true }],
+  ['s/\\..*//', ['s/\\..*//'], { nonull: true }],
 
   'legendary larry crashes bashes',
-  ['/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\\1/',
-    ['/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\\1/'], {nonull: true}],
-  ['/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\u0001/',
-    ['/^root:/{s/^[^:]*:[^:]*:\([^:]*\).*$/\u0001/'], {nonull: true}],
+  [
+    '/^root:/{s/^[^:]*:[^:]*:([^:]*).*$/\\1/',
+    ['/^root:/{s/^[^:]*:[^:]*:([^:]*).*$/\\1/'],
+    { nonull: true },
+  ],
+  [
+    '/^root:/{s/^[^:]*:[^:]*:([^:]*).*$/\u0001/',
+    ['/^root:/{s/^[^:]*:[^:]*:([^:]*).*$/\u0001/'],
+    { nonull: true },
+  ],
 
   'character classes',
   ['[a-c]b*', ['abc', 'abd', 'abe', 'bb', 'cb']],
-  ['[a-y]*[^c]', ['abd', 'abe', 'bb', 'bcd',
-    'bdir/', 'ca', 'cb', 'dd', 'de']],
+  ['[a-y]*[^c]', ['abd', 'abe', 'bb', 'bcd', 'bdir/', 'ca', 'cb', 'dd', 'de']],
   ['a*[^c]', ['abd', 'abe']],
-  function () { files.push('a-b', 'aXb') },
+  function () {
+    files.push('a-b', 'aXb')
+  },
   ['a[X-]b', ['a-b', 'aXb']],
-  function () { files.push('.x', '.y') },
+  function () {
+    files.push('.x', '.y')
+  },
   ['[^a-c]*', ['d', 'dd', 'de']],
-  function () { files.push('a*b/', 'a*b/ooo') },
+  function () {
+    files.push('a*b/', 'a*b/ooo')
+  },
   ['a\\*b/*', ['a*b/ooo']],
   ['a\\*?/*', ['a*b/ooo']],
-  ['*\\\\!*', [], {null: true}, ['echo !7']],
+  ['*\\\\!*', [], { null: true }, ['echo !7']],
   ['*\\!*', ['echo !7'], null, ['echo !7']],
   ['*.\\*', ['r.*'], null, ['r.*']],
   ['a[b]c', ['abc']],
   ['a[\\b]c', ['abc']],
   ['a?c', ['abc']],
-  ['a\\*c', [], {null: true}, ['abc']],
+  ['a\\*c', [], { null: true }, ['abc']],
   ['', [''], { null: true }, ['']],
 
   'http://www.opensource.apple.com/source/bash/bash-23/' +
-  'bash/tests/glob-test',
-  function () { files.push('man/', 'man/man1/', 'man/man1/bash.1') },
+    'bash/tests/glob-test',
+  function () {
+    files.push('man/', 'man/man1/', 'man/man1/bash.1')
+  },
   ['*/man*/bash.*', ['man/man1/bash.1']],
   ['man/man1/bash.1', ['man/man1/bash.1']],
   ['a***c', ['abc'], null, ['abc']],
@@ -88,11 +112,11 @@ module.exports = [
   ['[*', ['[abc'], null, ['[abc']],
 
   'a right bracket shall lose its special meaning and\n' +
-  'represent itself in a bracket expression if it occurs\n' +
-  'first in the list.  -- POSIX.2 2.8.3.2',
+    'represent itself in a bracket expression if it occurs\n' +
+    'first in the list.  -- POSIX.2 2.8.3.2',
   ['[]]', [']'], null, [']']],
   ['[]-]', [']'], null, [']']],
-  ['[a-\z]', ['p'], null, ['p']],
+  ['[a-z]', ['p'], null, ['p']],
   ['??**********?****?', [], { null: true }, ['abc']],
   ['??**********?****c', [], { null: true }, ['abc']],
   ['?************c****?****', [], { null: true }, ['abc']],
@@ -103,26 +127,19 @@ module.exports = [
   ['[abc', [], { null: true }, ['[']],
 
   'nocase tests',
-  ['XYZ', ['xYz'], { nocase: true, null: true },
-    ['xYz', 'ABC', 'IjK']],
-  [
-    'ab*',
-    ['ABC'],
-    { nocase: true, null: true },
-    ['xYz', 'ABC', 'IjK']
-  ],
+  ['XYZ', ['xYz'], { nocase: true, null: true }, ['xYz', 'ABC', 'IjK']],
+  ['ab*', ['ABC'], { nocase: true, null: true }, ['xYz', 'ABC', 'IjK']],
   [
     '[ia]?[ck]',
     ['ABC', 'IjK'],
     { nocase: true, null: true },
-    ['xYz', 'ABC', 'IjK']
+    ['xYz', 'ABC', 'IjK'],
   ],
 
   // [ pattern, [matches], MM opts, files, TAP opts]
   'onestar/twostar',
-  ['{/*,*}', [], {null: true}, ['/asdf/asdf/asdf']],
-  ['{/?,*}', ['/a', 'bb'], {null: true},
-    ['/a', '/b/b', '/a/b/c', 'bb']],
+  ['{/*,*}', [], { null: true }, ['/asdf/asdf/asdf']],
+  ['{/?,*}', ['/a', 'bb'], { null: true }, ['/a', '/b/b', '/a/b/c', 'bb']],
 
   'dots should not match unless requested',
   ['**', ['a/b'], {}, ['a/b', 'a/.d', '.a/.d']],
@@ -132,23 +149,18 @@ module.exports = [
   function () {
     files = ['a/./b', 'a/../b', 'a/c/b', 'a/.d/b']
   },
-  ['a/*/b', ['a/c/b', 'a/.d/b'], {dot: true}],
-  ['a/.*/b', ['a/./b', 'a/../b', 'a/.d/b'], {dot: true}],
-  ['a/*/b', ['a/c/b'], {dot: false}],
-  ['a/.*/b', ['a/./b', 'a/../b', 'a/.d/b'], {dot: false}],
+  ['a/*/b', ['a/c/b', 'a/.d/b'], { dot: true }],
+  ['a/.*/b', ['a/./b', 'a/../b', 'a/.d/b'], { dot: true }],
+  ['a/*/b', ['a/c/b'], { dot: false }],
+  ['a/.*/b', ['a/./b', 'a/../b', 'a/.d/b'], { dot: false }],
 
   // this also tests that changing the options needs
   // to change the cache key, even if the pattern is
   // the same!
-  [
-    '**',
-    ['a/b', 'a/.d', '.a/.d'],
-    { dot: true },
-    [ '.a/.d', 'a/.d', 'a/b']
-  ],
+  ['**', ['a/b', 'a/.d', '.a/.d'], { dot: true }, ['.a/.d', 'a/.d', 'a/b']],
 
   'paren sets cannot contain slashes',
-  ['*(a/b)', ['*(a/b)'], {nonull: true}, ['a/b']],
+  ['*(a/b)', ['*(a/b)'], { nonull: true }, ['a/b']],
 
   // brace sets trump all else.
   //
@@ -176,15 +188,34 @@ module.exports = [
     ['+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g'],
     {},
     ['+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g', 'a', 'b\\c'],
-    {skip: process.platform === 'win32'},
+    { skip: process.platform === 'win32' },
   ],
 
   // crazy nested {,,} and *(||) tests.
   function () {
     files = [
-      'a', 'b', 'c', 'd', 'ab', 'ac', 'ad', 'bc', 'cb', 'bc,d',
-      'c,db', 'c,d', 'd)', '(b|c', '*(b|c', 'b|c', 'b|cc', 'cb|c',
-      'x(a|b|c)', 'x(a|c)', '(a|b|c)', '(a|c)'
+      'a',
+      'b',
+      'c',
+      'd',
+      'ab',
+      'ac',
+      'ad',
+      'bc',
+      'cb',
+      'bc,d',
+      'c,db',
+      'c,d',
+      'd)',
+      '(b|c',
+      '*(b|c',
+      'b|c',
+      'b|cc',
+      'cb|c',
+      'x(a|b|c)',
+      'x(a|c)',
+      '(a|b|c)',
+      '(a|c)',
     ]
   },
   ['*(a|{b,c})', ['a', 'b', 'c', 'ab', 'ac']],
@@ -196,18 +227,14 @@ module.exports = [
   ['*(a|{b|c,c})', ['a', 'b', 'c', 'ab', 'ac', 'bc', 'cb']],
 
   // test various flag settings.
-  [
-    '*(a|{b|c,c})',
-    ['x(a|b|c)', 'x(a|c)', '(a|b|c)', '(a|c)'],
-    { noext: true }
-  ],
+  ['*(a|{b|c,c})', ['x(a|b|c)', 'x(a|c)', '(a|b|c)', '(a|c)'], { noext: true }],
   [
     'a?b',
     ['x/y/acb', 'acb/'],
-    {matchBase: true},
-    ['x/y/acb', 'acb/', 'acb/d/e', 'x/y/acb/d']
+    { matchBase: true },
+    ['x/y/acb', 'acb/', 'acb/d/e', 'x/y/acb/d'],
   ],
-  ['#*', ['#a', '#b'], {nocomment: true}, ['#a', '#b', 'c#d']],
+  ['#*', ['#a', '#b'], { nocomment: true }, ['#a', '#b', 'c#d']],
 
   // begin channelling Boole and deMorgan...
   'negation tests',
@@ -219,7 +246,7 @@ module.exports = [
   ['!a*', ['\\!a', 'd', 'e', '!ab', '!abc']],
 
   // anything that IS !a* matches.
-  ['!a*', ['!ab', '!abc'], {nonegate: true}],
+  ['!a*', ['!ab', '!abc'], { nonegate: true }],
 
   // anything that IS a* matches
   ['!!a*', ['a!b']],
@@ -229,35 +256,44 @@ module.exports = [
 
   // negation nestled within a pattern
   function () {
-    files = [
-      'foo.js',
-      'foo.bar',
-      'foo.js.js',
-      'blar.js',
-      'foo.',
-      'boo.js.boo'
-    ]
+    files = ['foo.js', 'foo.bar', 'foo.js.js', 'blar.js', 'foo.', 'boo.js.boo']
   },
   // last one is tricky! * matches foo, . matches ., and 'js.js' != 'js'
   // copy bash 4.3 behavior on this.
-  ['*.!(js)', ['foo.bar', 'foo.', 'boo.js.boo', 'foo.js.js'] ],
+  ['*.!(js)', ['foo.bar', 'foo.', 'boo.js.boo', 'foo.js.js']],
 
   'https://github.com/isaacs/minimatch/issues/5',
   function () {
     files = [
-      'a/b/.x/c', 'a/b/.x/c/d', 'a/b/.x/c/d/e', 'a/b/.x', 'a/b/.x/',
-      'a/.x/b', '.x', '.x/', '.x/a', '.x/a/b', 'a/.x/b/.x/c', '.x/.x'
+      'a/b/.x/c',
+      'a/b/.x/c/d',
+      'a/b/.x/c/d/e',
+      'a/b/.x',
+      'a/b/.x/',
+      'a/.x/b',
+      '.x',
+      '.x/',
+      '.x/a',
+      '.x/a/b',
+      'a/.x/b/.x/c',
+      '.x/.x',
     ]
   },
   [
     '**/.x/**',
     [
-      '.x/', '.x/a', '.x/a/b', 'a/.x/b', 'a/b/.x/', 'a/b/.x/c',
-      'a/b/.x/c/d', 'a/b/.x/c/d/e'
-    ]
+      '.x/',
+      '.x/a',
+      '.x/a/b',
+      'a/.x/b',
+      'a/b/.x/',
+      'a/b/.x/c',
+      'a/b/.x/c/d',
+      'a/b/.x/c/d/e',
+    ],
   ],
 
-  ['**/.x/**', ['a/.x/b'], {noglobstar: true}],
+  ['**/.x/**', ['a/.x/b'], { noglobstar: true }],
 
   'https://github.com/isaacs/minimatch/issues/59',
   ['[z-a]', []],
@@ -280,5 +316,5 @@ module.exports = [
 Object.defineProperty(module.exports, 'files', {
   get: function () {
     return files
-  }
+  },
 })

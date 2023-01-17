@@ -37,7 +37,8 @@ t.test('basic tests', function (t) {
     actual.sort(alpha)
 
     t.same(
-      actual, expect,
+      actual,
+      expect,
       JSON.stringify(pattern) + ' ' + JSON.stringify(expect),
       tapOpts
     )
@@ -51,7 +52,7 @@ t.test('basic tests', function (t) {
 
 t.test('global leak test', function (t) {
   var globalAfter = Object.keys(global).filter(function (k) {
-    return (k !== '__coverage__' && k !== '__core-js_shared__')
+    return k !== '__coverage__' && k !== '__core-js_shared__'
   })
   t.same(globalAfter, globalBefore, 'no new globals, please')
   t.end()
@@ -66,16 +67,7 @@ t.test('invalid patterns', t => {
   t.throws(() => mm.match(['xy'], toolong), expectTooLong)
 
   const invalid = { message: 'invalid pattern' }
-  const invalids = [
-    null,
-    1234,
-    NaN,
-    Infinity,
-    undefined,
-    {a: 1},
-    true,
-    false,
-  ]
+  const invalids = [null, 1234, NaN, Infinity, undefined, { a: 1 }, true, false]
   for (const i of invalids) {
     t.throws(() => mm.braceExpand(i), invalid)
     t.throws(() => new mm.Minimatch(i), invalid)
@@ -113,7 +105,7 @@ t.test('whitespace handling', t => {
 
 t.test('mm debug', t => {
   const { error } = console
-  t.teardown(() => console.error = error)
+  t.teardown(() => (console.error = error))
   const errs = []
   console.error = (...msg) => errs.push(msg)
   t.equal(mm('a/b/c', 'a/**/@(b|c)/**', { debug: true }), true)
@@ -149,7 +141,7 @@ t.test('flipNegate', t => {
   t.end()
 })
 
-function alpha (a, b) {
+function alpha(a, b) {
   return a > b ? 1 : -1
 }
 

@@ -1,13 +1,7 @@
 const t = require('tap')
 const minimatch = require('../').default
 
-const files = [
-  'a[]b',
-  '[b-a]x',
-  'a]b',
-  'a[]]b',
-  'a[[]b',
-]
+const files = ['a[]b', '[b-a]x', 'a]b', 'a[]]b', 'a[[]b']
 
 const patterns = [
   '\\[b-a]*',
@@ -16,7 +10,7 @@ const patterns = [
   '[b-a]*',
   'a[]]*',
   'a[[]*',
-  'a\[[]]*'
+  'a[[]]*',
 ]
 
 // uncomment and pipe stderr into a bash script to test bash behavior
@@ -44,5 +38,5 @@ for (const pattern of patterns) {
   }
 }
 
-t.comment({files, patterns, matches})
-t.matchSnapshot({files, patterns, matches})
+t.comment({ files, patterns, matches })
+t.matchSnapshot({ files, patterns, matches })

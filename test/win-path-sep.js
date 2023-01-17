@@ -19,19 +19,28 @@ t.test('override with options', t => {
   process.env.__MINIMATCH_TESTING_PLATFORM__ = 'win32'
   const mm = t.mock('../', {}).default
 
-  t.equal(mm('c:\\foo\\bar', 'c:\\foo\\*', {
-    windowsPathsNoEscape: true,
-  }), true)
+  t.equal(
+    mm('c:\\foo\\bar', 'c:\\foo\\*', {
+      windowsPathsNoEscape: true,
+    }),
+    true
+  )
 
-  t.equal(mm('c:\\foo\\bar', 'c:\\foo\\*', {
-    allowWindowsEscape: false,
-  }), true)
+  t.equal(
+    mm('c:\\foo\\bar', 'c:\\foo\\*', {
+      allowWindowsEscape: false,
+    }),
+    true
+  )
 
   t.equal(mm('c:\\foo\\bar', 'c:\\foo\\*', {}), false)
 
-  t.equal(mm('c:\\foo\\bar', 'c:\\foo\\*', {
-    allowWindowsEscape: null,
-  }), false)
+  t.equal(
+    mm('c:\\foo\\bar', 'c:\\foo\\*', {
+      allowWindowsEscape: null,
+    }),
+    false
+  )
 
   t.end()
 })

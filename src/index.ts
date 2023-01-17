@@ -13,6 +13,7 @@ export interface MinimatchOptions {
   nocase?: boolean
   matchBase?: boolean
   flipNegate?: boolean
+  preserveMultipleSlashes?: boolean
 }
 
 export const minimatch = (
@@ -88,9 +89,6 @@ const reSpecials = charSet('().*{}+?[]^$\\!')
 
 // characters that indicate we have to add the pattern start
 const addPatternStartSet = charSet('[.(')
-
-// normalizes slashes.
-const slashSplit = /\/+/
 
 export const filter =
   (pattern: string, options: MinimatchOptions = {}) =>
@@ -248,6 +246,7 @@ export class Minimatch {
   negate: boolean
   comment: boolean
   empty: boolean
+  preserveMultipleSlashes: boolean
   partial: boolean
   globSet: string[]
   globParts: string[][]
@@ -264,6 +263,7 @@ export class Minimatch {
     if (this.windowsPathsNoEscape) {
       this.pattern = this.pattern.replace(/\\/g, '/')
     }
+    this.preserveMultipleSlashes = !!options.preserveMultipleSlashes
     this.regexp = null
     this.negate = false
     this.nonegate = !!options.nonegate
@@ -313,7 +313,7 @@ export class Minimatch {
     // These will be regexps, except in the case of "**", which is
     // set to the GLOBSTAR object for globstar behavior,
     // and will not contain any / characters
-    const rawGlobParts = this.globSet.map(s => s.split(slashSplit))
+    const rawGlobParts = this.globSet.map(s => this.slashSplit(s))
 
     // consecutive globstars are an unncessary perf killer
     this.globParts = this.options.noglobstar
@@ -338,6 +338,22 @@ export class Minimatch {
     this.set = set.filter(
       s => s.indexOf(false) === -1
     ) as ParseReturnFiltered[][]
+
+    // do not treat the ? in UNC paths as magic
+    if (isWindows) {
+      for (let i = 0; i < this.set.length; i++) {
+        const p = this.set[i]
+        if (
+          p[0] === '' &&
+          p[1] === '' &&
+          this.globParts[i][2] === '?' &&
+          typeof p[3] === 'string' &&
+          /^[a-z]:$/i.test(p[3])
+        ) {
+          p[2] = '?'
+        }
+      }
+    }
 
     this.debug(this.pattern, this.set)
   }
@@ -364,10 +380,47 @@ export class Minimatch {
   // out of pattern, then that's fine, as long as all
   // the parts match.
   matchOne(file: string[], pattern: ParseReturn[], partial: boolean = false) {
-    var options = this.options
+    const options = this.options
 
-    this.debug('matchOne', { this: this, file: file, pattern: pattern })
+    // a UNC pattern like //?/c:/* can match a path like c:/x
+    // and vice versa
+    if (isWindows) {
+      const fileUNC =
+        file[0] === '' &&
+        file[1] === '' &&
+        file[2] === '?' &&
+        typeof file[3] === 'string' &&
+        /^[a-z]:$/i.test(file[3])
+      const patternUNC =
+        pattern[0] === '' &&
+        pattern[1] === '' &&
+        pattern[2] === '?' &&
+        typeof pattern[3] === 'string' &&
+        /^[a-z]:$/i.test(pattern[3])
 
+      if (fileUNC && patternUNC) {
+        const fd = file[3] as string
+        const pd = pattern[3] as string
+        if (fd.toLowerCase() === pd.toLowerCase()) {
+          file[3] = pd
+        }
+      } else if (patternUNC && typeof file[0] === 'string') {
+        const pd = pattern[3] as string
+        const fd = file[0]
+        if (pd.toLowerCase() === fd.toLowerCase()) {
+          pattern[3] = fd
+          pattern = pattern.slice(3)
+        }
+      } else if (fileUNC && typeof pattern[0] === 'string') {
+        const fd = file[3]
+        if (fd.toLowerCase() === pattern[0].toLowerCase()) {
+          pattern[0] = fd
+          file = file.slice(3)
+        }
+      }
+    }
+
+    this.debug('matchOne', this, { file, pattern })
     this.debug('matchOne', file.length, pattern.length)
 
     for (
@@ -993,6 +1046,21 @@ export class Minimatch {
     return this.regexp
   }
 
+  slashSplit(p: string) {
+    // if p starts with // on windows, we preserve that
+    // so that UNC paths aren't broken.  Otherwise, any number of
+    // / characters are coalesced into one, unless
+    // preserveMultipleSlashes is set to true.
+    if (this.preserveMultipleSlashes) {
+      return p.split('/')
+    } else if (isWindows && /^\/\/[^\/]+/.test(p)) {
+      // add an extra '' for the one we lose
+      return ['', ...p.split(/\/+/)]
+    } else {
+      return p.split(/\/+/)
+    }
+  }
+
   match(f: string, partial = this.partial) {
     this.debug('match', f, this.pattern)
     // short-circuit in the case of busted things.
@@ -1004,7 +1072,9 @@ export class Minimatch {
       return f === ''
     }
 
-    if (f === '/' && partial) return true
+    if (f === '/' && partial) {
+      return true
+    }
 
     const options = this.options
 
@@ -1014,7 +1084,7 @@ export class Minimatch {
     }
 
     // treat the test path as a set of pathparts.
-    const ff = f.split(slashSplit)
+    const ff = this.slashSplit(f)
     this.debug(this.pattern, 'split', ff)
 
     // just ONE of the pattern sets in this.set needs to match
@@ -1041,14 +1111,18 @@ export class Minimatch {
       }
       const hit = this.matchOne(file, pattern, partial)
       if (hit) {
-        if (options.flipNegate) return true
+        if (options.flipNegate) {
+          return true
+        }
         return !this.negate
       }
     }
 
     // didn't get any hits.  this is success if it's a negative
     // pattern, failure otherwise.
-    if (options.flipNegate) return false
+    if (options.flipNegate) {
+      return false
+    }
     return this.negate
   }
 
