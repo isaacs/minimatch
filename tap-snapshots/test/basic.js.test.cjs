@@ -109,6 +109,10 @@ exports[`test/basic.js TAP basic tests > makeRe *c*?** 1`] = `
 /^(?:(?!\\.)(?=.)[^/]*?c[^/]*?[^/][^/]*?[^/]*?)$/
 `
 
+exports[`test/basic.js TAP basic tests > makeRe +(a)!(b)+(c) 1`] = `
+/^(?:(?!\\.)(?=.)(?:a)+(?:(?!(?:b)(?:c)+)[^/]*?)(?:c)+)$/
+`
+
 exports[`test/basic.js TAP basic tests > makeRe +(a|*\\|c\\\\|d\\\\\\|e\\\\\\\\|f\\\\\\\\\\|g 1`] = `
 /^(?:(?=.)\\+\\(a\\|[^/]*?\\|c\\\\\\\\\\|d\\\\\\\\\\|e\\\\\\\\\\\\\\\\\\|f\\\\\\\\\\\\\\\\\\|g)$/
 `

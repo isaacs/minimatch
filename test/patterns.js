@@ -311,6 +311,22 @@ module.exports = [
   ['[z\\-a]', []],
   ['[\\-\\]]', []],
   ['[a-b-c]', []],
+
+  // https://github.com/isaacs/node-glob/issues/415
+  () => {
+    files = [
+      'ac',
+      'abc',
+      'acd',
+      'acc',
+      'acd',
+      'adc',
+      'bbc',
+      'bac',
+      'bcc',
+    ]
+  },
+  ['+(a)!(b)+(c)', ['ac', 'acc', 'adc']],
 ]
 
 Object.defineProperty(module.exports, 'files', {
