@@ -4,18 +4,18 @@
 
 - Handle UNC paths on Windows
 
-    This adds some slightly modified behavior when a pattern or path starts
-    with `//` on Windows.
+  This adds some slightly modified behavior when a pattern or path starts
+  with `//` on Windows.
 
-    - In the case of `//?/<drive letter>:/...`, the `?` is treated as a
-      literal character, rather than a wildcard. That is, `//?/c:` will
-      _not_ match `//x/c:`.
-    - UNC patterns starting with `//?/<drive letter>:/` will match file paths
-      starting with `<drive letter>:` if the drive letters match
-      case-insensitively.
-    - File paths starting with `//?/<drive letter>:/` will match file
-      patterns starting with `<drive letter>:` if the drive letters match
-      case-insensitively.
+  - In the case of `//?/<drive letter>:/...`, the `?` is treated as a
+    literal character, rather than a wildcard. That is, `//?/c:` will
+    _not_ match `//x/c:`.
+  - UNC patterns starting with `//?/<drive letter>:/` will match file paths
+    starting with `<drive letter>:` if the drive letters match
+    case-insensitively.
+  - File paths starting with `//?/<drive letter>:/` will match file
+    patterns starting with `<drive letter>:` if the drive letters match
+    case-insensitively.
 
 - Add `{preserveMultipleSlashes:true}` option to suppress the
   behavior where multiple consecutive `/` characters would be

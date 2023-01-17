@@ -60,16 +60,16 @@ On Windows, UNC paths like `//?/c:/...` or
 `//ComputerName/Share/...` are handled specially.
 
 - Patterns starting with a double-slash followed by some
-  non-slash characters will preserve their double-slash.  As a
+  non-slash characters will preserve their double-slash. As a
   result, a pattern like `//*` will match `//x`, but not `/x`.
-- Patterns staring with `//?/<drive letter>:` will *not* treat
-  the `?` as a wildcard character.  Instead, it will be treated
+- Patterns staring with `//?/<drive letter>:` will _not_ treat
+  the `?` as a wildcard character. Instead, it will be treated
   as a normal string.
 - Patterns starting with `//?/<drive letter>:/...` will match
   file paths starting with `<drive letter>:/...`, and vice versa,
-  as if the `//?/` was not present.  This behavior only is
+  as if the `//?/` was not present. This behavior only is
   present when the drive letters are a case-insensitive match to
-  one another.  The remaining portions of the path/pattern are
+  one another. The remaining portions of the path/pattern are
   compared case sensitively, unless `nocase:true` is set.
 
 Note that specifying a UNC path using `\` characters as path
