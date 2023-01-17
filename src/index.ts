@@ -615,12 +615,20 @@ export class Minimatch {
     let pl: PatternListEntry | undefined
     let sp: SubparseReturn
     // . and .. never match anything that doesn't start with .,
-    // even when options.dot is set.
-    const patternStart =
-      pattern.charAt(0) === '.'
-        ? '' // anything
-        : // not (start or / followed by . or .. followed by / or end)
-        options.dot
+    // even when options.dot is set.  However, if the pattern
+    // starts with ., then traversal patterns can match.
+    let dotTravAllowed = pattern.charAt(0) === '.'
+    let dotFileAllowed = options.dot || dotTravAllowed
+    const patternStart = () =>
+      dotTravAllowed
+        ? ''
+        : dotFileAllowed
+        ? '(?!(?:^|\\/)\\.{1,2}(?:$|\\/))'
+        : '(?!\\.)'
+    const subPatternStart = (p: string) =>
+      p.charAt(0) === '.'
+        ? ''
+        : options.dot
         ? '(?!(?:^|\\/)\\.{1,2}(?:$|\\/))'
         : '(?!\\.)'
 
@@ -719,7 +727,7 @@ export class Minimatch {
           if (options.noext) clearStateChar()
           continue
 
-        case '(':
+        case '(': {
           if (inClass) {
             re += '('
             continue
@@ -730,28 +738,38 @@ export class Minimatch {
             continue
           }
 
-          patternListStack.push({
+          const plEntry: PatternListEntry = {
             type: stateChar,
             start: i - 1,
             reStart: re.length,
             open: plTypes[stateChar].open,
             close: plTypes[stateChar].close,
-          })
-          // negation is (?:(?!js)[^/]*)
-          re += stateChar === '!' ? '(?:(?!(?:' : '(?:'
+          }
+          this.debug(this.pattern, '\t', plEntry)
+          patternListStack.push(plEntry)
+          // negation is (?:(?!(?:js)(?:<rest>))[^/]*)
+          re += plEntry.open
+          // next entry starts with a dot maybe?
+          if (plEntry.start === 0 && plEntry.type !== '!') {
+            dotTravAllowed = true
+            re += subPatternStart(pattern.slice(i + 1))
+          }
           this.debug('plType %j %j', stateChar, re)
           stateChar = false
           continue
+        }
 
-        case ')':
-          if (inClass || !patternListStack.length) {
+        case ')': {
+          const plEntry = patternListStack.pop()
+          if (inClass || !plEntry) {
             re += '\\)'
             continue
           }
 
+          // closing an extglob
           clearStateChar()
           hasMagic = true
-          pl = patternListStack.pop() as PatternListEntry
+          pl = plEntry
           // negation is (?:(?!js)[^/]*)
           // The others are (?:<pattern>)<type>
           re += pl.close
@@ -759,16 +777,24 @@ export class Minimatch {
             negativeLists.push(Object.assign(pl, { reEnd: re.length }))
           }
           continue
+        }
 
-        case '|':
-          if (inClass || !patternListStack.length) {
+        case '|': {
+          const plEntry = patternListStack[patternListStack.length - 1]
+          if (inClass || !plEntry) {
             re += '\\|'
             continue
           }
 
           clearStateChar()
           re += '|'
+          // next subpattern can start with a dot?
+          if (plEntry.start === 0 && plEntry.type !== '!') {
+            dotTravAllowed = true
+            re += subPatternStart(pattern.slice(i + 1))
+          }
           continue
+        }
 
         // these are mostly the same in regexp and glob
         case '[':
@@ -852,7 +878,7 @@ export class Minimatch {
     for (pl = patternListStack.pop(); pl; pl = patternListStack.pop()) {
       let tail: string
       tail = re.slice(pl.reStart + pl.open.length)
-      this.debug('setting tail', re, pl)
+      this.debug(this.pattern, 'setting tail', re, pl)
       // maybe some even number of \, then maybe 1 \, followed by a |
       tail = tail.replace(/((?:\\{2}){0,64})(\\?)\|/g, (_, $1, $2) => {
         if (!$2) {
@@ -928,7 +954,7 @@ export class Minimatch {
     }
 
     if (addPatternStart) {
-      re = patternStart + re
+      re = patternStart() + re
     }
 
     // parsing just a piece of a larger pattern.

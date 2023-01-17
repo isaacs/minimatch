@@ -58,17 +58,11 @@ module.exports = [
   ['[a-c]b*', ['abc', 'abd', 'abe', 'bb', 'cb']],
   ['[a-y]*[^c]', ['abd', 'abe', 'bb', 'bcd', 'bdir/', 'ca', 'cb', 'dd', 'de']],
   ['a*[^c]', ['abd', 'abe']],
-  function () {
-    files.push('a-b', 'aXb')
-  },
+  () => files.push('a-b', 'aXb'),
   ['a[X-]b', ['a-b', 'aXb']],
-  function () {
-    files.push('.x', '.y')
-  },
+  () => files.push('.x', '.y'),
   ['[^a-c]*', ['d', 'dd', 'de']],
-  function () {
-    files.push('a*b/', 'a*b/ooo')
-  },
+  () => files.push('a*b/', 'a*b/ooo'),
   ['a\\*b/*', ['a*b/ooo']],
   ['a\\*?/*', ['a*b/ooo']],
   ['*\\\\!*', [], { null: true }, ['echo !7']],
@@ -82,9 +76,7 @@ module.exports = [
 
   'http://www.opensource.apple.com/source/bash/bash-23/' +
     'bash/tests/glob-test',
-  function () {
-    files.push('man/', 'man/man1/', 'man/man1/bash.1')
-  },
+  () => files.push('man/', 'man/man1/', 'man/man1/bash.1'),
   ['*/man*/bash.*', ['man/man1/bash.1']],
   ['man/man1/bash.1', ['man/man1/bash.1']],
   ['a***c', ['abc'], null, ['abc']],
@@ -146,9 +138,7 @@ module.exports = [
 
   // .. and . can only match patterns starting with .,
   // even when options.dot is set.
-  function () {
-    files = ['a/./b', 'a/../b', 'a/c/b', 'a/.d/b']
-  },
+  () => (files = ['a/./b', 'a/../b', 'a/c/b', 'a/.d/b']),
   ['a/*/b', ['a/c/b', 'a/.d/b'], { dot: true }],
   ['a/.*/b', ['a/./b', 'a/../b', 'a/.d/b'], { dot: true }],
   ['a/*/b', ['a/c/b'], { dot: false }],
@@ -192,8 +182,8 @@ module.exports = [
   ],
 
   // crazy nested {,,} and *(||) tests.
-  function () {
-    files = [
+  () =>
+    (files = [
       'a',
       'b',
       'c',
@@ -216,8 +206,7 @@ module.exports = [
       'x(a|c)',
       '(a|b|c)',
       '(a|c)',
-    ]
-  },
+    ]),
   ['*(a|{b,c})', ['a', 'b', 'c', 'ab', 'ac']],
   ['{a,*(b|c,d)}', ['a', '(b|c', '*(b|c', 'd)']],
   // a
@@ -238,9 +227,7 @@ module.exports = [
 
   // begin channelling Boole and deMorgan...
   'negation tests',
-  function () {
-    files = ['d', 'e', '!ab', '!abc', 'a!b', '\\!a']
-  },
+  () => (files = ['d', 'e', '!ab', '!abc', 'a!b', '\\!a']),
 
   // anything that is NOT a* matches.
   ['!a*', ['\\!a', 'd', 'e', '!ab', '!abc']],
@@ -254,17 +241,23 @@ module.exports = [
   // anything that is NOT !a* matches
   ['!\\!a*', ['a!b', 'd', 'e', '\\!a']],
 
-  // negation nestled within a pattern
-  function () {
-    files = ['foo.js', 'foo.bar', 'foo.js.js', 'blar.js', 'foo.', 'boo.js.boo']
-  },
+  'negation nestled within a pattern',
+  () =>
+    (files = [
+      'foo.js',
+      'foo.bar',
+      'foo.js.js',
+      'blar.js',
+      'foo.',
+      'boo.js.boo',
+    ]),
   // last one is tricky! * matches foo, . matches ., and 'js.js' != 'js'
   // copy bash 4.3 behavior on this.
   ['*.!(js)', ['foo.bar', 'foo.', 'boo.js.boo', 'foo.js.js']],
 
   'https://github.com/isaacs/minimatch/issues/5',
-  function () {
-    files = [
+  () =>
+    (files = [
       'a/b/.x/c',
       'a/b/.x/c/d',
       'a/b/.x/c/d/e',
@@ -277,8 +270,7 @@ module.exports = [
       '.x/a/b',
       'a/.x/b/.x/c',
       '.x/.x',
-    ]
-  },
+    ]),
   [
     '**/.x/**',
     [
@@ -312,24 +304,38 @@ module.exports = [
   ['[\\-\\]]', []],
   ['[a-b-c]', []],
 
-  // https://github.com/isaacs/node-glob/issues/415
+  'https://github.com/isaacs/node-glob/issues/415',
   () => {
     files = ['ac', 'abc', 'acd', 'acc', 'acd', 'adc', 'bbc', 'bac', 'bcc']
   },
   ['+(a)!(b)+(c)', ['ac', 'acc', 'adc']],
 
-  // https://github.com/isaacs/node-glob/issues/394
+  'https://github.com/isaacs/node-glob/issues/394',
   () => (files = ['å']),
   ['å', ['å']],
   ['å', ['å'], { nocase: true }],
   ['Å', ['å'], { nocase: true }],
   ['Å', [], {}],
-
   () => (files = ['Å']),
   ['Å', ['Å']],
   ['å', ['Å'], { nocase: true }],
   ['Å', ['Å'], { nocase: true }],
   ['å', [], {}],
+
+  'https://github.com/isaacs/node-glob/issues/387',
+  () => (files = ['.a', '.a.js', '.js', 'a', 'a.js', 'js']),
+  ['.*', ['.a', '.a.js', '.js']],
+  ['*', ['.a', '.a.js', '.js', 'a', 'a.js', 'js'], { dot: true }],
+  ['@(*|.*)', ['.a', '.a.js', '.js', 'a', 'a.js', 'js']],
+  ['@(.*|*)', ['.a', '.a.js', '.js', 'a', 'a.js', 'js']],
+  ['@(*|a)', ['.a', '.a.js', '.js', 'a', 'a.js', 'js'], { dot: true }],
+  ['@(.*)', ['.a', '.a.js', '.js']],
+  ['@(.*)', ['.a', '.a.js', '.js'], { dot: true }],
+  ['@(js|.*)', ['js', '.a', '.a.js', '.js']],
+  ['@(.*|js)', ['js', '.a', '.a.js', '.js']],
+  // doesn't start at 0, no dice
+  // neg extglobs don't trigger this behavior.
+  ['!(.a|js)@(.*)', ['a.js'], { nonegate: true }],
 ]
 
 Object.defineProperty(module.exports, 'files', {
