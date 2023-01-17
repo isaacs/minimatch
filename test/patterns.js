@@ -336,6 +336,9 @@ module.exports = [
   // doesn't start at 0, no dice
   // neg extglobs don't trigger this behavior.
   ['!(.a|js)@(.*)', ['a.js'], { nonegate: true }],
+  () => files=['a(b', 'ab', 'a)b'],
+  ['@(a|a[(])b', ['a(b', 'ab']],
+  ['@(a|a[)])b', ['a)b', 'ab']],
 ]
 
 Object.defineProperty(module.exports, 'files', {

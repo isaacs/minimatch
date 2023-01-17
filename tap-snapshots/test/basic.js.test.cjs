@@ -193,6 +193,14 @@ exports[`test/basic.js TAP basic tests > makeRe @(.*|js) 1`] = `
 /^(?:(?=.)(?:\\.[^/]*?|(?!\\.)js))$/
 `
 
+exports[`test/basic.js TAP basic tests > makeRe @(a|a[(])b 1`] = `
+/^(?:(?=.)(?:(?!\\.)a|(?!\\.)a[(])b)$/
+`
+
+exports[`test/basic.js TAP basic tests > makeRe @(a|a[)])b 1`] = `
+/^(?:(?=.)(?:(?!\\.)a|(?!\\.)a[\\)])b)$/
+`
+
 exports[`test/basic.js TAP basic tests > makeRe @(js|.*) 1`] = `
 /^(?:(?=.)(?:(?!\\.)js|\\.[^/]*?))$/
 `

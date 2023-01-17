@@ -760,11 +760,12 @@ export class Minimatch {
         }
 
         case ')': {
-          const plEntry = patternListStack.pop()
+          const plEntry = patternListStack[patternListStack.length - 1]
           if (inClass || !plEntry) {
             re += '\\)'
             continue
           }
+          patternListStack.pop()
 
           // closing an extglob
           clearStateChar()
