@@ -291,6 +291,24 @@ module.exports = [
     ]
   },
   ['+(a)!(b)+(c)', ['ac', 'acc', 'adc']],
+
+  'https://github.com/isaacs/node-glob/issues/387',
+  () => (files = ['.a', '.a.js', '.js', 'a', 'a.js', 'js']),
+  ['.*', ['.a', '.a.js', '.js']],
+  ['*', ['.a', '.a.js', '.js', 'a', 'a.js', 'js'], { dot: true }],
+  ['@(*|.*)', ['.a', '.a.js', '.js', 'a', 'a.js', 'js']],
+  ['@(.*|*)', ['.a', '.a.js', '.js', 'a', 'a.js', 'js']],
+  ['@(*|a)', ['.a', '.a.js', '.js', 'a', 'a.js', 'js'], { dot: true }],
+  ['@(.*)', ['.a', '.a.js', '.js']],
+  ['@(.*)', ['.a', '.a.js', '.js'], { dot: true }],
+  ['@(js|.*)', ['js', '.a', '.a.js', '.js']],
+  ['@(.*|js)', ['js', '.a', '.a.js', '.js']],
+  // doesn't start at 0, no dice
+  // neg extglobs don't trigger this behavior.
+  ['!(.a|js)@(.*)', ['a.js'], { nonegate: true }],
+  () => files=['a(b', 'ab', 'a)b'],
+  ['@(a|a[(])b', ['a(b', 'ab']],
+  ['@(a|a[)])b', ['a)b', 'ab']],
 ]
 
 Object.defineProperty(module.exports, 'files', {
