@@ -314,19 +314,22 @@ module.exports = [
 
   // https://github.com/isaacs/node-glob/issues/415
   () => {
-    files = [
-      'ac',
-      'abc',
-      'acd',
-      'acc',
-      'acd',
-      'adc',
-      'bbc',
-      'bac',
-      'bcc',
-    ]
+    files = ['ac', 'abc', 'acd', 'acc', 'acd', 'adc', 'bbc', 'bac', 'bcc']
   },
   ['+(a)!(b)+(c)', ['ac', 'acc', 'adc']],
+
+  // https://github.com/isaacs/node-glob/issues/394
+  () => (files = ['å']),
+  ['å', ['å']],
+  ['å', ['å'], { nocase: true }],
+  ['Å', ['å'], { nocase: true }],
+  ['Å', [], {}],
+
+  () => (files = ['Å']),
+  ['Å', ['Å']],
+  ['å', ['Å'], { nocase: true }],
+  ['Å', ['Å'], { nocase: true }],
+  ['å', [], {}],
 ]
 
 Object.defineProperty(module.exports, 'files', {

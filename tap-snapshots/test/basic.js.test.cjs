@@ -428,3 +428,35 @@ exports[`test/basic.js TAP basic tests > makeRe {a,*(b|c,d)} 1`] = `
 exports[`test/basic.js TAP basic tests > makeRe {a,*(b|{c,d})} 1`] = `
 /^(?:a|(?!\\.)(?=.)(?:b|c)*|(?!\\.)(?=.)(?:b|d)*)$/
 `
+
+exports[`test/basic.js TAP basic tests > makeRe Å 1`] = `
+/^(?:Å)$/i
+`
+
+exports[`test/basic.js TAP basic tests > makeRe Å 2`] = `
+/^(?:Å)$/
+`
+
+exports[`test/basic.js TAP basic tests > makeRe Å 3`] = `
+/^(?:Å)$/
+`
+
+exports[`test/basic.js TAP basic tests > makeRe Å 4`] = `
+/^(?:Å)$/i
+`
+
+exports[`test/basic.js TAP basic tests > makeRe å 1`] = `
+/^(?:å)$/
+`
+
+exports[`test/basic.js TAP basic tests > makeRe å 2`] = `
+/^(?:å)$/i
+`
+
+exports[`test/basic.js TAP basic tests > makeRe å 3`] = `
+/^(?:å)$/i
+`
+
+exports[`test/basic.js TAP basic tests > makeRe å 4`] = `
+/^(?:å)$/
+`
