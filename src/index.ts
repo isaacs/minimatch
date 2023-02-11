@@ -33,6 +33,29 @@ export const minimatch = (
 
 export default minimatch
 
+// Optimized checking for the most common glob patterns.
+const starDotExtRE = /^\*+(\.[^!?\*\[\(]*)$/
+const starDotExtTest = (ext: string) => (f: string) =>
+  !f.startsWith('.') && f.endsWith(ext)
+const starDotExtTestDot = (ext: string) => (f: string) => f.endsWith(ext)
+const starDotExtTestNocase = (ext: string) => {
+  ext = ext.toLowerCase()
+  return (f: string) => !f.startsWith('.') && f.toLowerCase().endsWith(ext)
+}
+const starDotExtTestNocaseDot = (ext: string) => {
+  ext = ext.toLowerCase()
+  return (f: string) => f.toLowerCase().endsWith(ext)
+}
+const starDotStarRE = /^\*+\.\*+$/
+const starDotStarTest = (f: string) => !f.startsWith('.') && f.includes('.')
+const starDotStarTestDot = (f: string) =>
+  f !== '.' && f !== '..' && f.includes('.')
+const dotStarRE = /^\.\*+$/
+const dotStarTest = (f: string) => f !== '.' && f !== '..' && f.startsWith('.')
+const starRE = /^\*+$/
+const starTest = (f: string) => f.length !== 0 && !f.startsWith('.')
+const starTestDot = (f: string) => f.length !== 0 && f !== '.' && f !== '..'
+
 /* c8 ignore start */
 const platform =
   typeof process === 'object' && process
@@ -228,10 +251,11 @@ interface NegativePatternListEntry extends PatternListEntry {
   reEnd: number
 }
 
-type MMRegExp = RegExp & {
+export type MMRegExp = RegExp & {
   _src?: string
   _glob?: string
 }
+
 type SubparseReturn = [string, boolean]
 type ParseReturnFiltered = string | MMRegExp | typeof GLOBSTAR
 type ParseReturn = ParseReturnFiltered | false
@@ -316,16 +340,41 @@ export class Minimatch {
     const rawGlobParts = this.globSet.map(s => this.slashSplit(s))
 
     // consecutive globstars are an unncessary perf killer
-    this.globParts = this.options.noglobstar
-      ? rawGlobParts
-      : rawGlobParts.map(parts =>
-          parts.reduce((set: string[], part) => {
-            if (part !== '**' || set[set.length - 1] !== '**') {
-              set.push(part)
+    // also, **/*/... is equivalent to */**/..., so swap all of those
+    // this turns a pattern like **/*/**/*/x into */*/**/x
+    // and a pattern like **/x/**/*/y becomes **/x/*/**/y
+    // the *later* we can push the **, the more efficient it is,
+    // because we can avoid having to do a recursive walk until
+    // the walked tree is as shallow as possible.
+    // Note that this is only true up to the last pattern, though, because
+    // a/*/** will only match a/b if b is a dir, but a/**/* will match a/b
+    // regardless, since it's "0 or more path segments" if it's not final.
+    if (this.options.noglobstar) {
+      // ** is * anyway
+      this.globParts = rawGlobParts
+    } else {
+      for (const parts of rawGlobParts) {
+        let swapped: boolean
+        do {
+          swapped = false
+          for (let i = 0; i < parts.length - 1; i++) {
+            if (parts[i] === '*' && parts[i - 1] === '**') {
+              parts[i] = '**'
+              parts[i - 1] = '*'
+              swapped = true
             }
-            return set
-          }, [])
-        )
+          }
+        } while (swapped)
+      }
+      this.globParts = rawGlobParts.map(parts =>
+        parts.reduce((set: string[], part) => {
+          if (part !== '**' || set[set.length - 1] !== '**') {
+            set.push(part)
+          }
+          return set
+        }, [])
+      )
+    }
 
     this.debug(this.pattern, this.globParts)
 
@@ -600,6 +649,30 @@ export class Minimatch {
       else pattern = '*'
     }
     if (pattern === '') return ''
+
+    // far and away, the most common glob pattern parts are
+    // *, *.*, and *.<ext>  Add a fast check method for those.
+    let m: RegExpMatchArray | null
+    let fastTest: null | ((f: string) => boolean) = null
+    if (isSub !== SUBPARSE) {
+      if ((m = pattern.match(starRE))) {
+        fastTest = options.dot ? starTestDot : starTest
+      } else if ((m = pattern.match(starDotExtRE))) {
+        fastTest = (
+          options.nocase
+            ? options.dot
+              ? starDotExtTestNocaseDot
+              : starDotExtTestNocase
+            : options.dot
+            ? starDotExtTestDot
+            : starDotExtTest
+        )(m[1])
+      } else if ((m = pattern.match(starDotStarRE))) {
+        fastTest = options.dot ? starDotStarTestDot : starDotStarTest
+      } else if ((m = pattern.match(dotStarRE))) {
+        fastTest = dotStarTest
+      }
+    }
 
     let re = ''
     let hasMagic = false
@@ -977,10 +1050,17 @@ export class Minimatch {
 
     const flags = options.nocase ? 'i' : ''
     try {
-      return Object.assign(new RegExp('^' + re + '$', flags), {
-        _glob: pattern,
-        _src: re,
-      })
+      const ext = fastTest
+        ? {
+            _glob: pattern,
+            _src: re,
+            test: fastTest,
+          }
+        : {
+            _glob: pattern,
+            _src: re,
+          }
+      return Object.assign(new RegExp('^' + re + '$', flags), ext)
       /* c8 ignore start */
     } catch (er) {
       // should be impossible

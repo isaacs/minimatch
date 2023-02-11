@@ -140,9 +140,9 @@ module.exports = [
   // even when options.dot is set.
   () => (files = ['a/./b', 'a/../b', 'a/c/b', 'a/.d/b']),
   ['a/*/b', ['a/c/b', 'a/.d/b'], { dot: true }],
-  ['a/.*/b', ['a/./b', 'a/../b', 'a/.d/b'], { dot: true }],
+  ['a/.*/b', ['a/.d/b'], { dot: true }],
   ['a/*/b', ['a/c/b'], { dot: false }],
-  ['a/.*/b', ['a/./b', 'a/../b', 'a/.d/b'], { dot: false }],
+  ['a/.*/b', ['a/.d/b'], { dot: false }],
 
   // this also tests that changing the options needs
   // to change the cache key, even if the pattern is
@@ -266,16 +266,17 @@ module.exports = [
       'a/.x/b',
       '.x',
       '.x/',
-      '.x/a',
+      '.x/a/',
       '.x/a/b',
       'a/.x/b/.x/c',
-      '.x/.x',
+      '.x/.x/',
+      '.x/.y',
     ]),
   [
     '**/.x/**',
     [
       '.x/',
-      '.x/a',
+      '.x/a/',
       '.x/a/b',
       'a/.x/b',
       'a/b/.x/',
@@ -284,6 +285,17 @@ module.exports = [
       'a/b/.x/c/d/e',
     ],
   ],
+  'test equivalence of **/* and */**',
+  ['.x/**/*', ['.x/a/', '.x/a/b']],
+  ['.x/*/**', ['.x/a/', '.x/a/b']],
+  ['.x/**/**/*', ['.x/a/', '.x/a/b']],
+  ['.x/**/*/**', ['.x/a/', '.x/a/b']],
+  ['.x/*/**/**', ['.x/a/', '.x/a/b']],
+  ['.x/**/*', ['.x/a/', '.x/a/b', '.x/.x/', '.x/.y'], { dot: true }],
+  ['.x/*/**', ['.x/a/', '.x/a/b', '.x/.x/'], { dot: true }],
+  ['.x/**/**/*', ['.x/a/', '.x/a/b', '.x/.x/', '.x/.y'], { dot: true }],
+  ['.x/**/*/**', ['.x/a/', '.x/a/b', '.x/.x/'], { dot: true }],
+  ['.x/*/**/**', ['.x/a/', '.x/a/b', '.x/.x/'], { dot: true }],
 
   ['**/.x/**', ['a/.x/b'], { noglobstar: true }],
 
@@ -336,12 +348,49 @@ module.exports = [
   // doesn't start at 0, no dice
   // neg extglobs don't trigger this behavior.
   ['!(.a|js)@(.*)', ['a.js'], { nonegate: true }],
-  () => files=['a(b', 'ab', 'a)b'],
+  () => (files = ['a(b', 'ab', 'a)b']),
   ['@(a|a[(])b', ['a(b', 'ab']],
   ['@(a|a[)])b', ['a)b', 'ab']],
 
   // TODO: recursive descent parser for extglobs, to do this properly
   // ['@(+(.*))', ['.a', '.a.js', '.js']],
+
+  'optimized checking for some common patterns',
+  () =>
+    (files = [
+      '.a',
+      '.a.js',
+      '.js',
+      'a',
+      'a.js',
+      'js',
+      'a.JS',
+      '.a.JS',
+      '.JS',
+      '.',
+      '..',
+    ]),
+  ['*.js', ['a.js']],
+  ['*.js', ['a.js', '.a.js', '.js'], { dot: true }],
+  ['*.js', ['a.js', 'a.JS'], { nocase: true }],
+  [
+    '*.js',
+    ['a.js', 'a.JS', '.a.js', '.a.JS', '.js', '.JS'],
+    { dot: true, nocase: true },
+  ],
+  ['*.*', ['a.js', 'a.JS']],
+  [
+    '*.*',
+    ['.a', '.a.js', '.js', 'a.js', 'a.JS', '.a.JS', '.JS'],
+    { dot: true },
+  ],
+  ['.*', ['.a', '.a.js', '.js', '.a.JS', '.JS']],
+  ['*', ['a', 'a.js', 'js', 'a.JS']],
+  [
+    '*',
+    ['.a', '.a.js', '.js', 'a', 'a.js', 'js', 'a.JS', '.a.JS', '.JS'],
+    { dot: true },
+  ],
 ]
 
 Object.defineProperty(module.exports, 'files', {

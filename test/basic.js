@@ -29,9 +29,16 @@ t.test('basic tests', function (t) {
     t.equal(String(r), String(r2), 'same results from both makeRe fns')
     tapOpts.re = r
     tapOpts.files = JSON.stringify(f)
-    tapOpts.pattern = pattern
+    tapOpts.glob = pattern
     tapOpts.set = m.set
+    tapOpts.globSet = m.globSet
     tapOpts.negated = m.negate
+    const o = Object.entries(options)
+      .filter(([_, v]) => v)
+      .map(([k]) => k)
+    if (o.length) {
+      tapOpts.flags = o
+    }
 
     var actual = mm.match(f, pattern, options)
     actual.sort(alpha)
