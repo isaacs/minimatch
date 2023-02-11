@@ -149,6 +149,10 @@ exports[`test/basic.js TAP basic tests > makeRe *c*?** 1`] = `
 /^(?:(?!\\.)(?=.)[^/]*?c[^/]*?[^/][^/]*?[^/]*?)$/
 `
 
+exports[`test/basic.js TAP basic tests > makeRe *js 1`] = `
+/^(?:(?!\\.)(?=.)[^/]*?js)$/
+`
+
 exports[`test/basic.js TAP basic tests > makeRe +(a)!(b)+(c) 1`] = `
 /^(?:(?=.)(?:(?!\\.)a)+(?:(?!(?:b)(?:c)+)[^/]*?)(?:c)+)$/
 `
@@ -213,6 +217,10 @@ exports[`test/basic.js TAP basic tests > makeRe /^root:/{s/^[^:]*:[^:]*:([^:]*).
 /^(?:\\/\\^root:\\/\\{s\\/(?=.)\\^[^:][^/]*?:[^:][^/]*?:\\([^:]\\)[^/]*?\\.[^/]*?\\$\\/1\\/)$/
 `
 
+exports[`test/basic.js TAP basic tests > makeRe ? 1`] = `
+/^(?:(?!\\.)(?=.)[^/])$/
+`
+
 exports[`test/basic.js TAP basic tests > makeRe ?************c****?**** 1`] = `
 /^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?c[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?)$/
 `
@@ -237,12 +245,64 @@ exports[`test/basic.js TAP basic tests > makeRe ?***?****c 1`] = `
 /^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?c)$/
 `
 
+exports[`test/basic.js TAP basic tests > makeRe ?.js 1`] = `
+/^(?:(?!\\.)(?=.)[^/]\\.js)$/
+`
+
+exports[`test/basic.js TAP basic tests > makeRe ?.js 2`] = `
+/^(?:(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]\\.js)$/
+`
+
+exports[`test/basic.js TAP basic tests > makeRe ?.js 3`] = `
+/^(?:(?!\\.)(?=.)[^/]\\.js)$/i
+`
+
+exports[`test/basic.js TAP basic tests > makeRe ?.js 4`] = `
+/^(?:(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]\\.js)$/i
+`
+
+exports[`test/basic.js TAP basic tests > makeRe ?? 1`] = `
+/^(?:(?!\\.)(?=.)[^/][^/])$/
+`
+
+exports[`test/basic.js TAP basic tests > makeRe ?? 2`] = `
+/^(?:(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/][^/])$/
+`
+
+exports[`test/basic.js TAP basic tests > makeRe ?? 3`] = `
+/^(?:(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/][^/])$/i
+`
+
+exports[`test/basic.js TAP basic tests > makeRe ?? 4`] = `
+/^(?:(?!\\.)(?=.)[^/][^/])$/i
+`
+
 exports[`test/basic.js TAP basic tests > makeRe ??**********?****? 1`] = `
 /^(?:(?!\\.)(?=.)[^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/])$/
 `
 
 exports[`test/basic.js TAP basic tests > makeRe ??**********?****c 1`] = `
 /^(?:(?!\\.)(?=.)[^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?c)$/
+`
+
+exports[`test/basic.js TAP basic tests > makeRe ??? 1`] = `
+/^(?:(?!\\.)(?=.)[^/][^/][^/])$/
+`
+
+exports[`test/basic.js TAP basic tests > makeRe ??? 2`] = `
+/^(?:(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/][^/][^/])$/
+`
+
+exports[`test/basic.js TAP basic tests > makeRe ?js 1`] = `
+/^(?:(?!\\.)(?=.)[^/]js)$/
+`
+
+exports[`test/basic.js TAP basic tests > makeRe ?js 2`] = `
+/^(?:(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]js)$/
+`
+
+exports[`test/basic.js TAP basic tests > makeRe ?js 3`] = `
+/^(?:(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]js)$/i
 `
 
 exports[`test/basic.js TAP basic tests > makeRe @(*|.*) 1`] = `

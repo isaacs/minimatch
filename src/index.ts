@@ -34,7 +34,7 @@ export const minimatch = (
 export default minimatch
 
 // Optimized checking for the most common glob patterns.
-const starDotExtRE = /^\*+(\.[^!?\*\[\(]*)$/
+const starDotExtRE = /^\*+([^+@!?\*\[\(]*)$/
 const starDotExtTest = (ext: string) => (f: string) =>
   !f.startsWith('.') && f.endsWith(ext)
 const starDotExtTestDot = (ext: string) => (f: string) => f.endsWith(ext)
@@ -55,6 +55,35 @@ const dotStarTest = (f: string) => f !== '.' && f !== '..' && f.startsWith('.')
 const starRE = /^\*+$/
 const starTest = (f: string) => f.length !== 0 && !f.startsWith('.')
 const starTestDot = (f: string) => f.length !== 0 && f !== '.' && f !== '..'
+const qmarksRE = /^\?+([^+@!?\*\[\(]*)?$/
+const qmarksTestNocase = ([$0, ext = '']: RegExpMatchArray) => {
+  const noext = qmarksTestNoExt([$0])
+  if (!ext) return noext
+  ext = ext.toLowerCase()
+  return (f: string) => noext(f) && f.toLowerCase().endsWith(ext)
+}
+const qmarksTestNocaseDot = ([$0, ext = '']: RegExpMatchArray) => {
+  const noext = qmarksTestNoExtDot([$0])
+  if (!ext) return noext
+  ext = ext.toLowerCase()
+  return (f: string) => noext(f) && f.toLowerCase().endsWith(ext)
+}
+const qmarksTestDot = ([$0, ext = '']: RegExpMatchArray) => {
+  const noext = qmarksTestNoExtDot([$0])
+  return !ext ? noext : (f: string) => noext(f) && f.endsWith(ext)
+}
+const qmarksTest = ([$0, ext = '']: RegExpMatchArray) => {
+  const noext = qmarksTestNoExt([$0])
+  return !ext ? noext : (f: string) => noext(f) && f.endsWith(ext)
+}
+const qmarksTestNoExt = ([$0]: RegExpMatchArray) => {
+  const len = $0.length
+  return (f: string) => f.length === len && !f.startsWith('.')
+}
+const qmarksTestNoExtDot = ([$0]: RegExpMatchArray) => {
+  const len = $0.length
+  return (f: string) => f.length === len && f !== '.' && f !== '..'
+}
 
 /* c8 ignore start */
 const platform =
@@ -667,6 +696,16 @@ export class Minimatch {
             ? starDotExtTestDot
             : starDotExtTest
         )(m[1])
+      } else if ((m = pattern.match(qmarksRE))) {
+        fastTest = (
+          options.nocase
+            ? options.dot
+              ? qmarksTestNocaseDot
+              : qmarksTestNocase
+            : options.dot
+            ? qmarksTestDot
+            : qmarksTest
+        )(m)
       } else if ((m = pattern.match(starDotStarRE))) {
         fastTest = options.dot ? starDotStarTestDot : starDotStarTest
       } else if ((m = pattern.match(dotStarRE))) {
