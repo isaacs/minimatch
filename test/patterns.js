@@ -408,6 +408,17 @@ module.exports = [
     ['.a', '.a.js', '.js', 'a', 'a.js', 'js', 'a.JS', '.a.JS', '.JS', 'JS'],
     { dot: true },
   ],
+
+  () => (files = [
+    'x/y/z/a/b/c',
+    'x/y/a/b/c',
+    'x/z/a/b/c',
+    'x/a/b/c',
+    'a/b/c',
+  ]),
+  ['x/*/../a/b/c', ['x/a/b/c']],
+  ['x/z/../*/a/b/c', ['x/y/a/b/c', 'x/z/a/b/c']],
+  ['x/*/../../a/b/c', ['a/b/c']],
 ]
 
 Object.defineProperty(module.exports, 'files', {

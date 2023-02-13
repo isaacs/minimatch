@@ -382,6 +382,8 @@ export class Minimatch {
       // ** is * anyway
       this.globParts = rawGlobParts
     } else {
+      // do this swap BEFORE the reduce, so that we can turn a string
+      // of **/*/**/* into */*/**/** and then reduce the **'s into one
       for (const parts of rawGlobParts) {
         let swapped: boolean
         do {
@@ -397,9 +399,17 @@ export class Minimatch {
       }
       this.globParts = rawGlobParts.map(parts =>
         parts.reduce((set: string[], part) => {
-          if (part !== '**' || set[set.length - 1] !== '**') {
-            set.push(part)
+          const prev = set[set.length - 1]
+          if (part === '**' && prev === '**') {
+            return set
           }
+          if (part === '..') {
+            if (prev && prev !== '..' && prev !== '.' && prev !== '**') {
+              set.pop()
+              return set
+            }
+          }
+          set.push(part)
           return set
         }, [])
       )
