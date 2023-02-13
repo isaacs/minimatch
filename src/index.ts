@@ -397,8 +397,8 @@ export class Minimatch {
           }
         } while (swapped)
       }
-      this.globParts = rawGlobParts.map(parts =>
-        parts.reduce((set: string[], part) => {
+      this.globParts = rawGlobParts.map(parts => {
+        parts = parts.reduce((set: string[], part) => {
           const prev = set[set.length - 1]
           if (part === '**' && prev === '**') {
             return set
@@ -412,7 +412,8 @@ export class Minimatch {
           set.push(part)
           return set
         }, [])
-      )
+        return parts.length === 0 ? [''] : parts
+      })
     }
 
     this.debug(this.pattern, this.globParts)

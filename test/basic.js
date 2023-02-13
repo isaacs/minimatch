@@ -221,3 +221,9 @@ t.test('globstar re matches zero or more path portions', t => {
   }
   t.end()
 })
+
+t.test('do not create empty pattern via ..', t =>{
+  const m = new mm.Minimatch('*/..')
+  t.same(m.globParts, [['']])
+  t.end()
+})
