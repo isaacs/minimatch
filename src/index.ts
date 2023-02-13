@@ -11,6 +11,7 @@ export interface MinimatchOptions {
   partial?: boolean
   dot?: boolean
   nocase?: boolean
+  nocaseMagicOnly?: boolean
   matchBase?: boolean
   flipNegate?: boolean
   preserveMultipleSlashes?: boolean
@@ -1087,7 +1088,7 @@ export class Minimatch {
     }
 
     // if it's nocase, and the lcase/uppercase don't match, it's magic
-    if (options.nocase && !hasMagic) {
+    if (options.nocase && !hasMagic && !options.nocaseMagicOnly) {
       hasMagic = pattern.toUpperCase() !== pattern.toLowerCase()
     }
 

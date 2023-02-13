@@ -187,6 +187,16 @@ Disable "extglob" style patterns like `+(a|b)`.
 
 Perform a case-insensitive match.
 
+### nocaseMagicOnly
+
+When used with `{nocase: true}`, create regular expressions that
+are case-insensitive, but leave string match portions untouched.
+Has no effect when used without `{nocase: true}`
+
+Useful when some other form of case-insensitive matching is used,
+or if the original string representation is useful in some other
+way.
+
 ### nonull
 
 When a match is not found by `minimatch.match`, return a list containing

@@ -222,8 +222,25 @@ t.test('globstar re matches zero or more path portions', t => {
   t.end()
 })
 
-t.test('do not create empty pattern via ..', t =>{
+t.test('do not create empty pattern via ..', t => {
   const m = new mm.Minimatch('*/..')
   t.same(m.globParts, [['']])
+  t.end()
+})
+
+t.test('option to only nocase regexps, not strings', t => {
+  t.match(
+    new mm.Minimatch('test/*.js', {
+      nocase: true,
+      nocaseMagicOnly: true,
+    }).set,
+    [['test', /^(?!\.)(?=.)[^/]*?\.js$/i]]
+  )
+  t.match(
+    new mm.Minimatch('test/*.js', {
+      nocase: true,
+    }).set,
+    [[/^test$/i, /^(?!\.)(?=.)[^/]*?\.js$/i]]
+  )
   t.end()
 })
