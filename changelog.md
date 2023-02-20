@@ -1,5 +1,14 @@
 # change log
 
+## 7.0
+
+- Preprocess patterns to simplify complicated patterns and reduce
+  out `..` pattern portions where possible. Note that this means
+  a pattern like `a/b/../*` will be equivalent to `a/*`, and will
+  _not_ match the string `a/b/../c`. If this causes problems, it
+  can be addressed in a patch release by resolving `..` portions
+  in the test string.
+
 ## 6.1
 
 - Handle UNC paths on Windows
