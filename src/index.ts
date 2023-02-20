@@ -354,7 +354,7 @@ export class Minimatch {
     this.parseNegate()
 
     // step 2: expand braces
-    this.globSet = this.braceExpand()
+    this.globSet = [...new Set(this.braceExpand())]
 
     if (options.debug) {
       this.debug = (...args: any[]) => console.error(...args)
@@ -362,61 +362,17 @@ export class Minimatch {
 
     this.debug(this.pattern, this.globSet)
 
-    // step 3: now we have a set, so turn each one into a series of path-portion
-    // matching patterns.
+    // step 3: now we have a set, so turn each one into a series of
+    // path-portion matching patterns.
     // These will be regexps, except in the case of "**", which is
     // set to the GLOBSTAR object for globstar behavior,
     // and will not contain any / characters
+    //
+    // First, we preprocess to make the glob pattern sets a bit simpler
+    // and deduped.  There are some perf-killing patterns that can cause
+    // problems with a glob walk, but we can simplify them down a bit.
     const rawGlobParts = this.globSet.map(s => this.slashSplit(s))
-
-    // consecutive globstars are an unncessary perf killer
-    // also, **/*/... is equivalent to */**/..., so swap all of those
-    // this turns a pattern like **/*/**/*/x into */*/**/x
-    // and a pattern like **/x/**/*/y becomes **/x/*/**/y
-    // the *later* we can push the **, the more efficient it is,
-    // because we can avoid having to do a recursive walk until
-    // the walked tree is as shallow as possible.
-    // Note that this is only true up to the last pattern, though, because
-    // a/*/** will only match a/b if b is a dir, but a/**/* will match a/b
-    // regardless, since it's "0 or more path segments" if it's not final.
-    if (this.options.noglobstar) {
-      // ** is * anyway
-      this.globParts = rawGlobParts
-    } else {
-      // do this swap BEFORE the reduce, so that we can turn a string
-      // of **/*/**/* into */*/**/** and then reduce the **'s into one
-      for (const parts of rawGlobParts) {
-        let swapped: boolean
-        do {
-          swapped = false
-          for (let i = 0; i < parts.length - 1; i++) {
-            if (parts[i] === '*' && parts[i - 1] === '**') {
-              parts[i] = '**'
-              parts[i - 1] = '*'
-              swapped = true
-            }
-          }
-        } while (swapped)
-      }
-      this.globParts = rawGlobParts.map(parts => {
-        parts = parts.reduce((set: string[], part) => {
-          const prev = set[set.length - 1]
-          if (part === '**' && prev === '**') {
-            return set
-          }
-          if (part === '..') {
-            if (prev && prev !== '..' && prev !== '.' && prev !== '**') {
-              set.pop()
-              return set
-            }
-          }
-          set.push(part)
-          return set
-        }, [])
-        return parts.length === 0 ? [''] : parts
-      })
-    }
-
+    this.globParts = this.preprocess(rawGlobParts)
     this.debug(this.pattern, this.globParts)
 
     // glob --> regexps
@@ -446,6 +402,188 @@ export class Minimatch {
     }
 
     this.debug(this.pattern, this.set)
+  }
+
+  // various transforms to equivalent pattern sets that are
+  // faster to process in a filesystem walk.  The goal is to
+  // eliminate what we can, and push all ** patterns as far
+  // to the right as possible, even if it increases the number
+  // of patterns that we have to process.
+  preprocess(globParts: string[][]) {
+    // if we're not in globstar mode, then turn all ** into *
+    if (this.options.noglobstar) {
+      for (let i = 0; i < globParts.length; i++) {
+        for (let j = 0; j < globParts[i].length; j++) {
+          if (globParts[i][j] === '**') {
+            globParts[i][j] = '*'
+          }
+        }
+      }
+    }
+
+    globParts = this.firstPhasePreProcess(globParts)
+    globParts = this.secondPhasePreProcess(globParts)
+
+    return globParts
+  }
+
+  // First phase: single-pattern processing
+  // <pre> is 1 or more portions
+  // <rest> is 1 or more portions
+  // <p> is any portion other than ., .., '', or **
+  // <e> is . or ''
+  //
+  // **/.. is *brutal* for filesystem walking performance, because
+  // it effectively resets the recursive walk each time it occurs,
+  // and ** cannot be reduced out by a .. pattern part like a regexp
+  // or most strings (other than .., ., and '') can be.
+  //
+  // <pre>/**/../<p>/<rest> -> {<pre>/../<p>/<rest>,<pre>/**/<p>/<rest>}
+  // <pre>/<e>/<rest> -> <pre>/<rest>
+  // <pre>/<p>/../<rest> -> <pre>/<rest>
+  // **/**/<rest> -> **/<rest>
+  //
+  // **/*/<rest> -> */**/<rest> <== not valid because ** doesn't follow
+  // this WOULD be allowed if ** did follow symlinks, or * didn't
+  firstPhasePreProcess(globParts: string[][]) {
+    let didSomething = false
+    do {
+      didSomething = false
+      // <pre>/**/../<p>/<rest> -> {<pre>/../<p>/<rest>,<pre>/**/<p>/<rest>}
+      for (let parts of globParts) {
+        let gs: number = -1
+        while (-1 !== (gs = parts.indexOf('**', gs + 1))) {
+          let gss: number = gs
+          while (parts[gss + 1] === '**') {
+            // <pre>/**/**/<rest> -> <pre>/**/<rest>
+            gss++
+          }
+          // eg, if gs is 2 and gss is 4, that means we have 3 **
+          // parts, and can remove 2 of them.
+          if (gss > gs) {
+            parts.splice(gs + 1, gss - gs)
+          }
+
+          let next = parts[gs + 1]
+          const p = parts[gs + 2]
+          if (next !== '..') continue
+          if (!p || p === '.' || p === '..') continue
+          didSomething = true
+          // edit parts in place, and push the new one
+          parts.splice(gs, 1)
+          const other = parts.slice(0)
+          other[gs] = '**'
+          globParts.push(other)
+          gs--
+        }
+
+        // <pre>/<e>/<rest> -> <pre>/<rest>
+        if (!this.preserveMultipleSlashes) {
+          for (let i = 1; i < parts.length - 1; i++) {
+            const p = parts[i]
+            // don't squeeze out UNC patterns
+            if (i === 1 && p === '' && parts[0] === '') continue
+            if (p === '.' || p === '') {
+              didSomething = true
+              parts.splice(i, 1)
+              i--
+            }
+          }
+          if (parts[0] === '.') {
+            didSomething = true
+            parts.shift()
+          }
+        }
+
+        // <pre>/<p>/../<rest> -> <pre>/<rest>
+        let dd: number = 0
+        while (-1 !== (dd = parts.indexOf('..', dd + 1))) {
+          const p = parts[dd - 1]
+          if (p && p !== '.' && p !== '..' && p !== '**') {
+            didSomething = true
+            parts.splice(dd - 1, 2)
+            if (parts.length === 0) parts.push('')
+            dd -= 2
+          }
+        }
+      }
+    } while (didSomething)
+
+    return globParts
+  }
+
+  // second phase: multi-pattern dedupes
+  // {<pre>/*/<rest>,<pre>/<p>/<rest>} -> <pre>/*/<rest>
+  // {<pre>/<rest>,<pre>/<rest>} -> <pre>/<rest>
+  // {<pre>/**/<rest>,<pre>/<rest>} -> <pre>/**/<rest>
+  //
+  // {<pre>/**/<rest>,<pre>/**/<p>/<rest>} -> <pre>/**/<rest>
+  // ^-- not valid because ** doens't follow symlinks
+  secondPhasePreProcess(globParts: string[][]): string[][] {
+    for (let i = 0; i < globParts.length - 1; i++) {
+      for (let j = i + 1; j < globParts.length; j++) {
+        const matched = this.partsMatch(
+          globParts[i],
+          globParts[j],
+          !this.preserveMultipleSlashes
+        )
+        if (!matched) continue
+        globParts[i] = matched
+        globParts[j] = []
+      }
+    }
+    return globParts.filter(gs => gs.length)
+  }
+
+  partsMatch(
+    a: string[],
+    b: string[],
+    emptyGSMatch: boolean = false
+  ): false | string[] {
+    let ai = 0
+    let bi = 0
+    let result: string[] = []
+    let which: string = ''
+    while (ai < a.length && bi < b.length) {
+      if (a[ai] === b[bi]) {
+        result.push(which === 'b' ? b[bi] : a[ai])
+        ai++
+        bi++
+      } else if (emptyGSMatch && a[ai] === '**' && b[bi] === a[ai + 1]) {
+        result.push(a[ai])
+        ai++
+      } else if (emptyGSMatch && b[bi] === '**' && a[ai] === b[bi + 1]) {
+        result.push(b[bi])
+        bi++
+      } else if (
+        a[ai] === '*' &&
+        b[bi] &&
+        !b[bi].startsWith('.') &&
+        b[bi] !== '**'
+      ) {
+        if (which === 'b') return false
+        which = 'a'
+        result.push(a[ai])
+        ai++
+        bi++
+      } else if (
+        b[bi] === '*' &&
+        a[ai] &&
+        (this.options.dot || !a[ai].startsWith('.')) &&
+        a[ai] !== '**'
+      ) {
+        if (which === 'a') return false
+        which = 'b'
+        result.push(b[bi])
+        ai++
+        bi++
+      } else {
+        return false
+      }
+    }
+    // if we fall out of the loop, it means they two are identical
+    // as long as their lengths match
+    return a.length === b.length && result
   }
 
   parseNegate() {
@@ -685,10 +823,7 @@ export class Minimatch {
     const options = this.options
 
     // shortcuts
-    if (pattern === '**') {
-      if (!options.noglobstar) return GLOBSTAR
-      else pattern = '*'
-    }
+    if (pattern === '**') return GLOBSTAR
     if (pattern === '') return ''
 
     // far and away, the most common glob pattern parts are
