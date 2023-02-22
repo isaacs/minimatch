@@ -558,7 +558,7 @@ export class Minimatch {
       } else if (
         a[ai] === '*' &&
         b[bi] &&
-        !b[bi].startsWith('.') &&
+        (this.options.dot || !b[bi].startsWith('.')) &&
         b[bi] !== '**'
       ) {
         if (which === 'b') return false
@@ -763,6 +763,9 @@ export class Minimatch {
       // non-magic patterns just have to match exactly
       // patterns with magic have been turned into regexps.
       let hit: boolean
+      while (f === '.' && fi < fl - 1) {
+        f = file[++fi]
+      }
       if (typeof p === 'string') {
         hit = f === p
         this.debug('string match', p, f, hit)
