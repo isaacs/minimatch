@@ -1,5 +1,15 @@
 # change log
 
+## 7.1
+
+- Add `optimizationLevel` configuration option, and revert the
+  default back to the 6.2 style minimal optimizations, making the
+  advanced transforms introduced in 7.0 opt-in.  Also, process
+  provided file paths in the same way in optimizationLevel:2
+  mode, so _most_ things that matched with optimizationLevel 1 or
+  0 _should_ match with level 2 as well.  However, level 1 is the
+  default, out of an abundance of caution.
+
 ## 7.0
 
 - Preprocess patterns to simplify complicated patterns and reduce
@@ -8,6 +18,10 @@
   _not_ match the string `a/b/../c`. If this causes problems, it
   can be addressed in a patch release by resolving `..` portions
   in the test string.
+
+## 6.2
+
+- Add nocaseMagicOnly flag
 
 ## 6.1
 
