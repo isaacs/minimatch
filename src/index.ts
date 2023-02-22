@@ -15,6 +15,7 @@ export interface MinimatchOptions {
   matchBase?: boolean
   flipNegate?: boolean
   preserveMultipleSlashes?: boolean
+  optimizationLevel?: number
 }
 
 export const minimatch = (
@@ -421,10 +422,97 @@ export class Minimatch {
       }
     }
 
-    globParts = this.firstPhasePreProcess(globParts)
-    globParts = this.secondPhasePreProcess(globParts)
+    const { optimizationLevel = 1 } = this.options
+
+    if (optimizationLevel >= 2) {
+      // aggressive optimization for the purpose of fs walking
+      globParts = this.firstPhasePreProcess(globParts)
+      globParts = this.secondPhasePreProcess(globParts)
+    } else if (optimizationLevel >= 1) {
+      // just basic optimizations to remove some .. parts
+      globParts = this.levelOneOptimize(globParts)
+    } else {
+      globParts = this.adjascentGlobstarOptimize(globParts)
+    }
 
     return globParts
+  }
+
+  // just get rid of adjascent ** portions
+  adjascentGlobstarOptimize(globParts: string[][]) {
+    return globParts.map(parts => {
+      let gs: number = -1
+      while (-1 !== (gs = parts.indexOf('**', gs + 1))) {
+        let i = gs
+        while (parts[i + 1] === '**') {
+          i++
+        }
+        if (i !== gs) {
+          parts.splice(gs, i - gs)
+        }
+      }
+      return parts
+    })
+  }
+
+  // get rid of adjascent ** and resolve .. portions
+  levelOneOptimize(globParts: string[][]) {
+    return globParts.map(parts => {
+      parts = parts.reduce((set: string[], part) => {
+        const prev = set[set.length - 1]
+        if (part === '**' && prev === '**') {
+          return set
+        }
+        if (part === '..') {
+          if (prev && prev !== '..' && prev !== '.' && prev !== '**') {
+            set.pop()
+            return set
+          }
+        }
+        set.push(part)
+        return set
+      }, [])
+      return parts.length === 0 ? [''] : parts
+    })
+  }
+
+  levelTwoFileOptimize(parts: string | string[]) {
+    if (!Array.isArray(parts)) {
+      parts = this.slashSplit(parts)
+    }
+    let didSomething: boolean = false
+    do {
+      didSomething = false
+      // <pre>/<e>/<rest> -> <pre>/<rest>
+      if (!this.preserveMultipleSlashes) {
+        for (let i = 1; i < parts.length - 1; i++) {
+          const p = parts[i]
+          // don't squeeze out UNC patterns
+          if (i === 1 && p === '' && parts[0] === '') continue
+          if (p === '.' || p === '') {
+            didSomething = true
+            parts.splice(i, 1)
+            i--
+          }
+        }
+        if (parts[0] === '.') {
+          didSomething = true
+          parts.shift()
+        }
+      }
+
+      // <pre>/<p>/../<rest> -> <pre>/<rest>
+      let dd: number = 0
+      while (-1 !== (dd = parts.indexOf('..', dd + 1))) {
+        const p = parts[dd - 1]
+        if (p && p !== '.' && p !== '..' && p !== '**') {
+          didSomething = true
+          parts.splice(dd - 1, 2)
+          dd -= 2
+        }
+      }
+    } while (didSomething)
+    return parts.length === 0 ? [''] : parts
   }
 
   // First phase: single-pattern processing
@@ -648,6 +736,13 @@ export class Minimatch {
       }
     }
 
+    // resolve and reduce . and .. portions in the file as well.
+    // dont' need to do the second phase, because it's only one string[]
+    const { optimizationLevel = 1 } = this.options
+    if (optimizationLevel >= 2) {
+      file = this.levelTwoFileOptimize(file)
+    }
+
     this.debug('matchOne', this, { file, pattern })
     this.debug('matchOne', file.length, pattern.length)
 
@@ -763,9 +858,6 @@ export class Minimatch {
       // non-magic patterns just have to match exactly
       // patterns with magic have been turned into regexps.
       let hit: boolean
-      while (f === '.' && fi < fl - 1) {
-        f = file[++fi]
-      }
       if (typeof p === 'string') {
         hit = f === p
         this.debug('string match', p, f, hit)

@@ -630,7 +630,7 @@ exports[`test/basic.js TAP basic tests > makeRe {a,*(b|{c,d})} 1`] = `
 `
 
 exports[`test/basic.js TAP basic tests > makeRe {c*,./c*} 1`] = `
-/^(?:(?=.)c[^/]*?)$/
+/^(?:(?=.)c[^/]*?|\\.\\/(?=.)c[^/]*?)$/
 `
 
 exports[`test/basic.js TAP basic tests > makeRe Å 1`] = `

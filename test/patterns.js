@@ -385,7 +385,7 @@ module.exports = [
   ['?.js', ['a.js'], { dot: true }],
   ['?js', ['.js'], { dot: true }],
   ['?.js', ['a.js', 'a.JS'], { nocase: true }],
-  ['?js', ['.js', '.JS'], {dot: true, nocase: true}],
+  ['?js', ['.js', '.JS'], { dot: true, nocase: true }],
   ['?.js', ['a.js', 'a.JS'], { dot: true, nocase: true }],
 
   ['*.js', ['a.js']],
@@ -411,13 +411,7 @@ module.exports = [
     { dot: true },
   ],
 
-  () => (files = [
-    'x/y/z/a/b/c',
-    'x/y/a/b/c',
-    'x/z/a/b/c',
-    'x/a/b/c',
-    'a/b/c',
-  ]),
+  () => (files = ['x/y/z/a/b/c', 'x/y/a/b/c', 'x/z/a/b/c', 'x/a/b/c', 'a/b/c']),
   ['x/*/../a/b/c', ['x/a/b/c']],
   ['x/z/../*/a/b/c', ['x/y/a/b/c', 'x/z/a/b/c']],
   ['x/*/../../a/b/c', ['a/b/c']],

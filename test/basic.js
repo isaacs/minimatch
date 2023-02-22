@@ -5,8 +5,16 @@
 
 const t = require('tap')
 const globalBefore = Object.keys(global)
-const { minimatch: mm } = require('../')
+const { minimatch } = require('../')
 const patterns = require('./patterns.js')
+
+const mm = process.env._MINIMATCH_TEST_OPTIMIZATION_LEVEL
+  ? minimatch.defaults({
+      optimizationLevel: +process.env._MINIMATCH_TEST_OPTIMIZATION_LEVEL,
+    })
+  : minimatch
+
+const optimizationLevel = +(process.env._MINIMATCH_TEST_OPTIMIZATION_LEVEL || 1)
 
 t.test('basic tests', function (t) {
   var start = Date.now()
@@ -43,12 +51,22 @@ t.test('basic tests', function (t) {
     var actual = mm.match(f, pattern, options)
     actual.sort(alpha)
 
-    t.same(
-      actual,
-      expect,
-      JSON.stringify(pattern) + ' ' + JSON.stringify(expect),
-      tapOpts
-    )
+    if (optimizationLevel > 0) {
+      t.same(
+        actual,
+        expect,
+        JSON.stringify(pattern) + ' ' + JSON.stringify(expect),
+        tapOpts
+      )
+    } else {
+      // optimization level 0 just doesn't match a lot of stuff
+      // quite the same way, so handle that with snapshots.
+      t.matchSnapshot(
+        actual,
+        JSON.stringify(pattern) + ' ' + JSON.stringify(expect),
+        tapOpts
+      )
+    }
 
     t.matchSnapshot(tapOpts.re, 'makeRe ' + pattern, tapOpts)
   })
@@ -224,7 +242,8 @@ t.test('globstar re matches zero or more path portions', t => {
 
 t.test('do not create empty pattern via ..', t => {
   const m = new mm.Minimatch('*/..')
-  t.same(m.globParts, [['']])
+  t.equal(m.globParts.length, 1)
+  t.not(m.globParts[0].length, 0)
   t.end()
 })
 
