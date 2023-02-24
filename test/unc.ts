@@ -1,11 +1,10 @@
-process.env.__MINIMATCH_TESTING_PLATFORM__ = 'win32'
 import t from 'tap'
 import { minimatch, Minimatch, MinimatchOptions } from '../'
 
 t.test('UNC patterns do not lose their //', async t => {
-  const share = new Minimatch('//host/share/*')
+  const share = new Minimatch('//host/share/*', { platform: 'win32' })
   t.match(share.set, [['', '', 'host', 'share', RegExp]])
-  const uncPath = new Minimatch('//?/d:/*')
+  const uncPath = new Minimatch('//?/d:/*', { platform: 'win32' })
   t.match(uncPath.set, [['', '', '?', 'd:', RegExp]])
 })
 
@@ -34,6 +33,7 @@ const cases: Case[] = [
 
 t.test('UNC drive letter paths match normal paths', async t => {
   for (const [file, pattern, expect, opt = {}] of cases) {
+    opt.platform = 'win32'
     t.test(`f=${file} p=${pattern}`, t => {
       t.test('/ only', t => {
         t.equal(minimatch(file, pattern, opt), expect)

@@ -16,6 +16,7 @@ export interface MinimatchOptions {
   flipNegate?: boolean
   preserveMultipleSlashes?: boolean
   optimizationLevel?: number
+  platform?: typeof process.platform
 }
 
 export const minimatch = (
@@ -87,19 +88,21 @@ const qmarksTestNoExtDot = ([$0]: RegExpMatchArray) => {
   return (f: string) => f.length === len && f !== '.' && f !== '..'
 }
 
+type Platform = typeof process.platform
 /* c8 ignore start */
-const platform =
+const defaultPlatform: Platform = (
   typeof process === 'object' && process
     ? (typeof process.env === 'object' &&
         process.env &&
         process.env.__MINIMATCH_TESTING_PLATFORM__) ||
       process.platform
     : 'posix'
-const isWindows = platform === 'win32'
-const path = isWindows ? { sep: '\\' } : { sep: '/' }
+) as Platform
+type Sep = '\\' | '/'
+const path:{[k:string]:{sep:Sep}} = { win32: { sep: '\\' }, posix: { sep: '/' } }
 /* c8 ignore stop */
 
-export const sep = path.sep
+export const sep = defaultPlatform === 'win32' ? path.win32.sep : path.posix.sep
 minimatch.sep = sep
 
 export const GLOBSTAR = Symbol('globstar **')
@@ -306,6 +309,9 @@ export class Minimatch {
   globSet: string[]
   globParts: string[][]
 
+  isWindows: boolean
+  platform: typeof process.platform
+
   regexp: false | null | MMRegExp
   constructor(pattern: string, options: MinimatchOptions = {}) {
     assertValidPattern(pattern)
@@ -313,6 +319,8 @@ export class Minimatch {
     options = options || {}
     this.options = options
     this.pattern = pattern
+    this.platform = options.platform || defaultPlatform
+    this.isWindows = this.platform === 'win32'
     this.windowsPathsNoEscape =
       !!options.windowsPathsNoEscape || options.allowWindowsEscape === false
     if (this.windowsPathsNoEscape) {
@@ -387,7 +395,7 @@ export class Minimatch {
     ) as ParseReturnFiltered[][]
 
     // do not treat the ? in UNC paths as magic
-    if (isWindows) {
+    if (this.isWindows) {
       for (let i = 0; i < this.set.length; i++) {
         const p = this.set[i]
         if (
@@ -710,7 +718,7 @@ export class Minimatch {
 
     // a UNC pattern like //?/c:/* can match a path like c:/x
     // and vice versa
-    if (isWindows) {
+    if (this.isWindows) {
       const fileUNC =
         file[0] === '' &&
         file[1] === '' &&
@@ -1452,7 +1460,7 @@ export class Minimatch {
     // preserveMultipleSlashes is set to true.
     if (this.preserveMultipleSlashes) {
       return p.split('/')
-    } else if (isWindows && /^\/\/[^\/]+/.test(p)) {
+    } else if (this.isWindows && /^\/\/[^\/]+/.test(p)) {
       // add an extra '' for the one we lose
       return ['', ...p.split(/\/+/)]
     } else {
@@ -1478,8 +1486,8 @@ export class Minimatch {
     const options = this.options
 
     // windows: need to use /, not \
-    if (path.sep !== '/') {
-      f = f.split(path.sep).join('/')
+    if (this.isWindows) {
+      f = f.split('\\').join('/')
     }
 
     // treat the test path as a set of pathparts.

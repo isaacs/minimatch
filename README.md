@@ -320,6 +320,14 @@ is equivalent in all cases).
   string is first processed with
   `minimatch.levelTwoFileOptimize()` or similar.
 
+### platform
+
+When set to `win32`, this will trigger all windows-specific
+behaviors (special handling for UNC paths, and treating `\` as
+separators in file paths for comparison.)
+
+Defaults to the value of `process.platform`.
+
 ## Comparisons to other fnmatch/glob implementations
 
 While strict compliance with the existing standards is a
