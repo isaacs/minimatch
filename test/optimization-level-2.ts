@@ -24,6 +24,12 @@ t.test('explicit pattern coalescing and optimization', t => {
       })
 
       const patterns = [
+        '**',
+        '**/../x',
+        './**',
+        './**/',
+        './**/x',
+        './**/../x',
         '//host/share',
         '//host/share/',
         '//host/share//s/o//me////.//path',
@@ -44,6 +50,10 @@ t.test('explicit pattern coalescing and optimization', t => {
         'a/{,**/}*/b',
         'a/{**/,}b',
         'a/{**/,}*/b',
+        './././.',
+        './',
+        './x/.././///.//./',
+        '*/../**',
       ]
 
       const exp = (p: string) => braceExpand(p).map(s => s.split('/'))
@@ -69,6 +79,9 @@ t.test('optimize the file as well', t => {
     '',
     '.',
     '././.',
+    './.',
+    './',
+    './///././//././.',
     'x/..',
     'a/../b',
   ]

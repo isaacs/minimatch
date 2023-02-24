@@ -495,9 +495,13 @@ export class Minimatch {
             i--
           }
         }
-        if (parts[0] === '.') {
+        if (
+          parts[0] === '.' &&
+          parts.length === 2 &&
+          (parts[1] === '.' || parts[1] === '')
+        ) {
           didSomething = true
-          parts.shift()
+          parts.pop()
         }
       }
 
@@ -577,9 +581,13 @@ export class Minimatch {
               i--
             }
           }
-          if (parts[0] === '.') {
+          if (
+            parts[0] === '.' &&
+            parts.length === 2 &&
+            (parts[1] === '.' || parts[1] === '')
+          ) {
             didSomething = true
-            parts.shift()
+            parts.pop()
           }
         }
 
@@ -589,7 +597,9 @@ export class Minimatch {
           const p = parts[dd - 1]
           if (p && p !== '.' && p !== '..' && p !== '**') {
             didSomething = true
-            parts.splice(dd - 1, 2)
+            const needDot = dd === 1 && parts[dd + 1] === '**'
+            const splin = needDot ? ['.'] : []
+            parts.splice(dd - 1, 2, ...splin)
             if (parts.length === 0) parts.push('')
             dd -= 2
           }
