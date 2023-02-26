@@ -1,5 +1,9 @@
 # change log
 
+## 7.2
+
+- Add `windowsNoMagicRoot` option
+
 ## 7.1
 
 - Add `optimizationLevel` configuration option, and revert the

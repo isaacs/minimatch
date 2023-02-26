@@ -17,6 +17,7 @@ export interface MinimatchOptions {
   preserveMultipleSlashes?: boolean
   optimizationLevel?: number
   platform?: typeof process.platform
+  windowsNoMagicRoot?: boolean
 }
 
 export const minimatch = (
@@ -272,6 +273,7 @@ minimatch.match = match
 
 // replace stuff like \* with *
 const globUnescape = (s: string) => s.replace(/\\(.)/g, '$1')
+const globMagic = /[?*]|[+@!]\(.*?\)|\[|\]/
 const charUnescape = (s: string) => s.replace(/\\([^-\]])/g, '$1')
 const regExpEscape = (s: string) =>
   s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
@@ -311,9 +313,11 @@ export class Minimatch {
   partial: boolean
   globSet: string[]
   globParts: string[][]
+  nocase: boolean
 
   isWindows: boolean
   platform: typeof process.platform
+  windowsNoMagicRoot: boolean
 
   regexp: false | null | MMRegExp
   constructor(pattern: string, options: MinimatchOptions = {}) {
@@ -336,6 +340,11 @@ export class Minimatch {
     this.comment = false
     this.empty = false
     this.partial = !!options.partial
+    this.nocase = !!this.options.nocase
+    this.windowsNoMagicRoot =
+      options.windowsNoMagicRoot !== undefined
+        ? options.windowsNoMagicRoot
+        : !!(this.isWindows && this.nocase)
 
     this.globSet = []
     this.globParts = []
@@ -388,7 +397,23 @@ export class Minimatch {
     this.debug(this.pattern, this.globParts)
 
     // glob --> regexps
-    let set = this.globParts.map((s, _, __) => s.map(ss => this.parse(ss)))
+    let set = this.globParts.map((s, _, __) => {
+      if (this.isWindows && this.windowsNoMagicRoot) {
+        // check if it's a drive or unc path.
+        const isUNC =
+          s[0] === '' &&
+          s[1] === '' &&
+          (s[2] === '?' || !globMagic.test(s[2])) &&
+          !globMagic.test(s[3])
+        const isDrive = /^[a-z]:/i.test(s[0])
+        if (isUNC) {
+          return [...s.slice(0, 4), ...s.slice(4).map(ss => this.parse(ss))]
+        } else if (isDrive) {
+          return [s[0], ...s.slice(1).map(ss => this.parse(ss))]
+        }
+      }
+      return s.map(ss => this.parse(ss))
+    })
 
     this.debug(this.pattern, set)
 

@@ -254,6 +254,16 @@ paths](#windows).
 For legacy reasons, this is also set if
 `options.allowWindowsEscape` is set to the exact value `false`.
 
+### windowsNoMagicRoot
+
+When a pattern starts with a UNC path or drive letter, and in
+`nocase:true` mode, do not convert the root portions of the
+pattern into a case-insensitive regular expression, and instead
+leave them as strings.
+
+This is the default when the platform is `win32` and
+`nocase:true` is set.
+
 ### preserveMultipleSlashes
 
 By default, multiple `/` characters (other than the leading `//`
