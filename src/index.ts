@@ -99,7 +99,10 @@ const defaultPlatform: Platform = (
     : 'posix'
 ) as Platform
 type Sep = '\\' | '/'
-const path:{[k:string]:{sep:Sep}} = { win32: { sep: '\\' }, posix: { sep: '/' } }
+const path: { [k: string]: { sep: Sep } } = {
+  win32: { sep: '\\' },
+  posix: { sep: '/' },
+}
 /* c8 ignore stop */
 
 export const sep = defaultPlatform === 'win32' ? path.win32.sep : path.posix.sep
@@ -538,7 +541,7 @@ export class Minimatch {
   // and ** cannot be reduced out by a .. pattern part like a regexp
   // or most strings (other than .., ., and '') can be.
   //
-  // <pre>/**/../<p>/<rest> -> {<pre>/../<p>/<rest>,<pre>/**/<p>/<rest>}
+  // <pre>/**/../<p>/<p>/<rest> -> {<pre>/../<p>/<p>/<rest>,<pre>/**/<p>/<p>/<rest>}
   // <pre>/<e>/<rest> -> <pre>/<rest>
   // <pre>/<p>/../<rest> -> <pre>/<rest>
   // **/**/<rest> -> **/<rest>
@@ -549,7 +552,7 @@ export class Minimatch {
     let didSomething = false
     do {
       didSomething = false
-      // <pre>/**/../<p>/<rest> -> {<pre>/../<p>/<rest>,<pre>/**/<p>/<rest>}
+      // <pre>/**/../<p>/<p>/<rest> -> {<pre>/../<p>/<p>/<rest>,<pre>/**/<p>/<p>/<rest>}
       for (let parts of globParts) {
         let gs: number = -1
         while (-1 !== (gs = parts.indexOf('**', gs + 1))) {
@@ -566,8 +569,18 @@ export class Minimatch {
 
           let next = parts[gs + 1]
           const p = parts[gs + 2]
+          const p2 = parts[gs + 3]
           if (next !== '..') continue
-          if (!p || p === '.' || p === '..') continue
+          if (
+            !p ||
+            p === '.' ||
+            p === '..' ||
+            !p2 ||
+            p2 === '.' ||
+            p2 === '..'
+          ) {
+            continue
+          }
           didSomething = true
           // edit parts in place, and push the new one
           parts.splice(gs, 1)
