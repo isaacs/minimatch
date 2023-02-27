@@ -32,11 +32,20 @@ Supports these glob features:
 - Brace Expansion
 - Extended glob matching
 - "Globstar" `**` matching
+- [Posix character
+  classes](https://www.gnu.org/software/bash/manual/html_node/Pattern-Matching.html),
+  like `[[:alpha:]]`, supporting the full range of Unicode
+  characters.  For example, `[[:alpha:]]` will match against
+  `'é'`, though `[a-zA-Z]` will not.  Collating symbol and set
+  matching is not supported, so `[[=e=]]` will _not_ match `'é'`
+  and `[[.ch.]]` will not match `'ch'` in locales where `ch` is
+  considered a single character.
 
 See:
 
 - `man sh`
-- `man bash`
+- `man bash` [Pattern
+  Matching](https://www.gnu.org/software/bash/manual/html_node/Pattern-Matching.html)
 - `man 3 fnmatch`
 - `man 5 gitignore`
 

@@ -1,5 +1,9 @@
 # change log
 
+## 7.3
+
+- Add support for posix character classes in a unicode-aware way.
+
 ## 7.2
 
 - Add `windowsNoMagicRoot` option

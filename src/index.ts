@@ -1,3 +1,6 @@
+import expand from 'brace-expansion'
+import { parseClass } from './brace-expressions.js'
+
 export interface MinimatchOptions {
   nobrace?: boolean
   nocomment?: boolean
@@ -111,7 +114,6 @@ minimatch.sep = sep
 
 export const GLOBSTAR = Symbol('globstar **')
 minimatch.GLOBSTAR = GLOBSTAR
-import expand from 'brace-expansion'
 
 const plTypes = {
   '!': { open: '(?:(?!(?:', close: '))[^/]*?)' },
@@ -251,7 +253,6 @@ const assertValidPattern: (pattern: any) => void = (
 // when it is the *only* thing in a path portion.  Otherwise, any series
 // of * is equivalent to a single *.  Globstar behavior is enabled by
 // default, and can be disabled by setting options.noglobstar.
-const SUBPARSE = Symbol('subparse')
 
 export const makeRe = (pattern: string, options: MinimatchOptions = {}) =>
   new Minimatch(pattern, options).makeRe()
@@ -274,10 +275,8 @@ minimatch.match = match
 // replace stuff like \* with *
 const globUnescape = (s: string) => s.replace(/\\(.)/g, '$1')
 const globMagic = /[?*]|[+@!]\(.*?\)|\[|\]/
-const charUnescape = (s: string) => s.replace(/\\([^-\]])/g, '$1')
 const regExpEscape = (s: string) =>
   s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
-const braExpEscape = (s: string) => s.replace(/[[\]\\]/g, '\\$&')
 
 interface PatternListEntry {
   type: string
@@ -965,10 +964,7 @@ export class Minimatch {
     return braceExpand(this.pattern, this.options)
   }
 
-  parse(
-    pattern: string,
-    isSub?: typeof SUBPARSE
-  ): ParseReturn | SubparseReturn {
+  parse(pattern: string): ParseReturn | SubparseReturn {
     assertValidPattern(pattern)
 
     const options = this.options
@@ -981,34 +977,32 @@ export class Minimatch {
     // *, *.*, and *.<ext>  Add a fast check method for those.
     let m: RegExpMatchArray | null
     let fastTest: null | ((f: string) => boolean) = null
-    if (isSub !== SUBPARSE) {
-      if ((m = pattern.match(starRE))) {
-        fastTest = options.dot ? starTestDot : starTest
-      } else if ((m = pattern.match(starDotExtRE))) {
-        fastTest = (
-          options.nocase
-            ? options.dot
-              ? starDotExtTestNocaseDot
-              : starDotExtTestNocase
-            : options.dot
-            ? starDotExtTestDot
-            : starDotExtTest
-        )(m[1])
-      } else if ((m = pattern.match(qmarksRE))) {
-        fastTest = (
-          options.nocase
-            ? options.dot
-              ? qmarksTestNocaseDot
-              : qmarksTestNocase
-            : options.dot
-            ? qmarksTestDot
-            : qmarksTest
-        )(m)
-      } else if ((m = pattern.match(starDotStarRE))) {
-        fastTest = options.dot ? starDotStarTestDot : starDotStarTest
-      } else if ((m = pattern.match(dotStarRE))) {
-        fastTest = dotStarTest
-      }
+    if ((m = pattern.match(starRE))) {
+      fastTest = options.dot ? starTestDot : starTest
+    } else if ((m = pattern.match(starDotExtRE))) {
+      fastTest = (
+        options.nocase
+          ? options.dot
+            ? starDotExtTestNocaseDot
+            : starDotExtTestNocase
+          : options.dot
+          ? starDotExtTestDot
+          : starDotExtTest
+      )(m[1])
+    } else if ((m = pattern.match(qmarksRE))) {
+      fastTest = (
+        options.nocase
+          ? options.dot
+            ? qmarksTestNocaseDot
+            : qmarksTestNocase
+          : options.dot
+          ? qmarksTestDot
+          : qmarksTest
+      )(m)
+    } else if ((m = pattern.match(starDotStarRE))) {
+      fastTest = options.dot ? starDotStarTestDot : starDotStarTest
+    } else if ((m = pattern.match(dotStarRE))) {
+      fastTest = dotStarTest
     }
 
     let re = ''
@@ -1018,12 +1012,8 @@ export class Minimatch {
     const patternListStack: PatternListEntry[] = []
     const negativeLists: NegativePatternListEntry[] = []
     let stateChar: StateChar | false = false
-    let inClass = false
-    let reClassStart = -1
-    let classStart = -1
-    let cs: string
+    let uflag = false
     let pl: PatternListEntry | undefined
-    let sp: SubparseReturn
     // . and .. never match anything that doesn't start with .,
     // even when options.dot is set.  However, if the pattern
     // starts with ., then traversal patterns can match.
@@ -1098,11 +1088,6 @@ export class Minimatch {
         /* c8 ignore stop */
 
         case '\\':
-          if (inClass && pattern.charAt(i + 1) === '-') {
-            re += c
-            continue
-          }
-
           clearStateChar()
           escaping = true
           continue
@@ -1115,15 +1100,6 @@ export class Minimatch {
         case '@':
         case '!':
           this.debug('%s\t%s %s %j <-- stateChar', pattern, i, re, c)
-
-          // all of those are literals inside a class, except that
-          // the glob [!a] means [^a] in regexp
-          if (inClass) {
-            this.debug('  in class')
-            if (c === '!' && i === classStart + 1) c = '^'
-            re += c
-            continue
-          }
 
           // if we already have a stateChar, then it means
           // that there was something like ** or +? in there.
@@ -1138,11 +1114,6 @@ export class Minimatch {
           continue
 
         case '(': {
-          if (inClass) {
-            re += '('
-            continue
-          }
-
           if (!stateChar) {
             re += '\\('
             continue
@@ -1171,7 +1142,7 @@ export class Minimatch {
 
         case ')': {
           const plEntry = patternListStack[patternListStack.length - 1]
-          if (inClass || !plEntry) {
+          if (!plEntry) {
             re += '\\)'
             continue
           }
@@ -1192,7 +1163,7 @@ export class Minimatch {
 
         case '|': {
           const plEntry = patternListStack[patternListStack.length - 1]
-          if (inClass || !plEntry) {
+          if (!plEntry) {
             re += '\\|'
             continue
           }
@@ -1211,74 +1182,29 @@ export class Minimatch {
         case '[':
           // swallow any state-tracking char before the [
           clearStateChar()
-
-          if (inClass) {
-            re += '\\' + c
-            continue
+          const [src, needUflag, consumed] = parseClass(pattern, i)
+          if (consumed) {
+            re += src
+            uflag = uflag || needUflag
+            i += consumed - 1
+            hasMagic = true
+          } else {
+            re += '\\['
           }
-
-          inClass = true
-          classStart = i
-          reClassStart = re.length
-          re += c
           continue
 
         case ']':
-          //  a right bracket shall lose its special
-          //  meaning and represent itself in
-          //  a bracket expression if it occurs
-          //  first in the list.  -- POSIX.2 2.8.3.2
-          if (i === classStart + 1 || !inClass) {
-            re += '\\' + c
-            continue
-          }
-
-          // split where the last [ was, make sure we don't have
-          // an invalid re. if so, re-walk the contents of the
-          // would-be class to re-translate any characters that
-          // were passed through as-is
-          // TODO: It would probably be faster to determine this
-          // without a try/catch and a new RegExp, but it's tricky
-          // to do safely.  For now, this is safe and works.
-          cs = pattern.substring(classStart + 1, i)
-          try {
-            RegExp('[' + braExpEscape(charUnescape(cs)) + ']')
-            // looks good, finish up the class.
-            re += c
-          } catch (er) {
-            // out of order ranges in JS are errors, but in glob syntax,
-            // they're just a range that matches nothing.
-            re = re.substring(0, reClassStart) + '(?:$.)' // match nothing ever
-          }
-          hasMagic = true
-          inClass = false
+          re += '\\' + c
           continue
 
         default:
           // swallow any state char that wasn't consumed
           clearStateChar()
 
-          if (reSpecials[c] && !(c === '^' && inClass)) {
-            re += '\\'
-          }
-
-          re += c
+          re += regExpEscape(c)
           break
       } // switch
     } // for
-
-    // handle the case where we left a class open.
-    // "[abc" is valid, equivalent to "\[abc"
-    if (inClass) {
-      // split where the last [ was, and escape it
-      // this is a huge pita.  We now have to re-walk
-      // the contents of the would-be class to re-translate
-      // any characters that were passed through as-is
-      cs = pattern.slice(classStart + 1)
-      sp = this.parse(cs, SUBPARSE) as SubparseReturn
-      re = re.substring(0, reClassStart) + '\\[' + sp[0]
-      hasMagic = hasMagic || sp[1]
-    }
 
     // handle the case where we had a +( thing at the *end*
     // of the pattern.
@@ -1352,7 +1278,7 @@ export class Minimatch {
       }
       nlAfter = cleanAfter
 
-      const dollar = nlAfter === '' && isSub !== SUBPARSE ? '(?:$|\\/)' : ''
+      const dollar = nlAfter === '' ? '(?:$|\\/)' : ''
 
       re = nlBefore + nlFirst + nlAfter + dollar + nlLast
     }
@@ -1368,11 +1294,6 @@ export class Minimatch {
       re = patternStart() + re
     }
 
-    // parsing just a piece of a larger pattern.
-    if (isSub === SUBPARSE) {
-      return [re, hasMagic]
-    }
-
     // if it's nocase, and the lcase/uppercase don't match, it's magic
     if (options.nocase && !hasMagic && !options.nocaseMagicOnly) {
       hasMagic = pattern.toUpperCase() !== pattern.toLowerCase()
@@ -1385,7 +1306,7 @@ export class Minimatch {
       return globUnescape(pattern)
     }
 
-    const flags = options.nocase ? 'i' : ''
+    const flags = (options.nocase ? 'i' : '') + (uflag ? 'u' : '')
     try {
       const ext = fastTest
         ? {

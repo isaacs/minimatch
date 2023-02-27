@@ -415,6 +415,36 @@ module.exports = [
   ['x/*/../a/b/c', ['x/a/b/c']],
   ['x/z/../*/a/b/c', ['x/y/a/b/c', 'x/z/a/b/c']],
   ['x/*/../../a/b/c', ['a/b/c']],
+
+  () => (files = ['åéîøü', 'aeiou', 'fffff', '0f7fa', '99999']),
+  [
+    '[[:alpha:]][[:alpha:]][[:alpha:]][[:alpha:]][[:alpha:]]',
+    ['åéîøü', 'aeiou', 'fffff'],
+  ],
+  [
+    '[[:ascii:]][[:ascii:]][[:ascii:]][[:ascii:]][[:ascii:]]',
+    ['aeiou', 'fffff', '0f7fa', '99999'],
+  ],
+  ['[a-[:alpha:]*]', []],
+  ['[z-a]*', []],
+  ['[z-af]*', ['fffff']],
+  ['[fz-a]*', ['fffff']],
+  ['[f-gz-a]*', ['fffff']],
+  ['[f-fz-a]*', ['fffff']],
+  [
+    '[[:xdigit:]][[:xdigit:]][[:xdigit:]][[:xdigit:]][[:xdigit:]]',
+    ['fffff', '0f7fa', '99999'],
+  ],
+  [
+    '[[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]]',
+    ['åéîøü', 'aeiou', 'fffff', '0f7fa', '99999'],
+  ],
+  [
+    '[[:xdigit:]][[:xdigit:]]???',
+    ['aeiou', 'fffff', '0f7fa', '99999'],
+  ],
+  [ '[[:graph:]]f*', ['fffff', '0f7fa']],
+  [ '[[:graph:][:digit:]]f*', ['fffff', '0f7fa']],
 ]
 
 Object.defineProperty(module.exports, 'files', {

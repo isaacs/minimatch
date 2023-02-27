@@ -705,6 +705,64 @@ Array [
 ]
 `
 
+exports[`test/optimization-level-0.ts TAP basic tests > "[[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]]" ["0f7fa","99999","aeiou","fffff","åéîøü"] 1`] = `
+Array [
+  "0f7fa",
+  "99999",
+  "aeiou",
+  "fffff",
+  "åéîøü",
+]
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > "[[:alpha:]][[:alpha:]][[:alpha:]][[:alpha:]][[:alpha:]]" ["aeiou","fffff","åéîøü"] 1`] = `
+Array [
+  "aeiou",
+  "fffff",
+  "åéîøü",
+]
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > "[[:ascii:]][[:ascii:]][[:ascii:]][[:ascii:]][[:ascii:]]" ["0f7fa","99999","aeiou","fffff"] 1`] = `
+Array [
+  "0f7fa",
+  "99999",
+  "aeiou",
+  "fffff",
+]
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > "[[:graph:][:digit:]]f*" ["0f7fa","fffff"] 1`] = `
+Array [
+  "0f7fa",
+  "fffff",
+]
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > "[[:graph:]]f*" ["0f7fa","fffff"] 1`] = `
+Array [
+  "0f7fa",
+  "fffff",
+]
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > "[[:xdigit:]][[:xdigit:]]???" ["0f7fa","99999","aeiou","fffff"] 1`] = `
+Array [
+  "0f7fa",
+  "99999",
+  "aeiou",
+  "fffff",
+]
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > "[[:xdigit:]][[:xdigit:]][[:xdigit:]][[:xdigit:]][[:xdigit:]]" ["0f7fa","99999","fffff"] 1`] = `
+Array [
+  "0f7fa",
+  "99999",
+  "fffff",
+]
+`
+
 exports[`test/optimization-level-0.ts TAP basic tests > "[[]" ["["] 1`] = `
 Array [
   "[",
@@ -761,6 +819,10 @@ exports[`test/optimization-level-0.ts TAP basic tests > "[a-0][a-Ā]" [] 1`] = `
 Array []
 `
 
+exports[`test/optimization-level-0.ts TAP basic tests > "[a-[:alpha:]*]" [] 1`] = `
+Array []
+`
+
 exports[`test/optimization-level-0.ts TAP basic tests > "[a-b-c]" [] 1`] = `
 Array []
 `
@@ -805,6 +867,24 @@ Array [
 ]
 `
 
+exports[`test/optimization-level-0.ts TAP basic tests > "[f-fz-a]*" ["fffff"] 1`] = `
+Array [
+  "fffff",
+]
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > "[f-gz-a]*" ["fffff"] 1`] = `
+Array [
+  "fffff",
+]
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > "[fz-a]*" ["fffff"] 1`] = `
+Array [
+  "fffff",
+]
+`
+
 exports[`test/optimization-level-0.ts TAP basic tests > "[ia]?[ck]" ["ABC","IjK"] 1`] = `
 Array [
   "ABC",
@@ -814,6 +894,16 @@ Array [
 
 exports[`test/optimization-level-0.ts TAP basic tests > "[z-a]" [] 1`] = `
 Array []
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > "[z-a]*" [] 1`] = `
+Array []
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > "[z-af]*" ["fffff"] 1`] = `
+Array [
+  "fffff",
+]
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > "[z\\\\-a]" [] 1`] = `
@@ -1159,7 +1249,7 @@ false
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe #* 1`] = `
-/^(?:(?=.)#[^/]*?)$/
+/^(?:(?=.)\\#[^/]*?)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe * 1`] = `
@@ -1463,7 +1553,7 @@ exports[`test/optimization-level-0.ts TAP basic tests > makeRe @(a|a[(])b 1`] = 
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe @(a|a[)])b 1`] = `
-/^(?:(?=.)(?:(?!\\.)a|(?!\\.)a[\\)])b)$/
+/^(?:(?=.)(?:(?!\\.)a|(?!\\.)a[)])b)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe @(js|.*) 1`] = `
@@ -1487,19 +1577,47 @@ exports[`test/optimization-level-0.ts TAP basic tests > makeRe [ 1`] = `
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe [!a* 1`] = `
-/^(?:(?=.)\\[(?=.)\\!a[^/]*?)$/
+/^(?:(?=.)\\[\\!a[^/]*?)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe [#a* 1`] = `
-/^(?:(?=.)\\[(?=.)#a[^/]*?)$/
+/^(?:(?=.)\\[\\#a[^/]*?)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe [* 1`] = `
-/^(?:(?=.)\\[(?!\\.)(?=.)[^/]*?)$/
+/^(?:(?=.)\\[[^/]*?)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe [-abc] 1`] = `
-/^(?:(?!\\.)(?=.)[-abc])$/
+/^(?:(?!\\.)(?=.)[\\-abc])$/
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > makeRe [[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]] 1`] = `
+/^(?:(?!\\.)(?=.)[\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}])$/
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > makeRe [[:alpha:]][[:alpha:]][[:alpha:]][[:alpha:]][[:alpha:]] 1`] = `
+/^(?:(?!\\.)(?=.)[\\p{L}\\p{Nl}][\\p{L}\\p{Nl}][\\p{L}\\p{Nl}][\\p{L}\\p{Nl}][\\p{L}\\p{Nl}])$/
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > makeRe [[:ascii:]][[:ascii:]][[:ascii:]][[:ascii:]][[:ascii:]] 1`] = `
+/^(?:(?!\\.)(?=.)[\\x00-\\x7f][\\x00-\\x7f][\\x00-\\x7f][\\x00-\\x7f][\\x00-\\x7f])$/
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > makeRe [[:graph:][:digit:]]f* 1`] = `
+/^(?:(?!\\.)(?=.)([\\p{Nd}]|[^\\p{Z}\\p{C}])f[^/]*?)$/
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > makeRe [[:graph:]]f* 1`] = `
+/^(?:(?!\\.)(?=.)[^\\p{Z}\\p{C}]f[^/]*?)$/
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > makeRe [[:xdigit:]][[:xdigit:]]??? 1`] = `
+/^(?:(?!\\.)(?=.)[A-Fa-f0-9][A-Fa-f0-9][^/][^/][^/])$/
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > makeRe [[:xdigit:]][[:xdigit:]][[:xdigit:]][[:xdigit:]][[:xdigit:]] 1`] = `
+/^(?:(?!\\.)(?=.)[A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9])$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe [[] 1`] = `
@@ -1515,11 +1633,11 @@ exports[`test/optimization-level-0.ts TAP basic tests > makeRe [\\\\] 1`] = `
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe [\\b-a] 1`] = `
-/^(?:(?!\\.)(?=.)(?:$.))$/
+/^(?:(?=.)$.)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe [\\z-a] 1`] = `
-/^(?:(?!\\.)(?=.)(?:$.))$/
+/^(?:(?=.)$.)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe [] 1`] = `
@@ -1531,7 +1649,7 @@ exports[`test/optimization-level-0.ts TAP basic tests > makeRe []+*] 1`] = `
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe []-] 1`] = `
-/^(?:(?!\\.)(?=.)[\\]-])$/
+/^(?:(?!\\.)(?=.)[\\]\\-])$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe []] 1`] = `
@@ -1543,11 +1661,15 @@ exports[`test/optimization-level-0.ts TAP basic tests > makeRe [^a-c]* 1`] = `
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe [a-0][a-Ā] 1`] = `
-/^(?:(?!\\.)(?=.)(?:$.)[a-Ā])$/
+/^(?:(?=.)$.)$/
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > makeRe [a-[:alpha:]*] 1`] = `
+/^(?:(?=.)$.)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe [a-b-c] 1`] = `
-/^(?:(?!\\.)(?=.)[a-b-c])$/
+/^(?:(?!\\.)(?=.)[a-b\\-c])$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe [a-c]b* 1`] = `
@@ -1567,7 +1689,19 @@ exports[`test/optimization-level-0.ts TAP basic tests > makeRe [abc 1`] = `
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe [abc-] 1`] = `
-/^(?:(?!\\.)(?=.)[abc-])$/
+/^(?:(?!\\.)(?=.)[abc\\-])$/
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > makeRe [f-fz-a]* 1`] = `
+/^(?:(?!\\.)(?=.)[f][^/]*?)$/
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > makeRe [f-gz-a]* 1`] = `
+/^(?:(?!\\.)(?=.)[f-g][^/]*?)$/
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > makeRe [fz-a]* 1`] = `
+/^(?:(?!\\.)(?=.)[f][^/]*?)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe [ia]?[ck] 1`] = `
@@ -1575,7 +1709,15 @@ exports[`test/optimization-level-0.ts TAP basic tests > makeRe [ia]?[ck] 1`] = `
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe [z-a] 1`] = `
-/^(?:(?!\\.)(?=.)(?:$.))$/
+/^(?:(?=.)$.)$/
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > makeRe [z-a]* 1`] = `
+/^(?:(?=.)$.)$/
+`
+
+exports[`test/optimization-level-0.ts TAP basic tests > makeRe [z-af]* 1`] = `
+/^(?:(?!\\.)(?=.)[f][^/]*?)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe [z\\-a] 1`] = `
@@ -1671,7 +1813,7 @@ exports[`test/optimization-level-0.ts TAP basic tests > makeRe a/[2015-03-10T00:
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe a/[2015-03-10T00:23:08.647Z]/z 1`] = `
-/^(?:a\\/(?!\\.)(?=.)(?:$.)\\/z)$/
+/^(?:a\\/(?!\\.)(?=.)[2010T00:23:08.647Z]\\/z)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe a?b 1`] = `
@@ -1683,7 +1825,7 @@ exports[`test/optimization-level-0.ts TAP basic tests > makeRe a?c 1`] = `
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe a[X-]b 1`] = `
-/^(?:(?=.)a[X-]b)$/
+/^(?:(?=.)a[X\\-]b)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe a[\\b]c 1`] = `
