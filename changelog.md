@@ -1,5 +1,11 @@
 # change log
 
+## 7.4
+
+- Add `escape()` method
+- Add `unescape()` method
+- Add `Minimatch.hasMagic()` method
+
 ## 7.3
 
 - Add support for posix character classes in a unicode-aware way.

@@ -3,13 +3,13 @@
 // TODO: Some of these tests do very bad things with backslashes, and will
 // most likely fail badly on windows.  They should probably be skipped.
 
-var tap = require('tap')
-var globalBefore = Object.keys(global)
-var mm = require('../').default
+const t = require('tap')
+const globalBefore = Object.keys(global)
+const mm = require('../').default
 
-var patterns = require('./patterns.js')
+const patterns = require('./patterns.js')
 
-tap.test('basic tests', function (t) {
+t.test('basic tests', function (t) {
   var start = Date.now()
 
   // [ pattern, [matches], MM opts, files, TAP opts]
@@ -48,7 +48,7 @@ tap.test('basic tests', function (t) {
   t.end()
 })
 
-tap.test('global leak test', function (t) {
+t.test('global leak test', function (t) {
   var globalAfter = Object.keys(global).filter(function (k) {
     return k !== '__coverage__'
   })
@@ -56,7 +56,7 @@ tap.test('global leak test', function (t) {
   t.end()
 })
 
-tap.test('empty defaults obj returns original ctor', t => {
+t.test('empty defaults obj returns original ctor', t => {
   for (const empty of [{}, undefined]) {
     const defmm = mm.defaults(empty)
     t.equal(defmm, mm)
@@ -66,7 +66,7 @@ tap.test('empty defaults obj returns original ctor', t => {
   t.end()
 })
 
-tap.test('call defaults mm function', t => {
+t.test('call defaults mm function', t => {
   const defmm = mm.defaults({ nocomment: true })
   t.equal(mm('# nocomment', '# nocomment'), false)
   t.equal(defmm('# nocomment', '# nocomment'), true)
@@ -84,6 +84,23 @@ tap.test('call defaults mm function', t => {
   t.same(defmm.match(['x', '#nc', 'y'], '#nc'), ['#nc'])
   t.same(defmm.braceExpand('# {a,b}'), ['# a', '# b'])
   t.same(defmm.makeRe('# {a,b}'), /^(?:\#\ a|\#\ b)$/)
+  t.end()
+})
+
+t.test('defaults applied to minimatch.escape()', t => {
+  const { escape, unescape } = mm
+  const { escape: escapew, unescape: unescapew } = mm.defaults({
+    windowsPathsNoEscape: true,
+  })
+  const { escape: escapep, unescape: unescapep } = mm.defaults({
+    windowsPathsNoEscape: false,
+  })
+  t.equal(escape('*'), '\\*')
+  t.equal(unescape(escape('*')), '*')
+  t.equal(escapew('*'), '[*]')
+  t.equal(unescapew(escapew('*')), '*')
+  t.equal(escapep('*'), '\\*')
+  t.equal(unescapep(escapep('*')), '*')
   t.end()
 })
 

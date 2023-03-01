@@ -1,5 +1,7 @@
 import expand from 'brace-expansion'
 import { parseClass } from './brace-expressions.js'
+import { escape } from './escape.js'
+import { unescape } from './unescape.js'
 
 export interface MinimatchOptions {
   nobrace?: boolean
@@ -15,6 +17,7 @@ export interface MinimatchOptions {
   dot?: boolean
   nocase?: boolean
   nocaseMagicOnly?: boolean
+  magicalBraces?: boolean
   matchBase?: boolean
   flipNegate?: boolean
   preserveMultipleSlashes?: boolean
@@ -181,6 +184,16 @@ export const defaults = (def: MinimatchOptions): typeof minimatch => {
         return orig.defaults(ext(def, options)).Minimatch
       }
     },
+
+    unescape: (
+      s: string,
+      options: Pick<MinimatchOptions, 'windowsPathsNoEscape'> = {}
+    ) => orig.unescape(s, ext(def, options)),
+
+    escape: (
+      s: string,
+      options: Pick<MinimatchOptions, 'windowsPathsNoEscape'> = {}
+    ) => orig.escape(s, ext(def, options)),
 
     filter: (pattern: string, options: MinimatchOptions = {}) =>
       orig.filter(pattern, ext(def, options)),
@@ -351,6 +364,18 @@ export class Minimatch {
 
     // make the set of regexps etc.
     this.make()
+  }
+
+  hasMagic():boolean {
+    if (this.options.magicalBraces && this.set.length > 1) {
+      return true
+    }
+    for (const pattern of this.set) {
+      for (const part of pattern) {
+        if (typeof part !== 'string') return true
+      }
+    }
+    return false
   }
 
   debug(..._: any[]) {}
@@ -1182,12 +1207,12 @@ export class Minimatch {
         case '[':
           // swallow any state-tracking char before the [
           clearStateChar()
-          const [src, needUflag, consumed] = parseClass(pattern, i)
+          const [src, needUflag, consumed, magic] = parseClass(pattern, i)
           if (consumed) {
             re += src
             uflag = uflag || needUflag
             i += consumed - 1
-            hasMagic = true
+            hasMagic = hasMagic || magic
           } else {
             re += '\\['
           }
@@ -1303,7 +1328,7 @@ export class Minimatch {
     // unescape anything in it, though, so that it'll be
     // an exact match against a file etc.
     if (!hasMagic) {
-      return globUnescape(pattern)
+      return globUnescape(re)
     }
 
     const flags = (options.nocase ? 'i' : '') + (uflag ? 'u' : '')
@@ -1496,5 +1521,10 @@ export class Minimatch {
     return minimatch.defaults(def).Minimatch
   }
 }
-
+/* c8 ignore start */
+export { escape } from './escape.js'
+export { unescape } from './unescape.js'
+/* c8 ignore stop */
 minimatch.Minimatch = Minimatch
+minimatch.escape = escape
+minimatch.unescape = unescape

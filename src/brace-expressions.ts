@@ -20,15 +20,21 @@ const posixClasses: { [k: string]: [e: string, u: boolean, n?: boolean] } = {
 }
 
 // only need to escape a few things inside of brace expressions
-const regExpEscape = (s: string) => s.replace(/[[\]\\-]/g, '\\$&')
+// escapes: [ \ ] -
+const braceEscape = (s: string) => s.replace(/[[\]\\-]/g, '\\$&')
+// escape all regexp magic characters
+const regexpEscape = (s: string) =>
+  s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
 
-const rangesToString = (ranges: string[]): string => {
-  return (
-    ranges
-      // .map(r => r.replace(/[[\]]/g, '\\$&').replace(/^-/, '\\-'))
-      .join('')
-  )
-}
+// everything has already been escaped, we just have to join
+const rangesToString = (ranges: string[]): string => ranges.join('')
+
+export type ParseClassResult = [
+  src: string,
+  uFlag: boolean,
+  consumed: number,
+  hasMagic: boolean
+]
 
 // takes a glob string at a posix brace expression, and returns
 // an equivalent regular expression source, and boolean indicating
@@ -39,7 +45,7 @@ const rangesToString = (ranges: string[]): string => {
 export const parseClass = (
   glob: string,
   position: number
-): [string, boolean, number] => {
+): ParseClassResult => {
   const pos = position
   /* c8 ignore start */
   if (glob.charAt(pos) !== '[') {
@@ -84,7 +90,7 @@ export const parseClass = (
         if (glob.startsWith(cls, i)) {
           // invalid, [a-[] is fine, but not [a-[:alpha]]
           if (rangeStart) {
-            return ['$.', false, glob.length - pos]
+            return ['$.', false, glob.length - pos, true]
           }
           i += cls.length
           if (neg) negs.push(unip)
@@ -101,9 +107,9 @@ export const parseClass = (
       // throw this range away if it's not valid, but others
       // can still match.
       if (c > rangeStart) {
-        ranges.push(regExpEscape(rangeStart) + '-' + regExpEscape(c))
+        ranges.push(braceEscape(rangeStart) + '-' + braceEscape(c))
       } else if (c === rangeStart) {
-        ranges.push(regExpEscape(c))
+        ranges.push(braceEscape(c))
       }
       rangeStart = ''
       i++
@@ -113,7 +119,7 @@ export const parseClass = (
     // now might be the start of a range.
     // can be either c-d or c-] or c<more...>] or c] at this point
     if (glob.startsWith('-]', i + 1)) {
-      ranges.push(regExpEscape(c + '-'))
+      ranges.push(braceEscape(c + '-'))
       i += 2
       continue
     }
@@ -124,20 +130,34 @@ export const parseClass = (
     }
 
     // not the start of a range, just a single character
-    ranges.push(regExpEscape(c))
+    ranges.push(braceEscape(c))
     i++
   }
 
   if (endPos < i) {
     // didn't see the end of the class, not a valid class,
     // but might still be valid as a literal match.
-    return ['', false, 0]
+    return ['', false, 0, false]
   }
 
   // if we got no ranges and no negates, then we have a range that
   // cannot possibly match anything, and that poisons the whole glob
   if (!ranges.length && !negs.length) {
-    return ['$.', false, glob.length - pos]
+    return ['$.', false, glob.length - pos, true]
+  }
+
+  // if we got one positive range, and it's a single character, then that's
+  // not actually a magic pattern, it's just that one literal character.
+  // we should not treat that as "magic", we should just return the literal
+  // character. [_] is a perfectly valid way to escape glob magic chars.
+  if (
+    negs.length === 0 &&
+    ranges.length === 1 &&
+    /^\\?.$/.test(ranges[0]) &&
+    !negate
+  ) {
+    const r = ranges[0].length === 2 ? ranges[0].slice(-1) : ranges[0]
+    return [regexpEscape(r), false, endPos - pos, false]
   }
 
   const sranges = '[' + (negate ? '^' : '') + rangesToString(ranges) + ']'
@@ -149,5 +169,5 @@ export const parseClass = (
       ? sranges
       : snegs
 
-  return [comb, uflag, endPos - pos]
+  return [comb, uflag, endPos - pos, true]
 }

@@ -122,7 +122,7 @@ var mm = new Minimatch(pattern, options)
 
 ### Methods
 
-- `makeRe` Generate the `regexp` member if necessary, and return it.
+- `makeRe()` Generate the `regexp` member if necessary, and return it.
   Will return `false` if the pattern is invalid.
 - `match(fname)` Return true if the filename matches the pattern, or
   false otherwise.
@@ -130,6 +130,21 @@ var mm = new Minimatch(pattern, options)
   filename, and match it against a single row in the `regExpSet`. This
   method is mainly for internal use, but is exposed so that it can be
   used by a glob-walker that needs to avoid excessive filesystem calls.
+- `hasMagic()` Returns true if the parsed pattern contains any
+  magic characters.  Returns false if all comparator parts are
+  string literals.  If the `magicalBraces` option is set on the
+  constructor, then it will consider brace expansions which are
+  not otherwise magical to be magic.  If not set, then a pattern
+  like `a{b,c}d` will return `false`, because neither `abd` nor
+  `acd` contain any special glob characters.
+
+  This does **not** mean that the pattern string can be used as a
+  literal filename, as it may contain magic glob characters that
+  are escaped.  For example, the pattern `\\*` or `[*]` would not
+  be considered to have magic, as the matching portion parses to
+  the literal string `'*'` and would match a path named `'*'`,
+  not `'\\*'` or `'[*]'`.  The `minimatch.unescape()` method may
+  be used to remove escape characters.
 
 All other methods are internal, and will be called as necessary.
 
@@ -149,6 +164,34 @@ supplied argument, suitable for use with `Array.filter`. Example:
 ```javascript
 var javascripts = fileList.filter(minimatch.filter('*.js', { matchBase: true }))
 ```
+
+### minimatch.escape(pattern, options = {})
+
+Escape all magic characters in a glob pattern, so that it will
+only ever match literal strings
+
+If the `windowsPathsNoEscape` option is used, then characters are
+escaped by wrapping in `[]`, because a magic character wrapped in
+a character class can only be satisfied by that exact character.
+
+Slashes (and backslashes in `windowsPathsNoEscape` mode) cannot
+be escaped or unescaped.
+
+### minimatch.unescape(pattern, options = {})
+
+Un-escape a glob string that may contain some escaped characters.
+
+If the `windowsPathsNoEscape` option is used, then square-brace
+escapes are removed, but not backslash escapes.  For example, it
+will turn the string `'[*]'` into `*`, but it will not turn
+`'\\*'` into `'*'`, becuase `\` is a path separator in
+`windowsPathsNoEscape` mode.
+
+When `windowsPathsNoEscape` is not set, then both brace escapes
+and backslash escapes are removed.
+
+Slashes (and backslashes in `windowsPathsNoEscape` mode) cannot
+be escaped or unescaped.
 
 ### minimatch.match(list, pattern, options)
 
@@ -211,6 +254,16 @@ way.
 When a match is not found by `minimatch.match`, return a list containing
 the pattern itself if this option is set. When not set, an empty list
 is returned if there are no matches.
+
+### magicalBraces
+
+This only affects the results of the `Minimatch.hasMagic` method.
+
+If the pattern contains brace expansions, such as `a{b,c}d`, but
+no other magic characters, then the `Minipass.hasMagic()` method
+will return `false` by default.  When this option set, it will
+return `true` for brace expansion as well as other magic glob
+characters.
 
 ### matchBase
 

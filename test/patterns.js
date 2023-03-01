@@ -439,12 +439,9 @@ module.exports = [
     '[[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]]',
     ['åéîøü', 'aeiou', 'fffff', '0f7fa', '99999'],
   ],
-  [
-    '[[:xdigit:]][[:xdigit:]]???',
-    ['aeiou', 'fffff', '0f7fa', '99999'],
-  ],
-  [ '[[:graph:]]f*', ['fffff', '0f7fa']],
-  [ '[[:graph:][:digit:]]f*', ['fffff', '0f7fa']],
+  ['[[:xdigit:]][[:xdigit:]]???', ['aeiou', 'fffff', '0f7fa', '99999']],
+  ['[[:graph:]]f*', ['fffff', '0f7fa']],
+  ['[[:graph:][:digit:]]f*', ['fffff', '0f7fa']],
 ]
 
 Object.defineProperty(module.exports, 'files', {
