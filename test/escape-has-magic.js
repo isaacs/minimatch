@@ -25,5 +25,8 @@ for (const p of patterns) {
   t.matchSnapshot([maybeMagic.set, maybeMagic.hasMagic()], pattern)
 }
 
+// edge case, [\\] should be unescaped as [], not \\
+t.equal(unescape('[\\]'), '[]')
+
 t.equal(new Minimatch('{a,b}').hasMagic(), false)
 t.equal(new Minimatch('{a,b}', { magicalBraces: true }).hasMagic(), true)

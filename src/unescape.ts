@@ -21,5 +21,5 @@ export const unescape = (
 ) => {
   return windowsPathsNoEscape
     ? s.replace(/\[([^\/\\])\]/g, '$1')
-    : s.replace(/((?!\\).|^)\[([^\/])\]/g, '$1$2').replace(/\\([^\/])/g, '$1')
+    : s.replace(/((?!\\).|^)\[([^\/\\])\]/g, '$1$2').replace(/\\([^\/])/g, '$1')
 }
