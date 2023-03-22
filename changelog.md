@@ -1,5 +1,9 @@
 # change log
 
+## 8.0
+
+- Bump required Node.js version
+
 ## 7.4
 
 - Add `escape()` method

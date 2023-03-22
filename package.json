@@ -52,7 +52,7 @@
     "endOfLine": "lf"
   },
   "engines": {
-    "node": ">=10"
+    "node": ">=16 || 14 >=14.17"
   },
   "dependencies": {
     "brace-expansion": "^2.0.1"
