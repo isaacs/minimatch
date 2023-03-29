@@ -22,7 +22,18 @@ export interface MinimatchOptions {
   flipNegate?: boolean
   preserveMultipleSlashes?: boolean
   optimizationLevel?: number
-  platform?: typeof process.platform
+  platform?:
+    | 'aix'
+    | 'android'
+    | 'darwin'
+    | 'freebsd'
+    | 'haiku'
+    | 'linux'
+    | 'openbsd'
+    | 'sunos'
+    | 'win32'
+    | 'cygwin'
+    | 'netbsd'
   windowsNoMagicRoot?: boolean
 }
 
