@@ -28,9 +28,14 @@ t.test('basic tests', function (t) {
       expect = c[1].sort(alpha),
       options = c[2] || {},
       f = c[3] || patterns.files,
-      tapOpts = c[4] || {}
+      tapOpts = c[4] || {},
+      ast = mm.AST.fromGlob(pattern, options)
 
     // options.debug = true
+    t.matchSnapshot(ast.hasMagic, pattern + ' hasMagic pre-generate')
+    ast.toRegExpSource()
+    t.matchSnapshot(ast.toJSON(), pattern + ' parsed')
+    t.matchSnapshot(ast.hasMagic, pattern + ' hasMagic known')
     var m = new mm.Minimatch(pattern, options)
     var r = m.makeRe()
     var r2 = mm.makeRe(pattern, options)
@@ -253,13 +258,13 @@ t.test('option to only nocase regexps, not strings', t => {
       nocase: true,
       nocaseMagicOnly: true,
     }).set,
-    [['test', /^(?!\.)(?=.)[^/]*?\.js$/i]]
+    [['test', /^(?!\.)[^/]*?\.js$/i]]
   )
   t.match(
     new mm.Minimatch('test/*.js', {
       nocase: true,
     }).set,
-    [[/^test$/i, /^(?!\.)(?=.)[^/]*?\.js$/i]]
+    [[/^test$/i, /^(?!\.)[^/]*?\.js$/i]]
   )
   t.end()
 })

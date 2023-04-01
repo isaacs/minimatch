@@ -2,6 +2,8 @@
 
 ## 8.0
 
+- Recursive descent parser for extglob, allowing correct support
+  for arbitrarily nested extglob expressions
 - Bump required Node.js version
 
 ## 7.4

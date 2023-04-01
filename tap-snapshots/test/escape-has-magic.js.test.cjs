@@ -9,7 +9,29 @@ exports[`test/escape-has-magic.js TAP > !!a* 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)a[^/]*?$/,
+      /^a[^/]*?$/,
+    ],
+  ],
+  true,
+]
+`
+
+exports[`test/escape-has-magic.js TAP > !()y 1`] = `
+Array [
+  Array [
+    Array [
+      /^(?!\\.)[^/]+?y$/,
+    ],
+  ],
+  true,
+]
+`
+
+exports[`test/escape-has-magic.js TAP > !()y 2`] = `
+Array [
+  Array [
+    Array [
+      /^[^/]+?y$/,
     ],
   ],
   true,
@@ -20,7 +42,7 @@ exports[`test/escape-has-magic.js TAP > !(.a|js)@(.*) 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)(?:(?!(?:\\.a|js)(?:\\.[^/]*?))[^/]*?)(?:\\.[^/]*?)$/,
+      /^(?:(?!(?:\\.a(?:\\.[^/]*?)(?:$|\\/)|js(?:\\.[^/]*?)(?:$|\\/)))(?!\\.)[^/]*?)(?:(?!\\.\\.?(?:$|\\/))\\.[^/]*?)$/,
     ],
   ],
   true,
@@ -31,7 +53,7 @@ exports[`test/escape-has-magic.js TAP > !\\!a* 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)\\!a[^/]*?$/,
+      /^\\!a[^/]*?$/,
     ],
   ],
   true,
@@ -42,7 +64,7 @@ exports[`test/escape-has-magic.js TAP > !a* 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)a[^/]*?$/,
+      /^a[^/]*?$/,
     ],
   ],
   true,
@@ -53,7 +75,7 @@ exports[`test/escape-has-magic.js TAP > !a* 2`] = `
 Array [
   Array [
     Array [
-      /^(?=.)\\!a[^/]*?$/,
+      /^!a[^/]*?$/,
     ],
   ],
   true,
@@ -71,7 +93,7 @@ exports[`test/escape-has-magic.js TAP > #* 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)\\#[^/]*?$/,
+      /^\\#[^/]*?$/,
     ],
   ],
   true,
@@ -82,7 +104,7 @@ exports[`test/escape-has-magic.js TAP > * 1`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]*?$/,
+      /^(?!\\.\\.?(?:$|\\/))[^/]+?$/,
     ],
   ],
   true,
@@ -93,7 +115,7 @@ exports[`test/escape-has-magic.js TAP > * 2`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]*?$/,
+      /^(?!\\.)[^/]+?$/,
     ],
   ],
   true,
@@ -104,7 +126,7 @@ exports[`test/escape-has-magic.js TAP > * 3`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]*?$/,
+      /^(?!\\.\\.?(?:$|\\/))[^/]+?$/,
     ],
   ],
   true,
@@ -115,7 +137,7 @@ exports[`test/escape-has-magic.js TAP > *(a/b) 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)[^/]*?\\((?!\\.)a$/,
+      /^(?!\\.)[^/]*?\\(a$/,
       "b)",
     ],
   ],
@@ -127,10 +149,10 @@ exports[`test/escape-has-magic.js TAP > *(a|{b),c)} 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)(?:(?!\\.)a|(?!\\.)b)*$/,
+      /^(?:a|b)*$/,
     ],
     Array [
-      /^(?=.)(?:(?!\\.)a|(?!\\.)c)*$/,
+      /^(?:a|c)*$/,
     ],
   ],
   true,
@@ -141,10 +163,10 @@ exports[`test/escape-has-magic.js TAP > *(a|{b,c}) 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)(?:(?!\\.)a|(?!\\.)b)*$/,
+      /^(?:a|b)*$/,
     ],
     Array [
-      /^(?=.)(?:(?!\\.)a|(?!\\.)c)*$/,
+      /^(?:a|c)*$/,
     ],
   ],
   true,
@@ -155,10 +177,10 @@ exports[`test/escape-has-magic.js TAP > *(a|{b|c,c}) 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)(?:(?!\\.)a|(?!\\.)b|(?!\\.)c)*$/,
+      /^(?:a|b|c)*$/,
     ],
     Array [
-      /^(?=.)(?:(?!\\.)a|(?!\\.)c)*$/,
+      /^(?:a|c)*$/,
     ],
   ],
   true,
@@ -169,10 +191,10 @@ exports[`test/escape-has-magic.js TAP > *(a|{b|c,c}) 2`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]*?\\(a\\|b\\|c\\)$/,
+      /^(?!\\.)[^/]*?\\(a\\|b\\|c\\)$/,
     ],
     Array [
-      /^(?!\\.)(?=.)[^/]*?\\(a\\|c\\)$/,
+      /^(?!\\.)[^/]*?\\(a\\|c\\)$/,
     ],
   ],
   true,
@@ -216,7 +238,7 @@ exports[`test/escape-has-magic.js TAP > *******? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]$/,
+      /^(?!\\.)[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]$/,
     ],
   ],
   true,
@@ -227,7 +249,7 @@ exports[`test/escape-has-magic.js TAP > *******c 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?c$/,
+      /^(?!\\.)[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?c$/,
     ],
   ],
   true,
@@ -238,7 +260,7 @@ exports[`test/escape-has-magic.js TAP > *****?? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]$/,
+      /^(?!\\.)[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]$/,
     ],
   ],
   true,
@@ -273,9 +295,9 @@ exports[`test/escape-has-magic.js TAP > **/.x/** 2`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]*?$/,
+      /^(?!\\.)[^/]+?$/,
       ".x",
-      /^(?!\\.)(?=.)[^/]*?$/,
+      /^(?!\\.)[^/]+?$/,
     ],
   ],
   true,
@@ -286,7 +308,7 @@ exports[`test/escape-has-magic.js TAP > *.!(js) 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]*?\\.(?:(?!(?:js)(?:$|\\/))[^/]*?)$/,
+      /^(?!\\.)[^/]*?\\.(?:(?!(?:js(?:$|\\/)))[^/]*?)$/,
     ],
   ],
   true,
@@ -297,7 +319,7 @@ exports[`test/escape-has-magic.js TAP > *.* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]*?\\.[^/]*?$/,
+      /^(?!\\.)[^/]*?\\.[^/]*?$/,
     ],
   ],
   true,
@@ -308,7 +330,29 @@ exports[`test/escape-has-magic.js TAP > *.* 2`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]*?\\.[^/]*?$/,
+      /^(?!\\.\\.?(?:$|\\/))[^/]*?\\.[^/]*?$/,
+    ],
+  ],
+  true,
+]
+`
+
+exports[`test/escape-has-magic.js TAP > *.Y 1`] = `
+Array [
+  Array [
+    Array [
+      /^(?!\\.)[^/]*?\\.Y$/i,
+    ],
+  ],
+  true,
+]
+`
+
+exports[`test/escape-has-magic.js TAP > *.Z 1`] = `
+Array [
+  Array [
+    Array [
+      /^(?!\\.\\.?(?:$|\\/))[^/]*?\\.Z$/i,
     ],
   ],
   true,
@@ -319,7 +363,7 @@ exports[`test/escape-has-magic.js TAP > *.\\* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]*?\\.\\*$/,
+      /^(?!\\.)[^/]*?\\.\\*$/,
     ],
   ],
   true,
@@ -330,7 +374,7 @@ exports[`test/escape-has-magic.js TAP > *.js 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]*?\\.js$/,
+      /^(?!\\.)[^/]*?\\.js$/,
     ],
   ],
   true,
@@ -341,7 +385,7 @@ exports[`test/escape-has-magic.js TAP > *.js 2`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]*?\\.js$/,
+      /^(?!\\.\\.?(?:$|\\/))[^/]*?\\.js$/,
     ],
   ],
   true,
@@ -352,7 +396,7 @@ exports[`test/escape-has-magic.js TAP > *.js 3`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]*?\\.js$/i,
+      /^(?!\\.)[^/]*?\\.js$/i,
     ],
   ],
   true,
@@ -363,7 +407,29 @@ exports[`test/escape-has-magic.js TAP > *.js 4`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]*?\\.js$/i,
+      /^(?!\\.\\.?(?:$|\\/))[^/]*?\\.js$/i,
+    ],
+  ],
+  true,
+]
+`
+
+exports[`test/escape-has-magic.js TAP > *.y 1`] = `
+Array [
+  Array [
+    Array [
+      /^(?!\\.)[^/]*?\\.y$/,
+    ],
+  ],
+  true,
+]
+`
+
+exports[`test/escape-has-magic.js TAP > *.z 1`] = `
+Array [
+  Array [
+    Array [
+      /^(?!\\.\\.?(?:$|\\/))[^/]*?\\.z$/,
     ],
   ],
   true,
@@ -374,9 +440,9 @@ exports[`test/escape-has-magic.js TAP > */man*/bash.* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]*?$/,
-      /^(?=.)man[^/]*?$/,
-      /^(?=.)bash\\.[^/]*?$/,
+      /^(?!\\.)[^/]+?$/,
+      /^man[^/]*?$/,
+      /^bash\\.[^/]*?$/,
     ],
   ],
   true,
@@ -387,7 +453,7 @@ exports[`test/escape-has-magic.js TAP > *\\!* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]*?\\![^/]*?$/,
+      /^(?!\\.)[^/]*?\\![^/]*?$/,
     ],
   ],
   true,
@@ -398,7 +464,7 @@ exports[`test/escape-has-magic.js TAP > *\\\\!* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]*?\\\\\\![^/]*?$/,
+      /^(?!\\.)[^/]*?\\\\![^/]*?$/,
     ],
   ],
   true,
@@ -409,7 +475,7 @@ exports[`test/escape-has-magic.js TAP > *c*?** 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]*?c[^/]*?[^/][^/]*?[^/]*?$/,
+      /^(?!\\.)[^/]*?c[^/]*?[^/][^/]*?[^/]*?$/,
     ],
   ],
   true,
@@ -420,7 +486,29 @@ exports[`test/escape-has-magic.js TAP > *js 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]*?js$/,
+      /^(?!\\.)[^/]*?js$/,
+    ],
+  ],
+  true,
+]
+`
+
+exports[`test/escape-has-magic.js TAP > +() 1`] = `
+Array [
+  Array [
+    Array [
+      "+()",
+    ],
+  ],
+  false,
+]
+`
+
+exports[`test/escape-has-magic.js TAP > +()*(x|a) 1`] = `
+Array [
+  Array [
+    Array [
+      /^(?:)+(?:x|a)*$/,
     ],
   ],
   true,
@@ -431,7 +519,7 @@ exports[`test/escape-has-magic.js TAP > +(a)!(b)+(c) 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)(?:(?!\\.)a)+(?:(?!(?:b)(?:c)+)[^/]*?)(?:c)+$/,
+      /^(?:a)+(?:(?!(?:b(?:c)+(?:$|\\/)))[^/]*?)(?:c)+$/,
     ],
   ],
   true,
@@ -442,7 +530,18 @@ exports[`test/escape-has-magic.js TAP > +(a|*\\|c\\\\|d\\\\\\|e\\\\\\\\|f\\\\\\\
 Array [
   Array [
     Array [
-      /^(?=.)\\+\\((?!\\.)a\\|(?!\\.)[^/]*?\\|c\\\\\\\\\\|(?!\\.)d\\\\\\\\\\|e\\\\\\\\\\\\\\\\\\|(?!\\.)f\\\\\\\\\\\\\\\\\\|g$/,
+      /^\\+\\(a\\|[^/]*?|c\\\\\\|d\\\\|e\\\\\\\\\\|f\\\\\\\\|g$/,
+    ],
+  ],
+  true,
+]
+`
+
+exports[`test/escape-has-magic.js TAP > +(x|a[^)]y) 1`] = `
+Array [
+  Array [
+    Array [
+      /^(?:x|a[^)]y)+$/,
     ],
   ],
   true,
@@ -453,7 +552,7 @@ exports[`test/escape-has-magic.js TAP > .* 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)\\.[^/]*?$/,
+      /^(?!\\.\\.?(?:$|\\/))\\.[^/]*?$/,
     ],
   ],
   true,
@@ -464,7 +563,7 @@ exports[`test/escape-has-magic.js TAP > .* 2`] = `
 Array [
   Array [
     Array [
-      /^(?=.)\\.[^/]*?$/,
+      /^(?!\\.\\.?(?:$|\\/))\\.[^/]*?$/,
     ],
   ],
   true,
@@ -477,7 +576,7 @@ Array [
     Array [
       ".x",
       Symbol(globstar **),
-      /^(?!\\.)(?=.)[^/]*?$/,
+      /^(?!\\.)[^/]+?$/,
     ],
   ],
   true,
@@ -490,7 +589,7 @@ Array [
     Array [
       ".x",
       Symbol(globstar **),
-      /^(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]*?$/,
+      /^(?!\\.\\.?(?:$|\\/))[^/]+?$/,
     ],
   ],
   true,
@@ -503,7 +602,7 @@ Array [
     Array [
       ".x",
       Symbol(globstar **),
-      /^(?!\\.)(?=.)[^/]*?$/,
+      /^(?!\\.)[^/]+?$/,
     ],
   ],
   true,
@@ -516,7 +615,7 @@ Array [
     Array [
       ".x",
       Symbol(globstar **),
-      /^(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]*?$/,
+      /^(?!\\.\\.?(?:$|\\/))[^/]+?$/,
     ],
   ],
   true,
@@ -529,7 +628,7 @@ Array [
     Array [
       ".x",
       Symbol(globstar **),
-      /^(?!\\.)(?=.)[^/]*?$/,
+      /^(?!\\.)[^/]+?$/,
       Symbol(globstar **),
     ],
   ],
@@ -543,7 +642,7 @@ Array [
     Array [
       ".x",
       Symbol(globstar **),
-      /^(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]*?$/,
+      /^(?!\\.\\.?(?:$|\\/))[^/]+?$/,
       Symbol(globstar **),
     ],
   ],
@@ -556,7 +655,7 @@ Array [
   Array [
     Array [
       ".x",
-      /^(?!\\.)(?=.)[^/]*?$/,
+      /^(?!\\.)[^/]+?$/,
       Symbol(globstar **),
     ],
   ],
@@ -569,7 +668,7 @@ Array [
   Array [
     Array [
       ".x",
-      /^(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]*?$/,
+      /^(?!\\.\\.?(?:$|\\/))[^/]+?$/,
       Symbol(globstar **),
     ],
   ],
@@ -582,7 +681,7 @@ Array [
   Array [
     Array [
       ".x",
-      /^(?!\\.)(?=.)[^/]*?$/,
+      /^(?!\\.)[^/]+?$/,
       Symbol(globstar **),
     ],
   ],
@@ -595,7 +694,7 @@ Array [
   Array [
     Array [
       ".x",
-      /^(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]*?$/,
+      /^(?!\\.\\.?(?:$|\\/))[^/]+?$/,
       Symbol(globstar **),
     ],
   ],
@@ -610,7 +709,7 @@ Array [
       "",
       "^root:",
       "{s",
-      /^(?=.)\\^[^:][^/]*?:[^:][^/]*?:\\([^:]\\)[^/]*?\\.[^/]*?\\$$/,
+      /^\\^[^:][^/]*?:[^:][^/]*?:\\([^:][^/]*?\\)\\.[^/]*?\\$$/,
       "\\u0001",
       "",
     ],
@@ -626,7 +725,7 @@ Array [
       "",
       "^root:",
       "{s",
-      /^(?=.)\\^[^:][^/]*?:[^:][^/]*?:\\([^:]\\)[^/]*?\\.[^/]*?\\$$/,
+      /^\\^[^:][^/]*?:[^:][^/]*?:\\([^:][^/]*?\\)\\.[^/]*?\\$$/,
       "1",
       "",
     ],
@@ -639,7 +738,29 @@ exports[`test/escape-has-magic.js TAP > ? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]$/,
+      /^(?!\\.)[^/]$/,
+    ],
+  ],
+  true,
+]
+`
+
+exports[`test/escape-has-magic.js TAP > ?(x-!(y)|z) 1`] = `
+Array [
+  Array [
+    Array [
+      /^(?:x\\-(?:(?!(?:y(?:$|\\/)))[^/]*?)|z)?$/,
+    ],
+  ],
+  true,
+]
+`
+
+exports[`test/escape-has-magic.js TAP > ?(x-!(y)|z)b 1`] = `
+Array [
+  Array [
+    Array [
+      /^(?:x\\-(?:(?!(?:yb(?:$|\\/)))[^/]*?)|z)?b$/,
     ],
   ],
   true,
@@ -650,7 +771,7 @@ exports[`test/escape-has-magic.js TAP > ?************c****?**** 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?c[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?$/,
+      /^(?!\\.)[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?c[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?$/,
     ],
   ],
   true,
@@ -661,7 +782,7 @@ exports[`test/escape-has-magic.js TAP > ?*****?? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]$/,
+      /^(?!\\.)[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]$/,
     ],
   ],
   true,
@@ -672,7 +793,7 @@ exports[`test/escape-has-magic.js TAP > ?*****?c 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]c$/,
+      /^(?!\\.)[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]c$/,
     ],
   ],
   true,
@@ -683,7 +804,7 @@ exports[`test/escape-has-magic.js TAP > ?***?**** 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?$/,
+      /^(?!\\.)[^/][^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?$/,
     ],
   ],
   true,
@@ -694,7 +815,7 @@ exports[`test/escape-has-magic.js TAP > ?***?****? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]$/,
+      /^(?!\\.)[^/][^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]$/,
     ],
   ],
   true,
@@ -705,7 +826,7 @@ exports[`test/escape-has-magic.js TAP > ?***?****c 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?c$/,
+      /^(?!\\.)[^/][^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?c$/,
     ],
   ],
   true,
@@ -716,7 +837,7 @@ exports[`test/escape-has-magic.js TAP > ?.js 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]\\.js$/,
+      /^(?!\\.)[^/]\\.js$/,
     ],
   ],
   true,
@@ -727,7 +848,7 @@ exports[`test/escape-has-magic.js TAP > ?.js 2`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]\\.js$/,
+      /^(?!\\.\\.?(?:$|\\/))[^/]\\.js$/,
     ],
   ],
   true,
@@ -738,7 +859,7 @@ exports[`test/escape-has-magic.js TAP > ?.js 3`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]\\.js$/i,
+      /^(?!\\.)[^/]\\.js$/i,
     ],
   ],
   true,
@@ -749,7 +870,7 @@ exports[`test/escape-has-magic.js TAP > ?.js 4`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]\\.js$/i,
+      /^(?!\\.\\.?(?:$|\\/))[^/]\\.js$/i,
     ],
   ],
   true,
@@ -760,7 +881,7 @@ exports[`test/escape-has-magic.js TAP > ?? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/][^/]$/,
+      /^(?!\\.)[^/][^/]$/,
     ],
   ],
   true,
@@ -771,7 +892,7 @@ exports[`test/escape-has-magic.js TAP > ?? 2`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/][^/]$/,
+      /^(?!\\.\\.?(?:$|\\/))[^/][^/]$/,
     ],
   ],
   true,
@@ -782,7 +903,7 @@ exports[`test/escape-has-magic.js TAP > ?? 3`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/][^/]$/i,
+      /^(?!\\.\\.?(?:$|\\/))[^/][^/]$/i,
     ],
   ],
   true,
@@ -793,7 +914,7 @@ exports[`test/escape-has-magic.js TAP > ?? 4`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/][^/]$/i,
+      /^(?!\\.)[^/][^/]$/i,
     ],
   ],
   true,
@@ -804,7 +925,7 @@ exports[`test/escape-has-magic.js TAP > ??**********?****? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]$/,
+      /^(?!\\.)[^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]$/,
     ],
   ],
   true,
@@ -815,7 +936,7 @@ exports[`test/escape-has-magic.js TAP > ??**********?****c 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?c$/,
+      /^(?!\\.)[^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?c$/,
     ],
   ],
   true,
@@ -826,7 +947,7 @@ exports[`test/escape-has-magic.js TAP > ??? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/][^/][^/]$/,
+      /^(?!\\.)[^/][^/][^/]$/,
     ],
   ],
   true,
@@ -837,7 +958,7 @@ exports[`test/escape-has-magic.js TAP > ??? 2`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/][^/][^/]$/,
+      /^(?!\\.\\.?(?:$|\\/))[^/][^/][^/]$/,
     ],
   ],
   true,
@@ -848,7 +969,7 @@ exports[`test/escape-has-magic.js TAP > ?js 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^/]js$/,
+      /^(?!\\.)[^/]js$/,
     ],
   ],
   true,
@@ -859,7 +980,7 @@ exports[`test/escape-has-magic.js TAP > ?js 2`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]js$/,
+      /^(?!\\.\\.?(?:$|\\/))[^/]js$/,
     ],
   ],
   true,
@@ -870,7 +991,7 @@ exports[`test/escape-has-magic.js TAP > ?js 3`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]js$/i,
+      /^(?!\\.\\.?(?:$|\\/))[^/]js$/i,
     ],
   ],
   true,
@@ -881,7 +1002,7 @@ exports[`test/escape-has-magic.js TAP > @(*|.*) 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)(?:(?!\\.)[^/]*?|\\.[^/]*?)$/,
+      /^(?:(?!\\.)[^/]+?|(?!\\.\\.?(?:$|\\/))\\.[^/]*?)$/,
     ],
   ],
   true,
@@ -892,7 +1013,7 @@ exports[`test/escape-has-magic.js TAP > @(*|a) 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)(?:(?!(?:^|\\/)\\.{1,2}(?:$|\\/))[^/]*?|(?!(?:^|\\/)\\.{1,2}(?:$|\\/))a)$/,
+      /^(?:(?!\\.\\.?(?:$|\\/))[^/]+?|a)$/,
     ],
   ],
   true,
@@ -903,7 +1024,7 @@ exports[`test/escape-has-magic.js TAP > @(.*) 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)(?:\\.[^/]*?)$/,
+      /^(?:(?!\\.\\.?(?:$|\\/))\\.[^/]*?)$/,
     ],
   ],
   true,
@@ -914,7 +1035,7 @@ exports[`test/escape-has-magic.js TAP > @(.*) 2`] = `
 Array [
   Array [
     Array [
-      /^(?=.)(?:\\.[^/]*?)$/,
+      /^(?:(?!\\.\\.?(?:$|\\/))\\.[^/]*?)$/,
     ],
   ],
   true,
@@ -925,7 +1046,7 @@ exports[`test/escape-has-magic.js TAP > @(.*|*) 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)(?:\\.[^/]*?|(?!\\.)[^/]*?)$/,
+      /^(?:(?!\\.\\.?(?:$|\\/))\\.[^/]*?|(?!\\.)[^/]+?)$/,
     ],
   ],
   true,
@@ -936,7 +1057,7 @@ exports[`test/escape-has-magic.js TAP > @(.*|js) 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)(?:\\.[^/]*?|(?!\\.)js)$/,
+      /^(?:(?!\\.\\.?(?:$|\\/))\\.[^/]*?|js)$/,
     ],
   ],
   true,
@@ -947,7 +1068,7 @@ exports[`test/escape-has-magic.js TAP > @(a|a[(])b 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)(?:(?!\\.)a|(?!\\.)a\\()b$/,
+      /^(?:a|a\\()b$/,
     ],
   ],
   true,
@@ -958,7 +1079,7 @@ exports[`test/escape-has-magic.js TAP > @(a|a[)])b 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)(?:(?!\\.)a|(?!\\.)a\\))b$/,
+      /^(?:a|a\\))b$/,
     ],
   ],
   true,
@@ -969,7 +1090,7 @@ exports[`test/escape-has-magic.js TAP > @(js|.*) 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)(?:(?!\\.)js|\\.[^/]*?)$/,
+      /^(?:js|(?!\\.\\.?(?:$|\\/))\\.[^/]*?)$/,
     ],
   ],
   true,
@@ -980,7 +1101,7 @@ exports[`test/escape-has-magic.js TAP > X* 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)X[^/]*?$/,
+      /^X[^/]*?$/,
     ],
   ],
   true,
@@ -991,7 +1112,7 @@ exports[`test/escape-has-magic.js TAP > X* 2`] = `
 Array [
   Array [
     Array [
-      /^(?=.)X[^/]*?$/,
+      /^X[^/]*?$/,
     ],
   ],
   true,
@@ -1024,7 +1145,7 @@ exports[`test/escape-has-magic.js TAP > [!a* 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)\\[\\!a[^/]*?$/,
+      /^\\[!a[^/]*?$/,
     ],
   ],
   true,
@@ -1035,7 +1156,7 @@ exports[`test/escape-has-magic.js TAP > [#a* 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)\\[\\#a[^/]*?$/,
+      /^\\[\\#a[^/]*?$/,
     ],
   ],
   true,
@@ -1046,7 +1167,7 @@ exports[`test/escape-has-magic.js TAP > [* 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)\\[[^/]*?$/,
+      /^\\[[^/]*?$/,
     ],
   ],
   true,
@@ -1057,7 +1178,7 @@ exports[`test/escape-has-magic.js TAP > [-abc] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[\\-abc]$/,
+      /^(?!\\.)[\\-abc]$/,
     ],
   ],
   true,
@@ -1068,7 +1189,7 @@ exports[`test/escape-has-magic.js TAP > [[:alnum:]][[:alnum:]][[:alnum:]][[:alnu
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}]$/u,
+      /^(?!\\.)[\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}]$/u,
     ],
   ],
   true,
@@ -1079,7 +1200,7 @@ exports[`test/escape-has-magic.js TAP > [[:alpha:]][[:alpha:]][[:alpha:]][[:alph
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[\\p{L}\\p{Nl}][\\p{L}\\p{Nl}][\\p{L}\\p{Nl}][\\p{L}\\p{Nl}][\\p{L}\\p{Nl}]$/u,
+      /^(?!\\.)[\\p{L}\\p{Nl}][\\p{L}\\p{Nl}][\\p{L}\\p{Nl}][\\p{L}\\p{Nl}][\\p{L}\\p{Nl}]$/u,
     ],
   ],
   true,
@@ -1090,7 +1211,7 @@ exports[`test/escape-has-magic.js TAP > [[:ascii:]][[:ascii:]][[:ascii:]][[:asci
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[\\x00-\\x7f][\\x00-\\x7f][\\x00-\\x7f][\\x00-\\x7f][\\x00-\\x7f]$/,
+      /^(?!\\.)[\\x00-\\x7f][\\x00-\\x7f][\\x00-\\x7f][\\x00-\\x7f][\\x00-\\x7f]$/,
     ],
   ],
   true,
@@ -1101,7 +1222,7 @@ exports[`test/escape-has-magic.js TAP > [[:graph:][:digit:]]f* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)([\\p{Nd}]|[^\\p{Z}\\p{C}])f[^/]*?$/u,
+      /^([\\p{Nd}]|[^\\p{Z}\\p{C}])f[^/]*?$/u,
     ],
   ],
   true,
@@ -1112,7 +1233,7 @@ exports[`test/escape-has-magic.js TAP > [[:graph:]]f* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^\\p{Z}\\p{C}]f[^/]*?$/u,
+      /^(?!\\.)[^\\p{Z}\\p{C}]f[^/]*?$/u,
     ],
   ],
   true,
@@ -1123,7 +1244,7 @@ exports[`test/escape-has-magic.js TAP > [[:xdigit:]][[:xdigit:]]??? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[A-Fa-f0-9][A-Fa-f0-9][^/][^/][^/]$/,
+      /^(?!\\.)[A-Fa-f0-9][A-Fa-f0-9][^/][^/][^/]$/,
     ],
   ],
   true,
@@ -1134,7 +1255,7 @@ exports[`test/escape-has-magic.js TAP > [[:xdigit:]][[:xdigit:]][[:xdigit:]][[:x
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9]$/,
+      /^(?!\\.)[A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9]$/,
     ],
   ],
   true,
@@ -1156,7 +1277,7 @@ exports[`test/escape-has-magic.js TAP > [\\-\\]] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[\\-\\]]$/,
+      /^(?!\\.)[\\-\\]]$/,
     ],
   ],
   true,
@@ -1178,7 +1299,7 @@ exports[`test/escape-has-magic.js TAP > [\\b-a] 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)$.$/,
+      /^$.$/,
     ],
   ],
   true,
@@ -1189,7 +1310,7 @@ exports[`test/escape-has-magic.js TAP > [\\z-a] 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)$.$/,
+      /^$.$/,
     ],
   ],
   true,
@@ -1211,7 +1332,7 @@ exports[`test/escape-has-magic.js TAP > []+*] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[\\]+*]$/,
+      /^(?!\\.)[\\]+*]$/,
     ],
   ],
   true,
@@ -1222,7 +1343,7 @@ exports[`test/escape-has-magic.js TAP > []-] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[\\]\\-]$/,
+      /^(?!\\.)[\\]\\-]$/,
     ],
   ],
   true,
@@ -1244,7 +1365,7 @@ exports[`test/escape-has-magic.js TAP > [^a-c]* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[^a-c][^/]*?$/,
+      /^(?!\\.)[^a-c][^/]*?$/,
     ],
   ],
   true,
@@ -1255,7 +1376,7 @@ exports[`test/escape-has-magic.js TAP > [a-0][a-Ā] 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)$.$/,
+      /^$.$/,
     ],
   ],
   true,
@@ -1266,7 +1387,7 @@ exports[`test/escape-has-magic.js TAP > [a-[:alpha:]*] 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)$.$/,
+      /^$.$/,
     ],
   ],
   true,
@@ -1277,7 +1398,7 @@ exports[`test/escape-has-magic.js TAP > [a-b-c] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[a-b\\-c]$/,
+      /^(?!\\.)[a-b\\-c]$/,
     ],
   ],
   true,
@@ -1288,7 +1409,7 @@ exports[`test/escape-has-magic.js TAP > [a-c]b* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[a-c]b[^/]*?$/,
+      /^(?!\\.)[a-c]b[^/]*?$/,
     ],
   ],
   true,
@@ -1299,7 +1420,7 @@ exports[`test/escape-has-magic.js TAP > [a-y]*[^c] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[a-y][^/]*?[^c]$/,
+      /^(?!\\.)[a-y][^/]*?[^c]$/,
     ],
   ],
   true,
@@ -1310,7 +1431,7 @@ exports[`test/escape-has-magic.js TAP > [a-z] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[a-z]$/,
+      /^(?!\\.)[a-z]$/,
     ],
   ],
   true,
@@ -1332,7 +1453,7 @@ exports[`test/escape-has-magic.js TAP > [abc-] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[abc\\-]$/,
+      /^(?!\\.)[abc\\-]$/,
     ],
   ],
   true,
@@ -1343,7 +1464,7 @@ exports[`test/escape-has-magic.js TAP > [f-fz-a]* 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)f[^/]*?$/,
+      /^f[^/]*?$/,
     ],
   ],
   true,
@@ -1354,7 +1475,7 @@ exports[`test/escape-has-magic.js TAP > [f-gz-a]* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[f-g][^/]*?$/,
+      /^(?!\\.)[f-g][^/]*?$/,
     ],
   ],
   true,
@@ -1365,7 +1486,7 @@ exports[`test/escape-has-magic.js TAP > [fz-a]* 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)f[^/]*?$/,
+      /^f[^/]*?$/,
     ],
   ],
   true,
@@ -1376,7 +1497,7 @@ exports[`test/escape-has-magic.js TAP > [ia]?[ck] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[ia][^/][ck]$/i,
+      /^(?!\\.)[ia][^/][ck]$/i,
     ],
   ],
   true,
@@ -1387,7 +1508,7 @@ exports[`test/escape-has-magic.js TAP > [z-a] 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)$.$/,
+      /^$.$/,
     ],
   ],
   true,
@@ -1398,7 +1519,7 @@ exports[`test/escape-has-magic.js TAP > [z-a]* 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)$.$/,
+      /^$.$/,
     ],
   ],
   true,
@@ -1409,7 +1530,7 @@ exports[`test/escape-has-magic.js TAP > [z-af]* 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)f[^/]*?$/,
+      /^f[^/]*?$/,
     ],
   ],
   true,
@@ -1420,7 +1541,7 @@ exports[`test/escape-has-magic.js TAP > [z\\-a] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)(?=.)[z\\-a]$/,
+      /^(?!\\.)[z\\-a]$/,
     ],
   ],
   true,
@@ -1453,7 +1574,7 @@ exports[`test/escape-has-magic.js TAP > \\** 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)\\*[^/]*?$/,
+      /^\\*[^/]*?$/,
     ],
   ],
   true,
@@ -1476,7 +1597,7 @@ Array [
   Array [
     Array [
       "..",
-      /^(?!\\.)(?=.)[^/]*?$/,
+      /^(?!\\.)[^/]+?$/,
       "",
     ],
   ],
@@ -1488,7 +1609,7 @@ exports[`test/escape-has-magic.js TAP > a* 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)a[^/]*?$/,
+      /^a[^/]*?$/,
     ],
   ],
   true,
@@ -1499,7 +1620,7 @@ exports[`test/escape-has-magic.js TAP > a********???******* 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)a[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?$/,
+      /^a[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?$/,
     ],
   ],
   true,
@@ -1510,7 +1631,7 @@ exports[`test/escape-has-magic.js TAP > a*****?c 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)a[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]c$/,
+      /^a[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]c$/,
     ],
   ],
   true,
@@ -1521,7 +1642,7 @@ exports[`test/escape-has-magic.js TAP > a*****c*?** 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)a[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?c[^/]*?[^/][^/]*?[^/]*?$/,
+      /^a[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?c[^/]*?[^/][^/]*?[^/]*?$/,
     ],
   ],
   true,
@@ -1532,7 +1653,7 @@ exports[`test/escape-has-magic.js TAP > a****c**?**??***** 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)a[^/]*?[^/]*?[^/]*?[^/]*?c[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?$/,
+      /^a[^/]*?[^/]*?[^/]*?[^/]*?c[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?$/,
     ],
   ],
   true,
@@ -1543,7 +1664,7 @@ exports[`test/escape-has-magic.js TAP > a***c 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)a[^/]*?[^/]*?[^/]*?c$/,
+      /^a[^/]*?[^/]*?[^/]*?c$/,
     ],
   ],
   true,
@@ -1554,7 +1675,7 @@ exports[`test/escape-has-magic.js TAP > a**?**cd**?**??***k 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/][^/]*?[^/]*?[^/]*?k$/,
+      /^a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/][^/]*?[^/]*?[^/]*?k$/,
     ],
   ],
   true,
@@ -1565,7 +1686,7 @@ exports[`test/escape-has-magic.js TAP > a**?**cd**?**??***k** 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/][^/]*?[^/]*?[^/]*?k[^/]*?[^/]*?$/,
+      /^a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/][^/]*?[^/]*?[^/]*?k[^/]*?[^/]*?$/,
     ],
   ],
   true,
@@ -1576,7 +1697,7 @@ exports[`test/escape-has-magic.js TAP > a**?**cd**?**??k 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/]k$/,
+      /^a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/]k$/,
     ],
   ],
   true,
@@ -1587,7 +1708,7 @@ exports[`test/escape-has-magic.js TAP > a**?**cd**?**??k*** 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/]k[^/]*?[^/]*?[^/]*?$/,
+      /^a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/]k[^/]*?[^/]*?[^/]*?$/,
     ],
   ],
   true,
@@ -1598,7 +1719,7 @@ exports[`test/escape-has-magic.js TAP > a*[^c] 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)a[^/]*?[^c]$/,
+      /^a[^/]*?[^c]$/,
     ],
   ],
   true,
@@ -1609,7 +1730,7 @@ exports[`test/escape-has-magic.js TAP > a*cd**?**??k 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)a[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/]k$/,
+      /^a[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/]k$/,
     ],
   ],
   true,
@@ -1621,7 +1742,7 @@ Array [
   Array [
     Array [
       "a",
-      /^(?!(?:^|\\/)\\.{1,2}(?:$|\\/))(?=.)[^/]*?$/,
+      /^(?!\\.\\.?(?:$|\\/))[^/]+?$/,
       "b",
     ],
   ],
@@ -1634,7 +1755,7 @@ Array [
   Array [
     Array [
       "a",
-      /^(?!\\.)(?=.)[^/]*?$/,
+      /^(?!\\.)[^/]+?$/,
       "b",
     ],
   ],
@@ -1647,7 +1768,7 @@ Array [
   Array [
     Array [
       "a",
-      /^(?=.)\\.[^/]*?$/,
+      /^(?!\\.\\.?(?:$|\\/))\\.[^/]*?$/,
       "b",
     ],
   ],
@@ -1660,7 +1781,7 @@ Array [
   Array [
     Array [
       "a",
-      /^(?=.)\\.[^/]*?$/,
+      /^(?!\\.\\.?(?:$|\\/))\\.[^/]*?$/,
       "b",
     ],
   ],
@@ -1686,7 +1807,7 @@ Array [
   Array [
     Array [
       "a",
-      /^(?!\\.)(?=.)[2010T00:23:08.647Z]$/,
+      /^(?!\\.)[2010T00:23:08.647Z]$/,
       "z",
     ],
   ],
@@ -1698,7 +1819,7 @@ exports[`test/escape-has-magic.js TAP > a?b 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)a[^/]b$/,
+      /^a[^/]b$/,
     ],
   ],
   true,
@@ -1709,7 +1830,7 @@ exports[`test/escape-has-magic.js TAP > a?c 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)a[^/]c$/,
+      /^a[^/]c$/,
     ],
   ],
   true,
@@ -1720,7 +1841,7 @@ exports[`test/escape-has-magic.js TAP > a[X-]b 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)a[X\\-]b$/,
+      /^a[X\\-]b$/,
     ],
   ],
   true,
@@ -1753,8 +1874,8 @@ exports[`test/escape-has-magic.js TAP > a\\*?/* 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)a\\*[^/]$/,
-      /^(?!\\.)(?=.)[^/]*?$/,
+      /^a\\*[^/]$/,
+      /^(?!\\.)[^/]+?$/,
     ],
   ],
   true,
@@ -1766,7 +1887,7 @@ Array [
   Array [
     Array [
       "a*b",
-      /^(?!\\.)(?=.)[^/]*?$/,
+      /^(?!\\.)[^/]+?$/,
     ],
   ],
   true,
@@ -1788,7 +1909,7 @@ exports[`test/escape-has-magic.js TAP > ab* 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)ab[^/]*?$/i,
+      /^ab[^/]*?$/i,
     ],
   ],
   true,
@@ -1799,7 +1920,7 @@ exports[`test/escape-has-magic.js TAP > b*/ 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)b[^/]*?$/,
+      /^b[^/]*?$/,
       "",
     ],
   ],
@@ -1811,7 +1932,7 @@ exports[`test/escape-has-magic.js TAP > c* 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)c[^/]*?$/,
+      /^c[^/]*?$/,
     ],
   ],
   true,
@@ -1843,7 +1964,7 @@ Array [
   Array [
     Array [
       "s",
-      /^(?=.)\\.\\.[^/]*?$/,
+      /^(?!\\.\\.?(?:$|\\/))\\.\\.[^/]*?$/,
       "",
     ],
   ],
@@ -1883,7 +2004,7 @@ Array [
   Array [
     Array [
       "x",
-      /^(?!\\.)(?=.)[^/]*?$/,
+      /^(?!\\.)[^/]+?$/,
       "a",
       "b",
       "c",
@@ -1898,10 +2019,10 @@ Array [
   Array [
     Array [
       "",
-      /^(?!\\.)(?=.)[^/]*?$/,
+      /^(?!\\.)[^/]+?$/,
     ],
     Array [
-      /^(?!\\.)(?=.)[^/]*?$/,
+      /^(?!\\.)[^/]+?$/,
     ],
   ],
   true,
@@ -1913,10 +2034,10 @@ Array [
   Array [
     Array [
       "",
-      /^(?!\\.)(?=.)[^/]$/,
+      /^(?!\\.)[^/]$/,
     ],
     Array [
-      /^(?!\\.)(?=.)[^/]*?$/,
+      /^(?!\\.)[^/]+?$/,
     ],
   ],
   true,
@@ -1930,7 +2051,7 @@ Array [
       "a",
     ],
     Array [
-      /^(?=.)[^/]*?\\((?!\\.)b\\|(?!\\.)c$/,
+      /^(?!\\.)[^/]*?\\(b\\|c$/,
     ],
     Array [
       "d)",
@@ -1947,10 +2068,10 @@ Array [
       "a",
     ],
     Array [
-      /^(?=.)(?:(?!\\.)b|(?!\\.)c)*$/,
+      /^(?:b|c)*$/,
     ],
     Array [
-      /^(?=.)(?:(?!\\.)b|(?!\\.)d)*$/,
+      /^(?:b|d)*$/,
     ],
   ],
   true,
@@ -1961,11 +2082,11 @@ exports[`test/escape-has-magic.js TAP > {c*,./c*} 1`] = `
 Array [
   Array [
     Array [
-      /^(?=.)c[^/]*?$/,
+      /^c[^/]*?$/,
     ],
     Array [
       ".",
-      /^(?=.)c[^/]*?$/,
+      /^c[^/]*?$/,
     ],
   ],
   true,

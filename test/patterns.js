@@ -442,6 +442,25 @@ module.exports = [
   ['[[:xdigit:]][[:xdigit:]]???', ['aeiou', 'fffff', '0f7fa', '99999']],
   ['[[:graph:]]f*', ['fffff', '0f7fa']],
   ['[[:graph:][:digit:]]f*', ['fffff', '0f7fa']],
+
+  'fast track the *.ext patterns',
+  () =>
+    (files = ['x.y', 'a.y', 'x.z', 'a.z', 'xy', 'ay', 'x', 'a', '.y', '.z']),
+  ['*.y', ['x.y', 'a.y']],
+  ['*.z', ['x.z', 'a.z', '.z'], { dot: true }],
+  ['*.Y', ['x.y', 'a.y'], { nocase: true }],
+  ['*.Z', ['x.z', 'a.z', '.z'], { dot: true, nocase: true }],
+
+  () => files.push('+()'),
+  ['+()', ['+()']],
+  ['+()*(x|a)', ['x', 'a']],
+  ['+(x|a[^)]y)', ['x', 'a.y']],
+  ['!()y', ['x.y', 'a.y', 'xy', 'ay'], { nonegate: true }],
+  ['!()y', ['x.y', 'a.y', 'xy', 'ay', '.y'], { dot: true, nonegate: true }],
+
+  () => (files = ['x-a', 'x-ab', 'x-z', 'a-z', 'zb']),
+  ['?(x-!(y)|z)', ['x-a', 'x-ab', 'x-z']],
+  ['?(x-!(y)|z)b', ['x-ab', 'zb']],
 ]
 
 Object.defineProperty(module.exports, 'files', {

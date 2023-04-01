@@ -1,5 +1,6 @@
 import expand from 'brace-expansion'
-import { parseClass } from './brace-expressions.js'
+import { assertValidPattern } from './assert-valid-pattern.js'
+import { AST, ExtglobType } from './ast.js'
 import { escape } from './escape.js'
 import { unescape } from './unescape.js'
 
@@ -129,15 +130,6 @@ minimatch.sep = sep
 export const GLOBSTAR = Symbol('globstar **')
 minimatch.GLOBSTAR = GLOBSTAR
 
-const plTypes = {
-  '!': { open: '(?:(?!(?:', close: '))[^/]*?)' },
-  '?': { open: '(?:', close: ')?' },
-  '+': { open: '(?:', close: ')+' },
-  '*': { open: '(?:', close: ')*' },
-  '@': { open: '(?:', close: ')' },
-}
-type StateChar = '!' | '?' | '+' | '*' | '@'
-
 // any single thing other than /
 // don't need to escape / when using new RegExp()
 const qmark = '[^/]'
@@ -153,19 +145,6 @@ const twoStarDot = '(?:(?!(?:\\/|^)(?:\\.{1,2})($|\\/)).)*?'
 // not a ^ or / followed by a dot,
 // followed by anything, any number of times.
 const twoStarNoDot = '(?:(?!(?:\\/|^)\\.).)*?'
-
-// "abc" -> { a:true, b:true, c:true }
-const charSet = (s: string) =>
-  s.split('').reduce((set: { [k: string]: boolean }, c) => {
-    set[c] = true
-    return set
-  }, {})
-
-// characters that need to be escaped in RegExp.
-const reSpecials = charSet('().*{}+?[]^$\\!')
-
-// characters that indicate we have to add the pattern start
-const addPatternStartSet = charSet('[.(')
 
 export const filter =
   (pattern: string, options: MinimatchOptions = {}) =>
@@ -193,6 +172,22 @@ export const defaults = (def: MinimatchOptions): typeof minimatch => {
       }
       static defaults(options: MinimatchOptions) {
         return orig.defaults(ext(def, options)).Minimatch
+      }
+    },
+
+    AST: class AST extends orig.AST {
+      /* c8 ignore start */
+      constructor(
+        type: ExtglobType | null,
+        parent?: AST,
+        options: MinimatchOptions = {}
+      ) {
+        super(type, parent, ext(def, options))
+      }
+      /* c8 ignore stop */
+
+      static fromGlob(pattern: string, options: MinimatchOptions = {}) {
+        return orig.AST.fromGlob(pattern, ext(def, options))
       }
     },
 
@@ -253,19 +248,6 @@ export const braceExpand = (
 }
 minimatch.braceExpand = braceExpand
 
-const MAX_PATTERN_LENGTH = 1024 * 64
-const assertValidPattern: (pattern: any) => void = (
-  pattern: any
-): asserts pattern is string => {
-  if (typeof pattern !== 'string') {
-    throw new TypeError('invalid pattern')
-  }
-
-  if (pattern.length > MAX_PATTERN_LENGTH) {
-    throw new TypeError('pattern is too long')
-  }
-}
-
 // parse a component of the expanded set.
 // At this point, no pattern may contain "/" in it
 // so we're going to return a 2d array, where each entry is the full
@@ -297,30 +279,17 @@ export const match = (
 minimatch.match = match
 
 // replace stuff like \* with *
-const globUnescape = (s: string) => s.replace(/\\(.)/g, '$1')
 const globMagic = /[?*]|[+@!]\(.*?\)|\[|\]/
 const regExpEscape = (s: string) =>
   s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
-
-interface PatternListEntry {
-  type: string
-  start: number
-  reStart: number
-  open: string
-  close: string
-}
-interface NegativePatternListEntry extends PatternListEntry {
-  reEnd: number
-}
 
 export type MMRegExp = RegExp & {
   _src?: string
   _glob?: string
 }
 
-type SubparseReturn = [string, boolean]
-type ParseReturnFiltered = string | MMRegExp | typeof GLOBSTAR
-type ParseReturn = ParseReturnFiltered | false
+export type ParseReturnFiltered = string | MMRegExp | typeof GLOBSTAR
+export type ParseReturn = ParseReturnFiltered | false
 
 export class Minimatch {
   options: MinimatchOptions
@@ -377,7 +346,7 @@ export class Minimatch {
     this.make()
   }
 
-  hasMagic():boolean {
+  hasMagic(): boolean {
     if (this.options.magicalBraces && this.set.length > 1) {
       return true
     }
@@ -1000,7 +969,7 @@ export class Minimatch {
     return braceExpand(this.pattern, this.options)
   }
 
-  parse(pattern: string): ParseReturn | SubparseReturn {
+  parse(pattern: string): ParseReturn {
     assertValidPattern(pattern)
 
     const options = this.options
@@ -1041,331 +1010,8 @@ export class Minimatch {
       fastTest = dotStarTest
     }
 
-    let re = ''
-    let hasMagic = false
-    let escaping = false
-    // ? => one single character
-    const patternListStack: PatternListEntry[] = []
-    const negativeLists: NegativePatternListEntry[] = []
-    let stateChar: StateChar | false = false
-    let uflag = false
-    let pl: PatternListEntry | undefined
-    // . and .. never match anything that doesn't start with .,
-    // even when options.dot is set.  However, if the pattern
-    // starts with ., then traversal patterns can match.
-    let dotTravAllowed = pattern.charAt(0) === '.'
-    let dotFileAllowed = options.dot || dotTravAllowed
-    const patternStart = () =>
-      dotTravAllowed
-        ? ''
-        : dotFileAllowed
-        ? '(?!(?:^|\\/)\\.{1,2}(?:$|\\/))'
-        : '(?!\\.)'
-    const subPatternStart = (p: string) =>
-      p.charAt(0) === '.'
-        ? ''
-        : options.dot
-        ? '(?!(?:^|\\/)\\.{1,2}(?:$|\\/))'
-        : '(?!\\.)'
-
-    const clearStateChar = () => {
-      if (stateChar) {
-        // we had some state-tracking character
-        // that wasn't consumed by this pass.
-        switch (stateChar) {
-          case '*':
-            re += star
-            hasMagic = true
-            break
-          case '?':
-            re += qmark
-            hasMagic = true
-            break
-          default:
-            re += '\\' + stateChar
-            break
-        }
-        this.debug('clearStateChar %j %j', stateChar, re)
-        stateChar = false
-      }
-    }
-
-    for (
-      let i = 0, c: string;
-      i < pattern.length && (c = pattern.charAt(i));
-      i++
-    ) {
-      this.debug('%s\t%s %s %j', pattern, i, re, c)
-
-      // skip over any that are escaped.
-      if (escaping) {
-        // completely not allowed, even escaped.
-        // should be impossible.
-        /* c8 ignore start */
-        if (c === '/') {
-          return false
-        }
-        /* c8 ignore stop */
-
-        if (reSpecials[c]) {
-          re += '\\'
-        }
-        re += c
-        escaping = false
-        continue
-      }
-
-      switch (c) {
-        // Should already be path-split by now.
-        /* c8 ignore start */
-        case '/': {
-          return false
-        }
-        /* c8 ignore stop */
-
-        case '\\':
-          clearStateChar()
-          escaping = true
-          continue
-
-        // the various stateChar values
-        // for the "extglob" stuff.
-        case '?':
-        case '*':
-        case '+':
-        case '@':
-        case '!':
-          this.debug('%s\t%s %s %j <-- stateChar', pattern, i, re, c)
-
-          // if we already have a stateChar, then it means
-          // that there was something like ** or +? in there.
-          // Handle the stateChar, then proceed with this one.
-          this.debug('call clearStateChar %j', stateChar)
-          clearStateChar()
-          stateChar = c
-          // if extglob is disabled, then +(asdf|foo) isn't a thing.
-          // just clear the statechar *now*, rather than even diving into
-          // the patternList stuff.
-          if (options.noext) clearStateChar()
-          continue
-
-        case '(': {
-          if (!stateChar) {
-            re += '\\('
-            continue
-          }
-
-          const plEntry: PatternListEntry = {
-            type: stateChar,
-            start: i - 1,
-            reStart: re.length,
-            open: plTypes[stateChar].open,
-            close: plTypes[stateChar].close,
-          }
-          this.debug(this.pattern, '\t', plEntry)
-          patternListStack.push(plEntry)
-          // negation is (?:(?!(?:js)(?:<rest>))[^/]*)
-          re += plEntry.open
-          // next entry starts with a dot maybe?
-          if (plEntry.start === 0 && plEntry.type !== '!') {
-            dotTravAllowed = true
-            re += subPatternStart(pattern.slice(i + 1))
-          }
-          this.debug('plType %j %j', stateChar, re)
-          stateChar = false
-          continue
-        }
-
-        case ')': {
-          const plEntry = patternListStack[patternListStack.length - 1]
-          if (!plEntry) {
-            re += '\\)'
-            continue
-          }
-          patternListStack.pop()
-
-          // closing an extglob
-          clearStateChar()
-          hasMagic = true
-          pl = plEntry
-          // negation is (?:(?!js)[^/]*)
-          // The others are (?:<pattern>)<type>
-          re += pl.close
-          if (pl.type === '!') {
-            negativeLists.push(Object.assign(pl, { reEnd: re.length }))
-          }
-          continue
-        }
-
-        case '|': {
-          const plEntry = patternListStack[patternListStack.length - 1]
-          if (!plEntry) {
-            re += '\\|'
-            continue
-          }
-
-          clearStateChar()
-          re += '|'
-          // next subpattern can start with a dot?
-          if (plEntry.start === 0 && plEntry.type !== '!') {
-            dotTravAllowed = true
-            re += subPatternStart(pattern.slice(i + 1))
-          }
-          continue
-        }
-
-        // these are mostly the same in regexp and glob
-        case '[':
-          // swallow any state-tracking char before the [
-          clearStateChar()
-          const [src, needUflag, consumed, magic] = parseClass(pattern, i)
-          if (consumed) {
-            re += src
-            uflag = uflag || needUflag
-            i += consumed - 1
-            hasMagic = hasMagic || magic
-          } else {
-            re += '\\['
-          }
-          continue
-
-        case ']':
-          re += '\\' + c
-          continue
-
-        default:
-          // swallow any state char that wasn't consumed
-          clearStateChar()
-
-          re += regExpEscape(c)
-          break
-      } // switch
-    } // for
-
-    // handle the case where we had a +( thing at the *end*
-    // of the pattern.
-    // each pattern list stack adds 3 chars, and we need to go through
-    // and escape any | chars that were passed through as-is for the regexp.
-    // Go through and escape them, taking care not to double-escape any
-    // | chars that were already escaped.
-    for (pl = patternListStack.pop(); pl; pl = patternListStack.pop()) {
-      let tail: string
-      tail = re.slice(pl.reStart + pl.open.length)
-      this.debug(this.pattern, 'setting tail', re, pl)
-      // maybe some even number of \, then maybe 1 \, followed by a |
-      tail = tail.replace(/((?:\\{2}){0,64})(\\?)\|/g, (_, $1, $2) => {
-        if (!$2) {
-          // the | isn't already escaped, so escape it.
-          $2 = '\\'
-          // should already be done
-          /* c8 ignore start */
-        }
-        /* c8 ignore stop */
-
-        // need to escape all those slashes *again*, without escaping the
-        // one that we need for escaping the | character.  As it works out,
-        // escaping an even number of slashes can be done by simply repeating
-        // it exactly after itself.  That's why this trick works.
-        //
-        // I am sorry that you have to see this.
-        return $1 + $1 + $2 + '|'
-      })
-
-      this.debug('tail=%j\n   %s', tail, tail, pl, re)
-      const t =
-        pl.type === '*' ? star : pl.type === '?' ? qmark : '\\' + pl.type
-
-      hasMagic = true
-      re = re.slice(0, pl.reStart) + t + '\\(' + tail
-    }
-
-    // handle trailing things that only matter at the very end.
-    clearStateChar()
-    if (escaping) {
-      // trailing \\
-      re += '\\\\'
-    }
-
-    // only need to apply the nodot start if the re starts with
-    // something that could conceivably capture a dot
-    const addPatternStart = addPatternStartSet[re.charAt(0)]
-
-    // Hack to work around lack of negative lookbehind in JS
-    // A pattern like: *.!(x).!(y|z) needs to ensure that a name
-    // like 'a.xyz.yz' doesn't match.  So, the first negative
-    // lookahead, has to look ALL the way ahead, to the end of
-    // the pattern.
-    for (let n = negativeLists.length - 1; n > -1; n--) {
-      const nl = negativeLists[n]
-
-      const nlBefore = re.slice(0, nl.reStart)
-      const nlFirst = re.slice(nl.reStart, nl.reEnd - 8)
-      let nlAfter = re.slice(nl.reEnd)
-      const nlLast = re.slice(nl.reEnd - 8, nl.reEnd) + nlAfter
-
-      // Handle nested stuff like *(*.js|!(*.json)), where open parens
-      // mean that we should *not* include the ) in the bit that is considered
-      // "after" the negated section.
-      const closeParensBefore = nlBefore.split(')').length
-      const openParensBefore = nlBefore.split('(').length - closeParensBefore
-      let cleanAfter = nlAfter
-      for (let i = 0; i < openParensBefore; i++) {
-        cleanAfter = cleanAfter.replace(/\)[+*?]?/, '')
-      }
-      nlAfter = cleanAfter
-
-      const dollar = nlAfter === '' ? '(?:$|\\/)' : ''
-
-      re = nlBefore + nlFirst + nlAfter + dollar + nlLast
-    }
-
-    // if the re is not "" at this point, then we need to make sure
-    // it doesn't match against an empty path part.
-    // Otherwise a/* will match a/, which it should not.
-    if (re !== '' && hasMagic) {
-      re = '(?=.)' + re
-    }
-
-    if (addPatternStart) {
-      re = patternStart() + re
-    }
-
-    // if it's nocase, and the lcase/uppercase don't match, it's magic
-    if (options.nocase && !hasMagic && !options.nocaseMagicOnly) {
-      hasMagic = pattern.toUpperCase() !== pattern.toLowerCase()
-    }
-
-    // skip the regexp for non-magical patterns
-    // unescape anything in it, though, so that it'll be
-    // an exact match against a file etc.
-    if (!hasMagic) {
-      return globUnescape(re)
-    }
-
-    const flags = (options.nocase ? 'i' : '') + (uflag ? 'u' : '')
-    try {
-      const ext = fastTest
-        ? {
-            _glob: pattern,
-            _src: re,
-            test: fastTest,
-          }
-        : {
-            _glob: pattern,
-            _src: re,
-          }
-      return Object.assign(new RegExp('^' + re + '$', flags), ext)
-      /* c8 ignore start */
-    } catch (er) {
-      // should be impossible
-      // If it was an invalid regular expression, then it can't match
-      // anything.  This trick looks for a character after the end of
-      // the string, which is of course impossible, except in multi-line
-      // mode, but it's not a /m regex.
-      this.debug('invalid regexp', er)
-      return new RegExp('$.')
-    }
-    /* c8 ignore stop */
+    const re = AST.fromGlob(pattern, this.options).toMMPattern()
+    return fastTest ? Object.assign(re, { test: fastTest }) : re
   }
 
   makeRe() {
@@ -1390,7 +1036,7 @@ export class Minimatch {
       : options.dot
       ? twoStarDot
       : twoStarNoDot
-    const flags = options.nocase ? 'i' : ''
+    const flags = new Set(options.nocase ? ['i'] : [])
 
     // regexpify non-globstar patterns
     // if ** is only item, then we just do one twoStar
@@ -1400,13 +1046,16 @@ export class Minimatch {
     // then filter out GLOBSTAR symbols
     let re = set
       .map(pattern => {
-        const pp: (string | typeof GLOBSTAR)[] = pattern.map(p =>
-          typeof p === 'string'
+        const pp: (string | typeof GLOBSTAR)[] = pattern.map(p => {
+          if (p instanceof RegExp) {
+            for (const f of p.flags.split('')) flags.add(f)
+          }
+          return typeof p === 'string'
             ? regExpEscape(p)
             : p === GLOBSTAR
             ? GLOBSTAR
             : p._src
-        ) as (string | typeof GLOBSTAR)[]
+        }) as (string | typeof GLOBSTAR)[]
         pp.forEach((p, i) => {
           const next = pp[i + 1]
           const prev = pp[i - 1]
@@ -1430,15 +1079,18 @@ export class Minimatch {
       })
       .join('|')
 
+    // need to wrap in parens if we had more than one thing with |,
+    // otherwise only the first will be anchored to ^ and the last to $
+    const [open, close] = set.length > 1 ? ['(?:', ')'] : ['', '']
     // must match entire pattern
     // ending in a * or ** will make it less strict.
-    re = '^(?:' + re + ')$'
+    re = '^' + open + re + close + '$'
 
     // can match anything, as long as it's not this.
-    if (this.negate) re = '^(?!' + re + ').*$'
+    if (this.negate) re = '^(?!' + re + ').+$'
 
     try {
-      this.regexp = new RegExp(re, flags)
+      this.regexp = new RegExp(re, [...flags].join(''))
       /* c8 ignore start */
     } catch (ex) {
       // should be impossible
@@ -1533,9 +1185,11 @@ export class Minimatch {
   }
 }
 /* c8 ignore start */
+export { AST } from './ast.js'
 export { escape } from './escape.js'
 export { unescape } from './unescape.js'
 /* c8 ignore stop */
+minimatch.AST = AST
 minimatch.Minimatch = Minimatch
 minimatch.escape = escape
 minimatch.unescape = unescape
