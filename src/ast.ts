@@ -1,7 +1,7 @@
 // parse a single path portion
 
 import { MinimatchOptions, MMRegExp } from '.'
-import { parseClass } from './brace-expressions'
+import { parseClass } from './brace-expressions.js'
 
 // classes [] are handled by the parseClass method
 // for positive extglobs, we sub-parse the contents, and combine,
