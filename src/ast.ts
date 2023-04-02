@@ -1,7 +1,8 @@
 // parse a single path portion
 
-import { MinimatchOptions, MMRegExp } from '.'
+import { MinimatchOptions, MMRegExp } from './index.js'
 import { parseClass } from './brace-expressions.js'
+import { unescape } from './unescape.js'
 
 // classes [] are handled by the parseClass method
 // for positive extglobs, we sub-parse the contents, and combine,
@@ -72,7 +73,6 @@ const star = qmark + '*?'
 const starNoEmpty = qmark + '+?'
 
 // remove the \ chars that we added if we end up doing a nonmagic compare
-import { unescape } from './unescape'
 // const deslash = (s: string) => s.replace(/\\(.)/g, '$1')
 
 export class AST {
