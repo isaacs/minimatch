@@ -3,6 +3,19 @@ import { parseClass } from './brace-expressions.js'
 import { escape } from './escape.js'
 import { unescape } from './unescape.js'
 
+type Platform =
+  | 'aix'
+  | 'android'
+  | 'darwin'
+  | 'freebsd'
+  | 'haiku'
+  | 'linux'
+  | 'openbsd'
+  | 'sunos'
+  | 'win32'
+  | 'cygwin'
+  | 'netbsd'
+
 export interface MinimatchOptions {
   nobrace?: boolean
   nocomment?: boolean
@@ -22,18 +35,7 @@ export interface MinimatchOptions {
   flipNegate?: boolean
   preserveMultipleSlashes?: boolean
   optimizationLevel?: number
-  platform?:
-    | 'aix'
-    | 'android'
-    | 'darwin'
-    | 'freebsd'
-    | 'haiku'
-    | 'linux'
-    | 'openbsd'
-    | 'sunos'
-    | 'win32'
-    | 'cygwin'
-    | 'netbsd'
+  platform?: Platform
   windowsNoMagicRoot?: boolean
 }
 
@@ -106,7 +108,6 @@ const qmarksTestNoExtDot = ([$0]: RegExpMatchArray) => {
   return (f: string) => f.length === len && f !== '.' && f !== '..'
 }
 
-type Platform = typeof process.platform
 /* c8 ignore start */
 const defaultPlatform: Platform = (
   typeof process === 'object' && process
@@ -377,7 +378,7 @@ export class Minimatch {
     this.make()
   }
 
-  hasMagic():boolean {
+  hasMagic(): boolean {
     if (this.options.magicalBraces && this.set.length > 1) {
       return true
     }
