@@ -35,8 +35,8 @@ Supports these glob features:
 - [Posix character
   classes](https://www.gnu.org/software/bash/manual/html_node/Pattern-Matching.html),
   like `[[:alpha:]]`, supporting the full range of Unicode
-  characters.  For example, `[[:alpha:]]` will match against
-  `'é'`, though `[a-zA-Z]` will not.  Collating symbol and set
+  characters. For example, `[[:alpha:]]` will match against
+  `'é'`, though `[a-zA-Z]` will not. Collating symbol and set
   matching is not supported, so `[[=e=]]` will _not_ match `'é'`
   and `[[.ch.]]` will not match `'ch'` in locales where `ch` is
   considered a single character.
@@ -131,19 +131,19 @@ var mm = new Minimatch(pattern, options)
   method is mainly for internal use, but is exposed so that it can be
   used by a glob-walker that needs to avoid excessive filesystem calls.
 - `hasMagic()` Returns true if the parsed pattern contains any
-  magic characters.  Returns false if all comparator parts are
-  string literals.  If the `magicalBraces` option is set on the
+  magic characters. Returns false if all comparator parts are
+  string literals. If the `magicalBraces` option is set on the
   constructor, then it will consider brace expansions which are
-  not otherwise magical to be magic.  If not set, then a pattern
+  not otherwise magical to be magic. If not set, then a pattern
   like `a{b,c}d` will return `false`, because neither `abd` nor
   `acd` contain any special glob characters.
 
   This does **not** mean that the pattern string can be used as a
   literal filename, as it may contain magic glob characters that
-  are escaped.  For example, the pattern `\\*` or `[*]` would not
+  are escaped. For example, the pattern `\\*` or `[*]` would not
   be considered to have magic, as the matching portion parses to
   the literal string `'*'` and would match a path named `'*'`,
-  not `'\\*'` or `'[*]'`.  The `minimatch.unescape()` method may
+  not `'\\*'` or `'[*]'`. The `minimatch.unescape()` method may
   be used to remove escape characters.
 
 All other methods are internal, and will be called as necessary.
@@ -182,7 +182,7 @@ be escaped or unescaped.
 Un-escape a glob string that may contain some escaped characters.
 
 If the `windowsPathsNoEscape` option is used, then square-brace
-escapes are removed, but not backslash escapes.  For example, it
+escapes are removed, but not backslash escapes. For example, it
 will turn the string `'[*]'` into `*`, but it will not turn
 `'\\*'` into `'*'`, because `\` is a path separator in
 `windowsPathsNoEscape` mode.
@@ -261,7 +261,7 @@ This only affects the results of the `Minimatch.hasMagic` method.
 
 If the pattern contains brace expansions, such as `a{b,c}d`, but
 no other magic characters, then the `Minipass.hasMagic()` method
-will return `false` by default.  When this option set, it will
+will return `false` by default. When this option set, it will
 return `true` for brace expansion as well as other magic glob
 characters.
 
