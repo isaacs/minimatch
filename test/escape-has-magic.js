@@ -9,9 +9,13 @@ for (const p of patterns) {
   const escapep = escape(pattern)
   const escapew = escape(pattern, { windowsPathsNoEscape: true })
   t.equal(unescape(escapep), pattern, 'posix unescape(' + pattern + ')')
-  t.equal(unescape(escapew, {
-    windowsPathsNoEscape: true,
-  }), pattern, 'win32 unescape(' + pattern + ')')
+  t.equal(
+    unescape(escapew, {
+      windowsPathsNoEscape: true,
+    }),
+    pattern,
+    'win32 unescape(' + pattern + ')'
+  )
   const mmp = new Minimatch(escapep, { ...opts, nocaseMagicOnly: true })
   const mmw = new Minimatch(escapew, {
     ...opts,
