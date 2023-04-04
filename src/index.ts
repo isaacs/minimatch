@@ -309,7 +309,7 @@ export class Minimatch {
   nocase: boolean
 
   isWindows: boolean
-  platform: typeof process.platform
+  platform: Platform
   windowsNoMagicRoot: boolean
 
   regexp: false | null | MMRegExp
