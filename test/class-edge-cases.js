@@ -1,5 +1,5 @@
 const t = require('tap')
-const minimatch = require('../').default
+const { minimatch } = require('../')
 
 const files = ['a[]b', '[b-a]x', 'a]b', 'a[]]b', 'a[[]b']
 

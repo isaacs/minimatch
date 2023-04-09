@@ -1,5 +1,9 @@
 # change log
 
+## 9.0
+
+- No default export, only named exports.
+
 ## 8.0
 
 - Recursive descent parser for extglob, allowing correct support

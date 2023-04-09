@@ -1,6 +1,6 @@
 var t = require('tap')
 
-var minimatch = require('../').default
+var minimatch = require('../').minimatch
 
 // utility function for generating long strings
 var genstr = function (len, chr) {

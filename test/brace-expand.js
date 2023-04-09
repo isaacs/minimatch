@@ -1,5 +1,5 @@
-var tap = require('tap'),
-  minimatch = require('../').default
+var tap = require('tap')
+const { minimatch } = require('../')
 
 tap.test('brace expansion', function (t) {
   // [ pattern, [expanded] ]

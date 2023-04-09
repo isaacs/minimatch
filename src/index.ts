@@ -55,8 +55,6 @@ export const minimatch = (
   return new Minimatch(pattern, options).match(p)
 }
 
-export default minimatch
-
 // Optimized checking for the most common glob patterns.
 const starDotExtRE = /^\*+([^+@!?\*\[\(]*)$/
 const starDotExtTest = (ext: string) => (f: string) =>

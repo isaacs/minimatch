@@ -1,5 +1,5 @@
 var test = require('tap').test
-var minimatch = require('../').default
+const { minimatch } = require('../')
 
 test('extglob ending with statechar', function (t) {
   t.notOk(minimatch('ax', 'a?(b*)'))

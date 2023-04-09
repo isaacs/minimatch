@@ -1,5 +1,5 @@
 var tap = require('tap')
-var minimatch = require('../').default
+const { minimatch } = require('../')
 
 // test all characters with codes in range [mincc,maxcc]
 var mincc = 0x20
