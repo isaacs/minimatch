@@ -19,6 +19,10 @@ const cases: Case[] = [
   ['c:/x', '//?/C:/*', true],
   ['//?/c:/x', 'C:/*', true],
   ['//?/c:/x', '//?/C:/*', true],
+  ['c:/x', '//?/C:/*', true],
+  ['c:/x', 'C:/*', true],
+  ['C:/x', '//?/c:/*', true],
+  ['C:/x', 'c:/*', true],
 
   ['d:/x', '//?/c:/*', false],
   ['//?/d:/x', 'c:/*', false],
