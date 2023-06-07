@@ -174,7 +174,7 @@ export const defaults = (def: MinimatchOptions): typeof minimatch => {
       }
     },
 
-    AST: class AST extends orig.AST {
+    AST: class AST2 extends orig.AST {
       /* c8 ignore start */
       constructor(
         type: ExtglobType | null,
