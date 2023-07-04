@@ -55,7 +55,8 @@
     "node": ">=16 || 14 >=14.17"
   },
   "dependencies": {
-    "brace-expansion": "^2.0.1"
+    "brace-expansion": "github:MoLow/brace-expansion#use-primordials",
+    "node-primordials": "github:MoLow/node-primordials#tmp-build"
   },
   "devDependencies": {
     "@types/brace-expansion": "^1.1.0",
