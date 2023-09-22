@@ -1,4 +1,6 @@
 import { MinimatchOptions } from './index.js'
+import { StringPrototypeReplace } from 'node-primordials'
+
 /**
  * Un-escape a string that has been escaped with {@link escape}.
  *
@@ -20,6 +22,10 @@ export const unescape = (
   }: Pick<MinimatchOptions, 'windowsPathsNoEscape'> = {}
 ) => {
   return windowsPathsNoEscape
-    ? s.replace(/\[([^\/\\])\]/g, '$1')
-    : s.replace(/((?!\\).|^)\[([^\/\\])\]/g, '$1$2').replace(/\\([^\/])/g, '$1')
+    ? StringPrototypeReplace(s, /\[([^\/\\])\]/g, '$1')
+    : StringPrototypeReplace(
+        StringPrototypeReplace(s, /((?!\\).|^)\[([^\/\\])\]/g, '$1$2'),
+        /\\([^\/])/g,
+        '$1'
+      )
 }

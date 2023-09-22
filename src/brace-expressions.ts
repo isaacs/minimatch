@@ -1,8 +1,18 @@
+import {
+  ArrayPrototypeJoin,
+  ArrayPrototypePush,
+  ObjectEntries,
+  StringPrototypeCharAt,
+  StringPrototypeReplace,
+  StringPrototypeSlice,
+  StringPrototypeStartsWith,
+} from 'node-primordials'
 // translate the various posix character classes into unicode properties
 // this works across all unicode locales
 
 // { <posix class>: [<translation>, /u flag required, negated]
 const posixClasses: { [k: string]: [e: string, u: boolean, n?: boolean] } = {
+  __proto__: null as never,
   '[:alnum:]': ['\\p{L}\\p{Nl}\\p{Nd}', true],
   '[:alpha:]': ['\\p{L}\\p{Nl}', true],
   '[:ascii:]': ['\\x' + '00-\\x' + '7f', false],
@@ -21,13 +31,15 @@ const posixClasses: { [k: string]: [e: string, u: boolean, n?: boolean] } = {
 
 // only need to escape a few things inside of brace expressions
 // escapes: [ \ ] -
-const braceEscape = (s: string) => s.replace(/[[\]\\-]/g, '\\$&')
+const braceEscape = (s: string) =>
+  StringPrototypeReplace(s, /[[\]\\-]/g, '\\$&')
 // escape all regexp magic characters
 const regexpEscape = (s: string) =>
-  s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
+  StringPrototypeReplace(s, /[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
 
 // everything has already been escaped, we just have to join
-const rangesToString = (ranges: string[]): string => ranges.join('')
+const rangesToString = (ranges: string[]): string =>
+  ArrayPrototypeJoin(ranges, '')
 
 export type ParseClassResult = [
   src: string,
@@ -48,7 +60,7 @@ export const parseClass = (
 ): ParseClassResult => {
   const pos = position
   /* c8 ignore start */
-  if (glob.charAt(pos) !== '[') {
+  if (StringPrototypeCharAt(glob, pos) !== '[') {
     throw new Error('not in a brace expression')
   }
   /* c8 ignore stop */
@@ -63,7 +75,7 @@ export const parseClass = (
   let endPos = pos
   let rangeStart = ''
   WHILE: while (i < glob.length) {
-    const c = glob.charAt(i)
+    const c = StringPrototypeCharAt(glob, i)
     if ((c === '!' || c === '^') && i === pos + 1) {
       negate = true
       i++
@@ -86,15 +98,15 @@ export const parseClass = (
     }
     if (c === '[' && !escaping) {
       // either a posix class, a collation equivalent, or just a [
-      for (const [cls, [unip, u, neg]] of Object.entries(posixClasses)) {
-        if (glob.startsWith(cls, i)) {
+      for (const [cls, [unip, u, neg]] of ObjectEntries(posixClasses)) {
+        if (StringPrototypeStartsWith(glob, cls, i)) {
           // invalid, [a-[] is fine, but not [a-[:alpha]]
           if (rangeStart) {
             return ['$.', false, glob.length - pos, true]
           }
           i += cls.length
-          if (neg) negs.push(unip)
-          else ranges.push(unip)
+          if (neg) ArrayPrototypePush(negs, unip)
+          else ArrayPrototypePush(ranges, unip)
           uflag = uflag || u
           continue WHILE
         }
@@ -107,9 +119,12 @@ export const parseClass = (
       // throw this range away if it's not valid, but others
       // can still match.
       if (c > rangeStart) {
-        ranges.push(braceEscape(rangeStart) + '-' + braceEscape(c))
+        ArrayPrototypePush(
+          ranges,
+          braceEscape(rangeStart) + '-' + braceEscape(c)
+        )
       } else if (c === rangeStart) {
-        ranges.push(braceEscape(c))
+        ArrayPrototypePush(ranges, braceEscape(c))
       }
       rangeStart = ''
       i++
@@ -118,19 +133,19 @@ export const parseClass = (
 
     // now might be the start of a range.
     // can be either c-d or c-] or c<more...>] or c] at this point
-    if (glob.startsWith('-]', i + 1)) {
-      ranges.push(braceEscape(c + '-'))
+    if (StringPrototypeStartsWith(glob, '-]', i + 1)) {
+      ArrayPrototypePush(ranges, braceEscape(c + '-'))
       i += 2
       continue
     }
-    if (glob.startsWith('-', i + 1)) {
+    if (StringPrototypeStartsWith(glob, '-', i + 1)) {
       rangeStart = c
       i += 2
       continue
     }
 
     // not the start of a range, just a single character
-    ranges.push(braceEscape(c))
+    ArrayPrototypePush(ranges, braceEscape(c))
     i++
   }
 
@@ -156,7 +171,8 @@ export const parseClass = (
     /^\\?.$/.test(ranges[0]) &&
     !negate
   ) {
-    const r = ranges[0].length === 2 ? ranges[0].slice(-1) : ranges[0]
+    const r =
+      ranges[0].length === 2 ? StringPrototypeSlice(ranges[0], -1) : ranges[0]
     return [regexpEscape(r), false, endPos - pos, false]
   }
 

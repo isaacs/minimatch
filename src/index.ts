@@ -3,6 +3,32 @@ import { assertValidPattern } from './assert-valid-pattern.js'
 import { AST, ExtglobType } from './ast.js'
 import { escape } from './escape.js'
 import { unescape } from './unescape.js'
+import {
+  ArrayIsArray,
+  ArrayPrototypeFilter,
+  ArrayPrototypeIndexOf,
+  ArrayPrototypeMap,
+  ArrayPrototypePop,
+  ArrayPrototypePush,
+  ArrayPrototypeReduce,
+  ArrayPrototypeSlice,
+  ArrayPrototypeSplice,
+  ObjectAssign,
+  RegExpPrototypeTest,
+  SafeSet,
+  StringPrototypeCharAt,
+  StringPrototypeEndsWith,
+  StringPrototypeIncludes,
+  StringPrototypeMatch,
+  StringPrototypeReplace,
+  StringPrototypeSlice,
+  StringPrototypeStartsWith,
+  StringPrototypeToLowerCase,
+  RegExp,
+  StringPrototypeSplit,
+  ArrayPrototypeForEach,
+  ArrayPrototypeJoin,
+} from 'node-primordials'
 
 type Platform =
   | 'aix'
@@ -48,7 +74,7 @@ export const minimatch = (
   assertValidPattern(pattern)
 
   // shortcut: comments match nothing.
-  if (!options.nocomment && pattern.charAt(0) === '#') {
+  if (!options.nocomment && StringPrototypeCharAt(pattern, 0) === '#') {
     return false
   }
 
@@ -58,49 +84,62 @@ export const minimatch = (
 // Optimized checking for the most common glob patterns.
 const starDotExtRE = /^\*+([^+@!?\*\[\(]*)$/
 const starDotExtTest = (ext: string) => (f: string) =>
-  !f.startsWith('.') && f.endsWith(ext)
-const starDotExtTestDot = (ext: string) => (f: string) => f.endsWith(ext)
+  !StringPrototypeStartsWith(f, '.') && StringPrototypeEndsWith(f, ext)
+const starDotExtTestDot = (ext: string) => (f: string) =>
+  StringPrototypeEndsWith(f, ext)
 const starDotExtTestNocase = (ext: string) => {
-  ext = ext.toLowerCase()
-  return (f: string) => !f.startsWith('.') && f.toLowerCase().endsWith(ext)
+  ext = StringPrototypeToLowerCase(ext) as string
+  return (f: string) =>
+    !StringPrototypeStartsWith(f, '.') &&
+    StringPrototypeEndsWith(StringPrototypeToLowerCase(f), ext)
 }
 const starDotExtTestNocaseDot = (ext: string) => {
-  ext = ext.toLowerCase()
-  return (f: string) => f.toLowerCase().endsWith(ext)
+  ext = StringPrototypeToLowerCase(ext) as string
+  return (f: string) =>
+    StringPrototypeEndsWith(StringPrototypeToLowerCase(f), ext)
 }
 const starDotStarRE = /^\*+\.\*+$/
-const starDotStarTest = (f: string) => !f.startsWith('.') && f.includes('.')
+const starDotStarTest = (f: string) =>
+  !StringPrototypeStartsWith(f, '.') && StringPrototypeIncludes(f, '.')
 const starDotStarTestDot = (f: string) =>
-  f !== '.' && f !== '..' && f.includes('.')
+  f !== '.' && f !== '..' && StringPrototypeIncludes(f, '.')
 const dotStarRE = /^\.\*+$/
-const dotStarTest = (f: string) => f !== '.' && f !== '..' && f.startsWith('.')
+const dotStarTest = (f: string) =>
+  f !== '.' && f !== '..' && StringPrototypeStartsWith(f, '.')
 const starRE = /^\*+$/
-const starTest = (f: string) => f.length !== 0 && !f.startsWith('.')
+const starTest = (f: string) =>
+  f.length !== 0 && !StringPrototypeStartsWith(f, '.')
 const starTestDot = (f: string) => f.length !== 0 && f !== '.' && f !== '..'
 const qmarksRE = /^\?+([^+@!?\*\[\(]*)?$/
 const qmarksTestNocase = ([$0, ext = '']: RegExpMatchArray) => {
   const noext = qmarksTestNoExt([$0])
   if (!ext) return noext
-  ext = ext.toLowerCase()
-  return (f: string) => noext(f) && f.toLowerCase().endsWith(ext)
+  ext = StringPrototypeToLowerCase(ext) as string
+  return (f: string) =>
+    noext(f) && StringPrototypeEndsWith(StringPrototypeToLowerCase(f), ext)
 }
 const qmarksTestNocaseDot = ([$0, ext = '']: RegExpMatchArray) => {
   const noext = qmarksTestNoExtDot([$0])
   if (!ext) return noext
-  ext = ext.toLowerCase()
-  return (f: string) => noext(f) && f.toLowerCase().endsWith(ext)
+  ext = StringPrototypeToLowerCase(ext) as string
+  return (f: string) =>
+    noext(f) && StringPrototypeEndsWith(StringPrototypeToLowerCase(f), ext)
 }
 const qmarksTestDot = ([$0, ext = '']: RegExpMatchArray) => {
   const noext = qmarksTestNoExtDot([$0])
-  return !ext ? noext : (f: string) => noext(f) && f.endsWith(ext)
+  return !ext
+    ? noext
+    : (f: string) => noext(f) && StringPrototypeEndsWith(f, ext)
 }
 const qmarksTest = ([$0, ext = '']: RegExpMatchArray) => {
   const noext = qmarksTestNoExt([$0])
-  return !ext ? noext : (f: string) => noext(f) && f.endsWith(ext)
+  return !ext
+    ? noext
+    : (f: string) => noext(f) && StringPrototypeEndsWith(f, ext)
 }
 const qmarksTestNoExt = ([$0]: RegExpMatchArray) => {
   const len = $0.length
-  return (f: string) => f.length === len && !f.startsWith('.')
+  return (f: string) => f.length === len && !StringPrototypeStartsWith(f, '.')
 }
 const qmarksTestNoExtDot = ([$0]: RegExpMatchArray) => {
   const len = $0.length
@@ -152,7 +191,7 @@ export const filter =
 minimatch.filter = filter
 
 const ext = (a: MinimatchOptions, b: MinimatchOptions = {}) =>
-  Object.assign({}, a, b)
+  ObjectAssign({}, a, b)
 
 export const defaults = (def: MinimatchOptions): typeof minimatch => {
   if (!def || typeof def !== 'object' || !Object.keys(def).length) {
@@ -164,7 +203,7 @@ export const defaults = (def: MinimatchOptions): typeof minimatch => {
   const m = (p: string, pattern: string, options: MinimatchOptions = {}) =>
     orig(p, pattern, ext(def, options))
 
-  return Object.assign(m, {
+  return ObjectAssign(m, {
     Minimatch: class Minimatch extends orig.Minimatch {
       constructor(pattern: string, options: MinimatchOptions = {}) {
         super(pattern, ext(def, options))
@@ -238,7 +277,7 @@ export const braceExpand = (
 
   // Thanks to Yeting Li <https://github.com/yetingli> for
   // improving this regexp to avoid a ReDOS vulnerability.
-  if (options.nobrace || !/\{(?:(?!\{).)*\}/.test(pattern)) {
+  if (options.nobrace || !RegExpPrototypeTest(/\{(?:(?!\{).)*\}/, pattern)) {
     // shortcut. no need to expand.
     return [pattern]
   }
@@ -269,9 +308,9 @@ export const match = (
   options: MinimatchOptions = {}
 ) => {
   const mm = new Minimatch(pattern, options)
-  list = list.filter(f => mm.match(f))
+  list = ArrayPrototypeFilter(list, f => mm.match(f)) as string[]
   if (mm.options.nonull && !list.length) {
-    list.push(pattern)
+    ArrayPrototypePush(list, pattern)
   }
   return list
 }
@@ -280,7 +319,7 @@ minimatch.match = match
 // replace stuff like \* with *
 const globMagic = /[?*]|[+@!]\(.*?\)|\[|\]/
 const regExpEscape = (s: string) =>
-  s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
+  StringPrototypeReplace(s, /[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
 
 export type MMRegExp = RegExp & {
   _src?: string
@@ -322,7 +361,7 @@ export class Minimatch {
     this.windowsPathsNoEscape =
       !!options.windowsPathsNoEscape || options.allowWindowsEscape === false
     if (this.windowsPathsNoEscape) {
-      this.pattern = this.pattern.replace(/\\/g, '/')
+      this.pattern = StringPrototypeReplace(this.pattern, /\\/g, '/')
     }
     this.preserveMultipleSlashes = !!options.preserveMultipleSlashes
     this.regexp = null
@@ -364,7 +403,7 @@ export class Minimatch {
     const options = this.options
 
     // empty patterns and comments match nothing.
-    if (!options.nocomment && pattern.charAt(0) === '#') {
+    if (!options.nocomment && StringPrototypeCharAt(pattern, 0) === '#') {
       this.comment = true
       return
     }
@@ -378,7 +417,7 @@ export class Minimatch {
     this.parseNegate()
 
     // step 2: expand braces
-    this.globSet = [...new Set(this.braceExpand())]
+    this.globSet = [...new SafeSet(this.braceExpand())]
 
     if (options.debug) {
       this.debug = (...args: any[]) => console.error(...args)
@@ -400,29 +439,40 @@ export class Minimatch {
     this.debug(this.pattern, this.globParts)
 
     // glob --> regexps
-    let set = this.globParts.map((s, _, __) => {
+    let set = ArrayPrototypeMap(this.globParts, (s: string[], _, __) => {
       if (this.isWindows && this.windowsNoMagicRoot) {
         // check if it's a drive or unc path.
         const isUNC =
           s[0] === '' &&
           s[1] === '' &&
-          (s[2] === '?' || !globMagic.test(s[2])) &&
-          !globMagic.test(s[3])
-        const isDrive = /^[a-z]:/i.test(s[0])
+          (s[2] === '?' || !RegExpPrototypeTest(globMagic, s[2])) &&
+          !RegExpPrototypeTest(globMagic, s[3])
+        const isDrive = RegExpPrototypeTest(/^[a-z]:/i, s[0])
         if (isUNC) {
-          return [...s.slice(0, 4), ...s.slice(4).map(ss => this.parse(ss))]
+          return [
+            ...ArrayPrototypeSlice(s, 0, 4),
+            ...ArrayPrototypeMap(ArrayPrototypeSlice(s, 4), ss =>
+              this.parse(ss)
+            ),
+          ]
         } else if (isDrive) {
-          return [s[0], ...s.slice(1).map(ss => this.parse(ss))]
+          return [
+            s[0],
+            ...ArrayPrototypeMap(ArrayPrototypeSlice(s, 1), ss =>
+              this.parse(ss)
+            ),
+          ]
         }
       }
-      return s.map(ss => this.parse(ss))
-    })
+      return ArrayPrototypeMap(s, ss => this.parse(ss)) as ParseReturn[]
+    }) as ParseReturn[][]
 
     this.debug(this.pattern, set)
 
     // filter out everything that didn't compile properly.
-    this.set = set.filter(
-      s => s.indexOf(false) === -1
+    this.set = ArrayPrototypeFilter(
+      set,
+      s => ArrayPrototypeIndexOf(s, false) === -1
     ) as ParseReturnFiltered[][]
 
     // do not treat the ? in UNC paths as magic
@@ -434,7 +484,7 @@ export class Minimatch {
           p[1] === '' &&
           this.globParts[i][2] === '?' &&
           typeof p[3] === 'string' &&
-          /^[a-z]:$/i.test(p[3])
+          RegExpPrototypeTest(/^[a-z]:$/i, p[3])
         ) {
           p[2] = '?'
         }
@@ -481,13 +531,13 @@ export class Minimatch {
   adjascentGlobstarOptimize(globParts: string[][]) {
     return globParts.map(parts => {
       let gs: number = -1
-      while (-1 !== (gs = parts.indexOf('**', gs + 1))) {
+      while (-1 !== (gs = ArrayPrototypeIndexOf(parts, '**', gs + 1))) {
         let i = gs
         while (parts[i + 1] === '**') {
           i++
         }
         if (i !== gs) {
-          parts.splice(gs, i - gs)
+          ArrayPrototypeSplice(parts, gs, i - gs)
         }
       }
       return parts
@@ -496,28 +546,32 @@ export class Minimatch {
 
   // get rid of adjascent ** and resolve .. portions
   levelOneOptimize(globParts: string[][]) {
-    return globParts.map(parts => {
-      parts = parts.reduce((set: string[], part) => {
-        const prev = set[set.length - 1]
-        if (part === '**' && prev === '**') {
-          return set
-        }
-        if (part === '..') {
-          if (prev && prev !== '..' && prev !== '.' && prev !== '**') {
-            set.pop()
+    return ArrayPrototypeMap(globParts, (parts: string[]) => {
+      parts = ArrayPrototypeReduce(
+        parts,
+        ((set: string[], part: string) => {
+          const prev = set[set.length - 1]
+          if (part === '**' && prev === '**') {
             return set
           }
-        }
-        set.push(part)
-        return set
-      }, [])
+          if (part === '..') {
+            if (prev && prev !== '..' && prev !== '.' && prev !== '**') {
+              ArrayPrototypePop(set)
+              return set
+            }
+          }
+          ArrayPrototypePush(set, part)
+          return set
+        }) as any,
+        []
+      ) as string[]
       return parts.length === 0 ? [''] : parts
-    })
+    }) as string[][]
   }
 
-  levelTwoFileOptimize(parts: string | string[]) {
-    if (!Array.isArray(parts)) {
-      parts = this.slashSplit(parts)
+  levelTwoFileOptimize(parts: string | string[]): string[] {
+    if (!ArrayIsArray(parts)) {
+      parts = this.slashSplit(parts as string)
     }
     let didSomething: boolean = false
     do {
@@ -530,7 +584,7 @@ export class Minimatch {
           if (i === 1 && p === '' && parts[0] === '') continue
           if (p === '.' || p === '') {
             didSomething = true
-            parts.splice(i, 1)
+            ArrayPrototypeSplice(parts, i, 1)
             i--
           }
         }
@@ -540,22 +594,22 @@ export class Minimatch {
           (parts[1] === '.' || parts[1] === '')
         ) {
           didSomething = true
-          parts.pop()
+          ArrayPrototypePop(parts)
         }
       }
 
       // <pre>/<p>/../<rest> -> <pre>/<rest>
       let dd: number = 0
-      while (-1 !== (dd = parts.indexOf('..', dd + 1))) {
+      while (-1 !== (dd = ArrayPrototypeIndexOf(parts, '..', dd + 1))) {
         const p = parts[dd - 1]
         if (p && p !== '.' && p !== '..' && p !== '**') {
           didSomething = true
-          parts.splice(dd - 1, 2)
+          ArrayPrototypeSplice(parts, dd - 1, 2)
           dd -= 2
         }
       }
     } while (didSomething)
-    return parts.length === 0 ? [''] : parts
+    return parts.length === 0 ? [''] : (parts as string[])
   }
 
   // First phase: single-pattern processing
@@ -583,7 +637,7 @@ export class Minimatch {
       // <pre>/**/../<p>/<p>/<rest> -> {<pre>/../<p>/<p>/<rest>,<pre>/**/<p>/<p>/<rest>}
       for (let parts of globParts) {
         let gs: number = -1
-        while (-1 !== (gs = parts.indexOf('**', gs + 1))) {
+        while (-1 !== (gs = ArrayPrototypeIndexOf(parts, '**', gs + 1))) {
           let gss: number = gs
           while (parts[gss + 1] === '**') {
             // <pre>/**/**/<rest> -> <pre>/**/<rest>
@@ -592,7 +646,7 @@ export class Minimatch {
           // eg, if gs is 2 and gss is 4, that means we have 3 **
           // parts, and can remove 2 of them.
           if (gss > gs) {
-            parts.splice(gs + 1, gss - gs)
+            ArrayPrototypeSplice(parts, gs + 1, gss - gs)
           }
 
           let next = parts[gs + 1]
@@ -611,10 +665,10 @@ export class Minimatch {
           }
           didSomething = true
           // edit parts in place, and push the new one
-          parts.splice(gs, 1)
-          const other = parts.slice(0)
+          ArrayPrototypeSplice(parts, gs, 1)
+          const other = ArrayPrototypeSlice(parts, 0)
           other[gs] = '**'
-          globParts.push(other)
+          ArrayPrototypePush(globParts, other)
           gs--
         }
 
@@ -626,7 +680,7 @@ export class Minimatch {
             if (i === 1 && p === '' && parts[0] === '') continue
             if (p === '.' || p === '') {
               didSomething = true
-              parts.splice(i, 1)
+              ArrayPrototypeSplice(parts, i, 1)
               i--
             }
           }
@@ -636,20 +690,20 @@ export class Minimatch {
             (parts[1] === '.' || parts[1] === '')
           ) {
             didSomething = true
-            parts.pop()
+            ArrayPrototypePop(parts)
           }
         }
 
         // <pre>/<p>/../<rest> -> <pre>/<rest>
         let dd: number = 0
-        while (-1 !== (dd = parts.indexOf('..', dd + 1))) {
+        while (-1 !== (dd = ArrayPrototypeIndexOf(parts, '..', dd + 1))) {
           const p = parts[dd - 1]
           if (p && p !== '.' && p !== '..' && p !== '**') {
             didSomething = true
             const needDot = dd === 1 && parts[dd + 1] === '**'
             const splin = needDot ? ['.'] : []
-            parts.splice(dd - 1, 2, ...splin)
-            if (parts.length === 0) parts.push('')
+            ArrayPrototypeSplice(parts, dd - 1, 2, ...splin)
+            if (parts.length === 0) ArrayPrototypePush(parts, '')
             dd -= 2
           }
         }
@@ -679,7 +733,7 @@ export class Minimatch {
         globParts[j] = []
       }
     }
-    return globParts.filter(gs => gs.length)
+    return ArrayPrototypeFilter(globParts, gs => gs.length) as string[][]
   }
 
   partsMatch(
@@ -693,35 +747,35 @@ export class Minimatch {
     let which: string = ''
     while (ai < a.length && bi < b.length) {
       if (a[ai] === b[bi]) {
-        result.push(which === 'b' ? b[bi] : a[ai])
+        ArrayPrototypePush(result, which === 'b' ? b[bi] : a[ai])
         ai++
         bi++
       } else if (emptyGSMatch && a[ai] === '**' && b[bi] === a[ai + 1]) {
-        result.push(a[ai])
+        ArrayPrototypePush(result, a[ai])
         ai++
       } else if (emptyGSMatch && b[bi] === '**' && a[ai] === b[bi + 1]) {
-        result.push(b[bi])
+        ArrayPrototypePush(result, b[bi])
         bi++
       } else if (
         a[ai] === '*' &&
         b[bi] &&
-        (this.options.dot || !b[bi].startsWith('.')) &&
+        (this.options.dot || !StringPrototypeStartsWith(b[bi], '.')) &&
         b[bi] !== '**'
       ) {
         if (which === 'b') return false
         which = 'a'
-        result.push(a[ai])
+        ArrayPrototypePush(result, a[ai])
         ai++
         bi++
       } else if (
         b[bi] === '*' &&
         a[ai] &&
-        (this.options.dot || !a[ai].startsWith('.')) &&
+        (this.options.dot || !StringPrototypeStartsWith(a[ai], '.')) &&
         a[ai] !== '**'
       ) {
         if (which === 'a') return false
         which = 'b'
-        result.push(b[bi])
+        ArrayPrototypePush(result, b[bi])
         ai++
         bi++
       } else {
@@ -740,12 +794,16 @@ export class Minimatch {
     let negate = false
     let negateOffset = 0
 
-    for (let i = 0; i < pattern.length && pattern.charAt(i) === '!'; i++) {
+    for (
+      let i = 0;
+      i < pattern.length && StringPrototypeCharAt(pattern, i) === '!';
+      i++
+    ) {
       negate = !negate
       negateOffset++
     }
 
-    if (negateOffset) this.pattern = pattern.slice(negateOffset)
+    if (negateOffset) this.pattern = StringPrototypeSlice(pattern, negateOffset)
     this.negate = negate
   }
 
@@ -761,34 +819,36 @@ export class Minimatch {
     // Drive letters in absolute drive or unc paths are always compared
     // case-insensitively.
     if (this.isWindows) {
-      const fileDrive = typeof file[0] === 'string' && /^[a-z]:$/i.test(file[0])
+      const fileDrive =
+        typeof file[0] === 'string' && RegExpPrototypeTest(/^[a-z]:$/i, file[0])
       const fileUNC =
         !fileDrive &&
         file[0] === '' &&
         file[1] === '' &&
         file[2] === '?' &&
-        /^[a-z]:$/i.test(file[3])
+        RegExpPrototypeTest(/^[a-z]:$/i, file[3])
 
       const patternDrive =
-        typeof pattern[0] === 'string' && /^[a-z]:$/i.test(pattern[0])
+        typeof pattern[0] === 'string' &&
+        RegExpPrototypeTest(/^[a-z]:$/i, pattern[0])
       const patternUNC =
         !patternDrive &&
         pattern[0] === '' &&
         pattern[1] === '' &&
         pattern[2] === '?' &&
         typeof pattern[3] === 'string' &&
-        /^[a-z]:$/i.test(pattern[3])
+        RegExpPrototypeTest(/^[a-z]:$/i, pattern[3])
 
       const fdi = fileUNC ? 3 : fileDrive ? 0 : undefined
       const pdi = patternUNC ? 3 : patternDrive ? 0 : undefined
       if (typeof fdi === 'number' && typeof pdi === 'number') {
         const [fd, pd]: [string, string] = [file[fdi], pattern[pdi] as string]
-        if (fd.toLowerCase() === pd.toLowerCase()) {
+        if (StringPrototypeToLowerCase(fd) === StringPrototypeToLowerCase(pd)) {
           pattern[pdi] = fd
           if (pdi > fdi) {
-            pattern = pattern.slice( pdi)
+            pattern = ArrayPrototypeSlice(pattern, pdi)
           } else if (fdi > pdi) {
-            file = file.slice(fdi)
+            file = ArrayPrototypeSlice(file, fdi)
           }
         }
       }
@@ -862,7 +922,7 @@ export class Minimatch {
             if (
               file[fi] === '.' ||
               file[fi] === '..' ||
-              (!options.dot && file[fi].charAt(0) === '.')
+              (!options.dot && StringPrototypeCharAt(file[fi], 0) === '.')
             )
               return false
           }
@@ -876,7 +936,13 @@ export class Minimatch {
           this.debug('\nglobstar while', file, fr, pattern, pr, swallowee)
 
           // XXX remove this slice.  Just pass the start index.
-          if (this.matchOne(file.slice(fr), pattern.slice(pr), partial)) {
+          if (
+            this.matchOne(
+              ArrayPrototypeSlice(file, fr),
+              ArrayPrototypeSlice(pattern, pr),
+              partial
+            )
+          ) {
             this.debug('globstar found match!', fr, fl, swallowee)
             // found a match.
             return true
@@ -886,7 +952,7 @@ export class Minimatch {
             if (
               swallowee === '.' ||
               swallowee === '..' ||
-              (!options.dot && swallowee.charAt(0) === '.')
+              (!options.dot && StringPrototypeCharAt(swallowee, 0) === '.')
             ) {
               this.debug('dot detected!', file, fr, pattern, pr)
               break
@@ -920,6 +986,7 @@ export class Minimatch {
         hit = f === p
         this.debug('string match', p, f, hit)
       } else {
+        // Do not use RegexpPrototypeTest, since we override with a fast path sometimes
         hit = p.test(f)
         this.debug('pattern match', p, f, hit)
       }
@@ -958,7 +1025,7 @@ export class Minimatch {
       /* c8 ignore start */
     } else {
       // should be unreachable.
-      throw new Error('wtf?')
+      throw new Error('Invalid')
     }
     /* c8 ignore stop */
   }
@@ -980,9 +1047,9 @@ export class Minimatch {
     // *, *.*, and *.<ext>  Add a fast check method for those.
     let m: RegExpMatchArray | null
     let fastTest: null | ((f: string) => boolean) = null
-    if ((m = pattern.match(starRE))) {
+    if ((m = StringPrototypeMatch(pattern, starRE))) {
       fastTest = options.dot ? starTestDot : starTest
-    } else if ((m = pattern.match(starDotExtRE))) {
+    } else if ((m = StringPrototypeMatch(pattern, starDotExtRE))) {
       fastTest = (
         options.nocase
           ? options.dot
@@ -992,7 +1059,7 @@ export class Minimatch {
           ? starDotExtTestDot
           : starDotExtTest
       )(m[1])
-    } else if ((m = pattern.match(qmarksRE))) {
+    } else if ((m = StringPrototypeMatch(pattern, qmarksRE))) {
       fastTest = (
         options.nocase
           ? options.dot
@@ -1002,14 +1069,16 @@ export class Minimatch {
           ? qmarksTestDot
           : qmarksTest
       )(m)
-    } else if ((m = pattern.match(starDotStarRE))) {
+    } else if ((m = StringPrototypeMatch(pattern, starDotStarRE))) {
       fastTest = options.dot ? starDotStarTestDot : starDotStarTest
-    } else if ((m = pattern.match(dotStarRE))) {
+    } else if ((m = StringPrototypeMatch(pattern, dotStarRE))) {
       fastTest = dotStarTest
     }
 
     const re = AST.fromGlob(pattern, this.options).toMMPattern()
-    return fastTest ? Object.assign(re, { test: fastTest }) : re
+    return fastTest
+      ? ObjectAssign(re as object, { __proto__: null, test: fastTest })
+      : re
   }
 
   makeRe() {
@@ -1034,7 +1103,7 @@ export class Minimatch {
       : options.dot
       ? twoStarDot
       : twoStarNoDot
-    const flags = new Set(options.nocase ? ['i'] : [])
+    const flags = new SafeSet(options.nocase ? ['i'] : [])
 
     // regexpify non-globstar patterns
     // if ** is only item, then we just do one twoStar
@@ -1042,19 +1111,25 @@ export class Minimatch {
     // if ** is last, append (\/twoStar|) to previous
     // if ** is in the middle, append (\/|\/twoStar\/) to previous
     // then filter out GLOBSTAR symbols
-    let re = set
-      .map(pattern => {
-        const pp: (string | typeof GLOBSTAR)[] = pattern.map(p => {
-          if (p instanceof RegExp) {
-            for (const f of p.flags.split('')) flags.add(f)
+    let re = ArrayPrototypeJoin(
+      ArrayPrototypeMap(set, (pattern: ParseReturnFiltered[]) => {
+        const pp: (string | typeof GLOBSTAR)[] = ArrayPrototypeMap(
+          pattern,
+          (p: ParseReturnFiltered) => {
+            if (p instanceof RegExp) {
+              const flagsList = StringPrototypeSplit(p.flags, '' as any)
+              for (let i = 0; i < flagsList.length; i++) {
+                flags.add(flagsList[i])
+              }
+            }
+            return typeof p === 'string'
+              ? regExpEscape(p)
+              : p === GLOBSTAR
+              ? GLOBSTAR
+              : p._src
           }
-          return typeof p === 'string'
-            ? regExpEscape(p)
-            : p === GLOBSTAR
-            ? GLOBSTAR
-            : p._src
-        }) as (string | typeof GLOBSTAR)[]
-        pp.forEach((p, i) => {
+        ) as (string | typeof GLOBSTAR)[]
+        ArrayPrototypeForEach(pp, (p: string | typeof GLOBSTAR, i: number) => {
           const next = pp[i + 1]
           const prev = pp[i - 1]
           if (p !== GLOBSTAR || prev === GLOBSTAR) {
@@ -1073,9 +1148,13 @@ export class Minimatch {
             pp[i + 1] = GLOBSTAR
           }
         })
-        return pp.filter(p => p !== GLOBSTAR).join('/')
-      })
-      .join('|')
+        return ArrayPrototypeJoin(
+          ArrayPrototypeFilter(pp, p => p !== GLOBSTAR),
+          '/'
+        )
+      }),
+      '|'
+    )
 
     // need to wrap in parens if we had more than one thing with |,
     // otherwise only the first will be anchored to ^ and the last to $
@@ -1088,7 +1167,7 @@ export class Minimatch {
     if (this.negate) re = '^(?!' + re + ').+$'
 
     try {
-      this.regexp = new RegExp(re, [...flags].join(''))
+      this.regexp = new RegExp(re, ArrayPrototypeJoin([...flags], ''))
       /* c8 ignore start */
     } catch (ex) {
       // should be impossible
@@ -1104,12 +1183,12 @@ export class Minimatch {
     // / characters are coalesced into one, unless
     // preserveMultipleSlashes is set to true.
     if (this.preserveMultipleSlashes) {
-      return p.split('/')
-    } else if (this.isWindows && /^\/\/[^\/]+/.test(p)) {
+      return StringPrototypeSplit(p, '/' as any)
+    } else if (this.isWindows && RegExpPrototypeTest(/^\/\/[^\/]+/, p)) {
       // add an extra '' for the one we lose
-      return ['', ...p.split(/\/+/)]
+      return ['', ...StringPrototypeSplit(p, /\/+/)]
     } else {
-      return p.split(/\/+/)
+      return StringPrototypeSplit(p, /\/+/)
     }
   }
 
@@ -1132,7 +1211,7 @@ export class Minimatch {
 
     // windows: need to use /, not \
     if (this.isWindows) {
-      f = f.split('\\').join('/')
+      f = ArrayPrototypeJoin(StringPrototypeSplit(f, '\\' as any), '/')
     }
 
     // treat the test path as a set of pathparts.

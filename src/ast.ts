@@ -3,6 +3,21 @@
 import { parseClass } from './brace-expressions.js'
 import { MinimatchOptions, MMRegExp } from './index.js'
 import { unescape } from './unescape.js'
+import {
+  ArrayPrototypeFilter,
+  ArrayPrototypeJoin,
+  ArrayPrototypeMap,
+  ArrayPrototypePop,
+  ArrayPrototypePush,
+  ArrayPrototypeSlice,
+  ObjectAssign,
+  SafeSet,
+  StringPrototypeCharAt,
+  StringPrototypeReplace,
+  StringPrototypeSubstring,
+  StringPrototypeToLowerCase,
+  StringPrototypeToUpperCase,
+} from 'node-primordials'
 
 // classes [] are handled by the parseClass method
 // for positive extglobs, we sub-parse the contents, and combine,
@@ -42,7 +57,7 @@ import { unescape } from './unescape.js'
 // ['^a(?:i|w(?:(?!(?:x|y).*zb$).*)z|j)b$']
 
 export type ExtglobType = '!' | '?' | '+' | '*' | '@'
-const types = new Set<ExtglobType>(['!', '?', '+', '*', '@'])
+const types = new SafeSet<ExtglobType>(['!', '?', '+', '*', '@'])
 const isExtglobType = (c: string): c is ExtglobType =>
   types.has(c as ExtglobType)
 
@@ -56,12 +71,28 @@ const startNoDot = '(?!\\.)'
 // characters that indicate a start of pattern needs the "no dots" bit,
 // because a dot *might* be matched. ( is not in the list, because in
 // the case of a child extglob, it will handle the prevention itself.
-const addPatternStart = new Set(['[', '.'])
+const addPatternStart = new SafeSet(['[', '.'])
 // cases where traversal is A-OK, no dot prevention needed
-const justDots = new Set(['..', '.'])
-const reSpecials = new Set('().*{}+?[]^$\\!')
+const justDots = new SafeSet(['..', '.'])
+const reSpecials = new SafeSet([
+  "'",
+  '(',
+  ')',
+  '.',
+  '*',
+  '{',
+  '}',
+  '+',
+  '?',
+  '[',
+  ']',
+  '^',
+  '$',
+  '\\',
+  '!',
+])
 const regExpEscape = (s: string) =>
-  s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
+  StringPrototypeReplace(s, /[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
 
 // any single thing other than /
 const qmark = '[^/]'
@@ -95,7 +126,7 @@ export class AST {
   constructor(
     type: ExtglobType | null,
     parent?: AST,
-    options: MinimatchOptions = {}
+    options: MinimatchOptions = { __proto__: null } as MinimatchOptions
   ) {
     this.type = type
     // extglobs are inherently magical
@@ -104,7 +135,8 @@ export class AST {
     this.#root = this.#parent ? this.#parent.#root : this
     this.#options = this.#root === this ? options : this.#root.#options
     this.#negs = this.#root === this ? [] : this.#root.#negs
-    if (type === '!' && !this.#root.#filledNegs) this.#negs.push(this)
+    if (type === '!' && !this.#root.#filledNegs)
+      ArrayPrototypePush(this.#negs, this)
     this.#parentIndex = this.#parent ? this.#parent.#parts.length : 0
   }
 
@@ -112,7 +144,8 @@ export class AST {
     /* c8 ignore start */
     if (this.#hasMagic !== undefined) return this.#hasMagic
     /* c8 ignore stop */
-    for (const p of this.#parts) {
+    for (let i = 0; i < this.#parts.length; i++) {
+      const p = this.#parts[i]
       if (typeof p === 'string') continue
       if (p.type || p.hasMagic) return (this.#hasMagic = true)
     }
@@ -123,11 +156,12 @@ export class AST {
   // reconstructs the pattern
   toString(): string {
     if (this.#toString !== undefined) return this.#toString
+    const parts = ArrayPrototypeMap(this.#parts, p => String(p))
     if (!this.type) {
-      return (this.#toString = this.#parts.map(p => String(p)).join(''))
+      return (this.#toString = ArrayPrototypeJoin(parts, ''))
     } else {
       return (this.#toString =
-        this.type + '(' + this.#parts.map(p => String(p)).join('|') + ')')
+        this.type + '(' + ArrayPrototypeJoin(parts, '|') + ')')
     }
   }
 
@@ -141,7 +175,7 @@ export class AST {
     this.toString()
     this.#filledNegs = true
     let n: AST | undefined
-    while ((n = this.#negs.pop())) {
+    while ((n = ArrayPrototypePop(this.#negs))) {
       if (n.type !== '!') continue
       // walk up the tree, appending everthing that comes AFTER parentIndex
       let p: AST | undefined = n
@@ -152,7 +186,8 @@ export class AST {
           !pp.type && i < pp.#parts.length;
           i++
         ) {
-          for (const part of n.#parts) {
+          for (let y = 0; y < n.#parts.length; y++) {
+            const part = n.#parts[y]
             /* c8 ignore start */
             if (typeof part === 'string') {
               throw new Error('string part in extglob AST??')
@@ -169,7 +204,8 @@ export class AST {
   }
 
   push(...parts: (string | AST)[]) {
-    for (const p of parts) {
+    for (let i = 0; i < parts.length; i++) {
+      const p = parts[i]
       if (p === '') continue
       /* c8 ignore start */
       if (typeof p !== 'string' && !(p instanceof AST && p.#parent === this)) {
@@ -183,8 +219,11 @@ export class AST {
   toJSON() {
     const ret: any[] =
       this.type === null
-        ? this.#parts.slice().map(p => (typeof p === 'string' ? p : p.toJSON()))
-        : [this.type, ...this.#parts.map(p => (p as AST).toJSON())]
+        ? ArrayPrototypeMap(
+            ArrayPrototypeSlice(this.#parts),
+            (p: string | AST) => (typeof p === 'string' ? p : p.toJSON())
+          )
+        : [this.type, ...ArrayPrototypeMap(this.#parts, (p: AST) => p.toJSON())]
     if (this.isStart() && !this.type) ret.unshift([])
     if (
       this.isEnd() &&
@@ -231,8 +270,8 @@ export class AST {
 
   clone(parent: AST) {
     const c = new AST(this.type, parent)
-    for (const p of this.#parts) {
-      c.copyIn(p)
+    for (let i = 0; i < this.#parts.length; i++) {
+      c.copyIn(this.#parts[i])
     }
     return c
   }
@@ -252,7 +291,7 @@ export class AST {
       let i = pos
       let acc = ''
       while (i < str.length) {
-        const c = str.charAt(i++)
+        const c = StringPrototypeCharAt(str, i++)
         // still accumulate escapes at this point, but we do ignore
         // starts that are escaped
         if (escaping || c === '\\') {
@@ -279,7 +318,11 @@ export class AST {
           continue
         }
 
-        if (!opt.noext && isExtglobType(c) && str.charAt(i) === '(') {
+        if (
+          !opt.noext &&
+          isExtglobType(c) &&
+          StringPrototypeCharAt(str, i) === '('
+        ) {
           ast.push(acc)
           acc = ''
           const ext = new AST(c, ast)
@@ -300,7 +343,7 @@ export class AST {
     const parts: AST[] = []
     let acc = ''
     while (i < str.length) {
-      const c = str.charAt(i++)
+      const c = StringPrototypeCharAt(str, i++)
       // still accumulate escapes at this point, but we do ignore
       // starts that are escaped
       if (escaping || c === '\\') {
@@ -327,7 +370,7 @@ export class AST {
         continue
       }
 
-      if (isExtglobType(c) && str.charAt(i) === '(') {
+      if (isExtglobType(c) && StringPrototypeCharAt(str, i) === '(') {
         part.push(acc)
         acc = ''
         const ext = new AST(c, part)
@@ -338,7 +381,7 @@ export class AST {
       if (c === '|') {
         part.push(acc)
         acc = ''
-        parts.push(part)
+        ArrayPrototypePush(parts, part)
         part = new AST(null, ast)
         continue
       }
@@ -359,11 +402,14 @@ export class AST {
     // maybe something else in there.
     ast.type = null
     ast.#hasMagic = undefined
-    ast.#parts = [str.substring(pos - 1)]
+    ast.#parts = [StringPrototypeSubstring(str, pos - 1)]
     return i
   }
 
-  static fromGlob(pattern: string, options: MinimatchOptions = {}) {
+  static fromGlob(
+    pattern: string,
+    options: MinimatchOptions = { __proto__: null } as MinimatchOptions
+  ) {
     const ast = new AST(null, undefined, options)
     AST.#parseAST(pattern, ast, 0, options)
     return ast
@@ -386,13 +432,13 @@ export class AST {
       this.#hasMagic ||
       (this.#options.nocase &&
         !this.#options.nocaseMagicOnly &&
-        glob.toUpperCase() !== glob.toLowerCase())
+        StringPrototypeToUpperCase(glob) !== StringPrototypeToLowerCase(glob))
     if (!anyMagic) {
       return body
     }
 
     const flags = (this.#options.nocase ? 'i' : '') + (uflag ? 'u' : '')
-    return Object.assign(new RegExp(`^${re}$`, flags), {
+    return ObjectAssign(new RegExp(`^${re}$`, flags), {
       _src: re,
       _glob: glob,
     })
@@ -474,8 +520,8 @@ export class AST {
     if (this.#root === this) this.#fillNegs()
     if (!this.type) {
       const noEmpty = this.isStart() && this.isEnd()
-      const src = this.#parts
-        .map(p => {
+      const src = ArrayPrototypeJoin(
+        ArrayPrototypeMap(this.#parts, (p: string | AST) => {
           const [re, _, hasMagic, uflag] =
             typeof p === 'string'
               ? AST.#parseGlob(p, this.#hasMagic, noEmpty)
@@ -483,8 +529,9 @@ export class AST {
           this.#hasMagic = this.#hasMagic || hasMagic
           this.#uflag = this.#uflag || uflag
           return re
-        })
-        .join('')
+        }),
+        ''
+      )
 
       let start = ''
       if (this.isStart()) {
@@ -502,14 +549,17 @@ export class AST {
             // and prevent that.
             const needNoTrav =
               // dots are allowed, and the pattern starts with [ or .
-              (dot && aps.has(src.charAt(0))) ||
+              (dot && aps.has(StringPrototypeCharAt(src, 0))) ||
               // the pattern starts with \., and then [ or .
-              (src.startsWith('\\.') && aps.has(src.charAt(2))) ||
+              (src.startsWith('\\.') &&
+                aps.has(StringPrototypeCharAt(src, 2))) ||
               // the pattern starts with \.\., and then [ or .
-              (src.startsWith('\\.\\.') && aps.has(src.charAt(4)))
+              (src.startsWith('\\.\\.') &&
+                aps.has(StringPrototypeCharAt(src, 4)))
             // no need to prevent dots if it can't match a dot, or if a
             // sub-pattern will be preventing it anyway.
-            const needNoDot = !dot && !allowDot && aps.has(src.charAt(0))
+            const needNoDot =
+              !dot && !allowDot && aps.has(StringPrototypeCharAt(src, 0))
 
             start = needNoTrav ? startNoTraversal : needNoDot ? startNoDot : ''
           }
@@ -597,21 +647,24 @@ export class AST {
   }
 
   #partsToRegExp(dot: boolean) {
-    return this.#parts
-      .map(p => {
-        // extglob ASTs should only contain parent ASTs
-        /* c8 ignore start */
-        if (typeof p === 'string') {
-          throw new Error('string type in extglob ast??')
-        }
-        /* c8 ignore stop */
-        // can ignore hasMagic, because extglobs are already always magic
-        const [re, _, _hasMagic, uflag] = p.toRegExpSource(dot)
-        this.#uflag = this.#uflag || uflag
-        return re
-      })
-      .filter(p => !(this.isStart() && this.isEnd()) || !!p)
-      .join('|')
+    return ArrayPrototypeJoin(
+      ArrayPrototypeFilter(
+        ArrayPrototypeMap(this.#parts, (p: string | AST) => {
+          // extglob ASTs should only contain parent ASTs
+          /* c8 ignore start */
+          if (typeof p === 'string') {
+            throw new Error('string type in extglob ast??')
+          }
+          /* c8 ignore stop */
+          // can ignore hasMagic, because extglobs are already always magic
+          const [re, _, _hasMagic, uflag] = p.toRegExpSource(dot)
+          this.#uflag = this.#uflag || uflag
+          return re
+        }),
+        (p: any) => !(this.isStart() && this.isEnd()) || !!p
+      ),
+      '|'
+    )
   }
 
   static #parseGlob(
@@ -623,7 +676,7 @@ export class AST {
     let re = ''
     let uflag = false
     for (let i = 0; i < glob.length; i++) {
-      const c = glob.charAt(i)
+      const c = StringPrototypeCharAt(glob, i)
       if (escaping) {
         escaping = false
         re += (reSpecials.has(c) ? '\\' : '') + c

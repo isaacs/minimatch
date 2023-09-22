@@ -1,4 +1,5 @@
 import { MinimatchOptions } from './index.js'
+import { StringPrototypeReplace } from 'node-primordials'
 /**
  * Escape all magic characters in a glob pattern.
  *
@@ -18,6 +19,6 @@ export const escape = (
   // that make those magic, and escaping ! as [!] isn't valid,
   // because [!]] is a valid glob class meaning not ']'.
   return windowsPathsNoEscape
-    ? s.replace(/[?*()[\]]/g, '[$&]')
-    : s.replace(/[?*()[\]\\]/g, '\\$&')
+    ? StringPrototypeReplace(s, /[?*()[\]]/g, '[$&]')
+    : StringPrototypeReplace(s, /[?*()[\]\\]/g, '\\$&')
 }
