@@ -129,6 +129,15 @@ minimatch.sep = sep
 export const GLOBSTAR = Symbol('globstar **')
 minimatch.GLOBSTAR = GLOBSTAR
 
+const noFastTest: boolean = (
+  typeof process === 'object' && process
+    ? (typeof process.env === 'object' &&
+        process.env &&
+        process.env.__MINIMATCH_NO_FASTTEST__ === '1') ||
+      false
+    : false
+)
+
 // any single thing other than /
 // don't need to escape / when using new RegExp()
 const qmark = '[^/]'
@@ -980,7 +989,10 @@ export class Minimatch {
     // *, *.*, and *.<ext>  Add a fast check method for those.
     let m: RegExpMatchArray | null
     let fastTest: null | ((f: string) => boolean) = null
-    if ((m = pattern.match(starRE))) {
+
+    if (noFastTest) {
+      fastTest = null
+    } else if ((m = pattern.match(starRE))) {
       fastTest = options.dot ? starTestDot : starTest
     } else if ((m = pattern.match(starDotExtRE))) {
       fastTest = (
