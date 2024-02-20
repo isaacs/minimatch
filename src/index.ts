@@ -1009,7 +1009,15 @@ export class Minimatch {
     }
 
     const re = AST.fromGlob(pattern, this.options).toMMPattern()
-    return fastTest ? Object.assign(re, { test: fastTest }) : re
+    if (fastTest) {
+      if (typeof re === 'object') {
+        // Avoids overriding in frozen environments
+        Reflect.defineProperty(re, 'test', { value: fastTest })
+      } else {
+        Object.assign(re, { test: fastTest })
+      }
+    }
+    return re
   }
 
   makeRe() {
