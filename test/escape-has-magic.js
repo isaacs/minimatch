@@ -1,6 +1,6 @@
-const t = require('tap')
-const { unescape, escape, Minimatch } = require('../')
-const patterns = require('./patterns.js')
+import t from 'tap'
+import { unescape, escape, Minimatch } from '../dist/esm/index.js'
+import patterns from './patterns.js'
 
 for (const p of patterns) {
   if (!Array.isArray(p) || typeof p[0] !== 'string') continue

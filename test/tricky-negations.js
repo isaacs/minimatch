@@ -1,5 +1,6 @@
-var t = require('tap')
-var minimatch = require('../').minimatch
+import t from 'tap'
+import { minimatch } from '../dist/esm/index.js'
+
 var cases = {
   'bar.min.js': {
     '*.!(js|css)': true,

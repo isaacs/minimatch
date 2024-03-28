@@ -5,7 +5,7 @@
  * Make sure to inspect the output below.  Do not ignore changes!
  */
 'use strict'
-exports[`test/windows-no-magic-root.ts TAP no magic the root //?/d: > default to true 1`] = `
+exports[`test/windows-no-magic-root.ts > TAP > no magic the root > //?/d: > default to true 1`] = `
 Array [
   Array [
     "",
@@ -16,7 +16,7 @@ Array [
 ]
 `
 
-exports[`test/windows-no-magic-root.ts TAP no magic the root //?/d: > set explicitly false 1`] = `
+exports[`test/windows-no-magic-root.ts > TAP > no magic the root > //?/d: > set explicitly false 1`] = `
 Array [
   Array [
     "",
@@ -27,7 +27,7 @@ Array [
 ]
 `
 
-exports[`test/windows-no-magic-root.ts TAP no magic the root //?/d:/ > default to true 1`] = `
+exports[`test/windows-no-magic-root.ts > TAP > no magic the root > //?/d:/ > default to true 1`] = `
 Array [
   Array [
     "",
@@ -39,7 +39,7 @@ Array [
 ]
 `
 
-exports[`test/windows-no-magic-root.ts TAP no magic the root //?/d:/ > set explicitly false 1`] = `
+exports[`test/windows-no-magic-root.ts > TAP > no magic the root > //?/d:/ > set explicitly false 1`] = `
 Array [
   Array [
     "",
@@ -51,7 +51,7 @@ Array [
 ]
 `
 
-exports[`test/windows-no-magic-root.ts TAP no magic the root //?/d:/x/y/z > default to true 1`] = `
+exports[`test/windows-no-magic-root.ts > TAP > no magic the root > //?/d:/x/y/z > default to true 1`] = `
 Array [
   Array [
     "",
@@ -65,7 +65,7 @@ Array [
 ]
 `
 
-exports[`test/windows-no-magic-root.ts TAP no magic the root //?/d:/x/y/z > set explicitly false 1`] = `
+exports[`test/windows-no-magic-root.ts > TAP > no magic the root > //?/d:/x/y/z > set explicitly false 1`] = `
 Array [
   Array [
     "",
@@ -79,7 +79,7 @@ Array [
 ]
 `
 
-exports[`test/windows-no-magic-root.ts TAP no magic the root //host/share > default to true 1`] = `
+exports[`test/windows-no-magic-root.ts > TAP > no magic the root > //host/share > default to true 1`] = `
 Array [
   Array [
     "",
@@ -90,7 +90,7 @@ Array [
 ]
 `
 
-exports[`test/windows-no-magic-root.ts TAP no magic the root //host/share > set explicitly false 1`] = `
+exports[`test/windows-no-magic-root.ts > TAP > no magic the root > //host/share > set explicitly false 1`] = `
 Array [
   Array [
     "",
@@ -101,7 +101,7 @@ Array [
 ]
 `
 
-exports[`test/windows-no-magic-root.ts TAP no magic the root //host/share/ > default to true 1`] = `
+exports[`test/windows-no-magic-root.ts > TAP > no magic the root > //host/share/ > default to true 1`] = `
 Array [
   Array [
     "",
@@ -113,7 +113,7 @@ Array [
 ]
 `
 
-exports[`test/windows-no-magic-root.ts TAP no magic the root //host/share/ > set explicitly false 1`] = `
+exports[`test/windows-no-magic-root.ts > TAP > no magic the root > //host/share/ > set explicitly false 1`] = `
 Array [
   Array [
     "",
@@ -125,7 +125,7 @@ Array [
 ]
 `
 
-exports[`test/windows-no-magic-root.ts TAP no magic the root //host/share/x/y/z > default to true 1`] = `
+exports[`test/windows-no-magic-root.ts > TAP > no magic the root > //host/share/x/y/z > default to true 1`] = `
 Array [
   Array [
     "",
@@ -139,7 +139,7 @@ Array [
 ]
 `
 
-exports[`test/windows-no-magic-root.ts TAP no magic the root //host/share/x/y/z > set explicitly false 1`] = `
+exports[`test/windows-no-magic-root.ts > TAP > no magic the root > //host/share/x/y/z > set explicitly false 1`] = `
 Array [
   Array [
     "",
@@ -153,7 +153,7 @@ Array [
 ]
 `
 
-exports[`test/windows-no-magic-root.ts TAP no magic the root d: > default to true 1`] = `
+exports[`test/windows-no-magic-root.ts > TAP > no magic the root > d: > default to true 1`] = `
 Array [
   Array [
     "d:",
@@ -161,7 +161,7 @@ Array [
 ]
 `
 
-exports[`test/windows-no-magic-root.ts TAP no magic the root d: > set explicitly false 1`] = `
+exports[`test/windows-no-magic-root.ts > TAP > no magic the root > d: > set explicitly false 1`] = `
 Array [
   Array [
     /^d:$/i,
@@ -169,7 +169,7 @@ Array [
 ]
 `
 
-exports[`test/windows-no-magic-root.ts TAP no magic the root d:/ > default to true 1`] = `
+exports[`test/windows-no-magic-root.ts > TAP > no magic the root > d:/ > default to true 1`] = `
 Array [
   Array [
     "d:",
@@ -178,7 +178,7 @@ Array [
 ]
 `
 
-exports[`test/windows-no-magic-root.ts TAP no magic the root d:/ > set explicitly false 1`] = `
+exports[`test/windows-no-magic-root.ts > TAP > no magic the root > d:/ > set explicitly false 1`] = `
 Array [
   Array [
     /^d:$/i,
@@ -187,7 +187,7 @@ Array [
 ]
 `
 
-exports[`test/windows-no-magic-root.ts TAP no magic the root d:/x/y/z > default to true 1`] = `
+exports[`test/windows-no-magic-root.ts > TAP > no magic the root > d:/x/y/z > default to true 1`] = `
 Array [
   Array [
     "d:",
@@ -198,7 +198,7 @@ Array [
 ]
 `
 
-exports[`test/windows-no-magic-root.ts TAP no magic the root d:/x/y/z > set explicitly false 1`] = `
+exports[`test/windows-no-magic-root.ts > TAP > no magic the root > d:/x/y/z > set explicitly false 1`] = `
 Array [
   Array [
     /^d:$/i,

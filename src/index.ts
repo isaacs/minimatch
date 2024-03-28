@@ -471,6 +471,7 @@ export class Minimatch {
       // just basic optimizations to remove some .. parts
       globParts = this.levelOneOptimize(globParts)
     } else {
+      // just collapse multiple ** portions into one
       globParts = this.adjascentGlobstarOptimize(globParts)
     }
 
@@ -1009,13 +1010,9 @@ export class Minimatch {
     }
 
     const re = AST.fromGlob(pattern, this.options).toMMPattern()
-    if (fastTest) {
-      if (typeof re === 'object') {
-        // Avoids overriding in frozen environments
-        Reflect.defineProperty(re, 'test', { value: fastTest })
-      } else {
-        Object.assign(re, { test: fastTest })
-      }
+    if (fastTest && typeof re === 'object') {
+      // Avoids overriding in frozen environments
+      Reflect.defineProperty(re, 'test', { value: fastTest })
     }
     return re
   }

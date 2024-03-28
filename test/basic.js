@@ -3,10 +3,10 @@
 // TODO: Some of these tests do very bad things with backslashes, and will
 // most likely fail badly on windows.  They should probably be skipped.
 
-const t = require('tap')
+import t from 'tap'
 const globalBefore = Object.keys(global)
-const { minimatch } = require('../')
-const patterns = require('./patterns.js')
+import { GLOBSTAR, minimatch } from '../dist/esm/index.js'
+import patterns from './patterns.js'
 
 const mm = process.env._MINIMATCH_TEST_OPTIMIZATION_LEVEL
   ? minimatch.defaults({
@@ -14,7 +14,7 @@ const mm = process.env._MINIMATCH_TEST_OPTIMIZATION_LEVEL
     })
   : minimatch
 
-const optimizationLevel = +(process.env._MINIMATCH_TEST_OPTIMIZATION_LEVEL || 1)
+const optimizationLevel = +(process.env._MINIMATCH_TEST_OPTIMIZATION_LEVEL ?? 1)
 
 t.test('basic tests', function (t) {
   var start = Date.now()
@@ -266,5 +266,32 @@ t.test('option to only nocase regexps, not strings', t => {
     }).set,
     [[/^test$/i, /^(?!\.)[^/]*?\.js$/i]]
   )
+  t.end()
+})
+
+t.test('preprocess out multiple ** portions, opt 0', t => {
+  const { set } = new mm.Minimatch('test/**/**/**/**/**/**/*.js', {
+    optimizationLevel: 0,
+  })
+  t.match(set, [['test', GLOBSTAR, /^(?!\.)[^/]*?\.js$/]])
+  t.end()
+})
+
+t.test('preprocess out multiple ** portions, opt 1', t => {
+  const { set } = new mm.Minimatch('test/**/**/**/**/**/**/*.js', {
+    optimizationLevel: 1,
+  })
+  t.match(set, [['test', GLOBSTAR, /^(?!\.)[^/]*?\.js$/]])
+  t.end()
+})
+
+t.test('preprocess out multiple ** portions, opt 2', t => {
+  const m = new mm.Minimatch('test/**/**/**/**/**/**/*.js', {
+    optimizationLevel: 2,
+  })
+  t.match(m.set, [['test', GLOBSTAR, /^(?!\.)[^/]*?\.js$/]])
+
+  // optimize the file, too
+  t.equal(m.match('test//.//a/x.js'), true)
   t.end()
 })

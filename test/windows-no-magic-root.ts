@@ -1,4 +1,4 @@
-import { Minimatch } from '../'
+import { Minimatch } from '../dist/esm/index.js'
 import t from 'tap'
 
 t.test('no magic the root', t => {

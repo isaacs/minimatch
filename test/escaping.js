@@ -1,5 +1,5 @@
-var tap = require('tap')
-const { minimatch } = require('../')
+import tap from 'tap'
+import { minimatch } from '../dist/esm/index.js'
 
 // test all characters with codes in range [mincc,maxcc]
 var mincc = 0x20

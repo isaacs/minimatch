@@ -1,5 +1,7 @@
-if (module === require.main) {
-  console.log('1..1\nok')
+import { fileURLToPath } from 'url'
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  console.log('TAP version 14\n1..1\nok\n')
 }
 
 var files = [
@@ -20,7 +22,7 @@ var files = [
   'bdir/cfile',
 ]
 
-module.exports = [
+const patterns = [
   'http://www.bashcookbook.com/bashinfo/source/bash-1.14.7/tests/glob-test',
   ['a*', ['a', 'abc', 'abd', 'abe']],
   ['X*', ['X*'], { nonull: true }],
@@ -579,8 +581,10 @@ module.exports = [
   ['+(a|.)', ['a.a', 'aa', 'aa.', '.aa']],
 ]
 
-Object.defineProperty(module.exports, 'files', {
+Object.defineProperty(patterns, 'files', {
   get: function () {
     return files
   },
 })
+
+export default patterns

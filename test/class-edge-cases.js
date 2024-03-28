@@ -1,5 +1,5 @@
-const t = require('tap')
-const { minimatch } = require('../')
+import t from 'tap'
+import { minimatch } from '../dist/esm/index.js'
 
 const files = ['a[]b', '[b-a]x', 'a]b', 'a[]]b', 'a[[]b']
 

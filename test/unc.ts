@@ -1,5 +1,5 @@
 import t from 'tap'
-import { minimatch, Minimatch, MinimatchOptions } from '../'
+import { minimatch, Minimatch, MinimatchOptions } from '../dist/esm/index.js'
 
 t.test('UNC patterns do not lose their //', async t => {
   const share = new Minimatch('//host/share/*', { platform: 'win32' })

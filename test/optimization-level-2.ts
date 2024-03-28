@@ -2,20 +2,20 @@
 process.env.__MINIMATCH_TESTING_PLATFORM__ = 'linux'
 
 import t from 'tap'
-import { braceExpand } from '../'
+import { braceExpand } from '../dist/esm/index.js'
 
 const optimizationLevel = 2
 process.env._MINIMATCH_TEST_OPTIMIZATION_LEVEL = String(optimizationLevel)
 
 // run all the basic tests with this setting
-import './basic'
+import './basic.js'
 
 t.test('explicit pattern coalescing and optimization', t => {
   t.plan(2)
   for (const platform of ['win32', 'linux']) {
-    t.test(platform, t => {
+    t.test(platform, async t => {
       process.env.__MINIMATCH_TESTING_PLATFORM__ = platform
-      const { Minimatch } = t.mock('../', {})
+      const { Minimatch } = await t.mockImport('../dist/esm/index.js', {})
       const m = new Minimatch('*', { optimizationLevel })
       const noGS = new Minimatch('*', { noglobstar: true, optimizationLevel })
       const ms = new Minimatch('*', {
@@ -92,9 +92,9 @@ t.test('optimize the file as well', t => {
     'a/../b',
   ]
   for (const platform of ['win32', 'linux']) {
-    t.test(platform, t => {
+    t.test(platform, async t => {
       process.env.__MINIMATCH_TESTING_PLATFORM__ = platform
-      const { Minimatch } = t.mock('../', {})
+      const { Minimatch } = await t.mockImport('../dist/esm/index.js', {})
       const mm = new Minimatch('.')
       const ms = new Minimatch('.', {
         preserveMultipleSlashes: true,

@@ -1,5 +1,5 @@
-var test = require('tap').test
-const { minimatch } = require('../')
+import { test } from 'tap'
+import { minimatch } from '../dist/esm/index.js'
 
 test('extglob ending with statechar', function (t) {
   t.notOk(minimatch('ax', 'a?(b*)'))

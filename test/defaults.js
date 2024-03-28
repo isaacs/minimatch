@@ -3,11 +3,10 @@
 // TODO: Some of these tests do very bad things with backslashes, and will
 // most likely fail badly on windows.  They should probably be skipped.
 
-const t = require('tap')
+import t from 'tap'
 const globalBefore = Object.keys(global)
-const { minimatch: mm } = require('../')
-
-const patterns = require('./patterns.js')
+import { minimatch as mm } from '../dist/esm/index.js'
+import patterns from './patterns.js'
 
 t.test('basic tests', function (t) {
   var start = Date.now()
@@ -101,6 +100,16 @@ t.test('defaults applied to minimatch.escape()', t => {
   t.equal(unescapew(escapew('*')), '*')
   t.equal(escapep('*'), '\\*')
   t.equal(unescapep(escapep('*')), '*')
+  t.end()
+})
+
+t.test('defaults applied to AST class', t => {
+  const { AST } = mm
+  const { AST: ASTx } = mm.defaults({ nocaseMagicOnly: true, nocase: true })
+  t.equal(new AST().options.nocaseMagicOnly, undefined)
+  t.equal(new ASTx().options.nocaseMagicOnly, true)
+  const fg = ASTx.fromGlob('*')
+  t.equal(fg.options.nocaseMagicOnly, true)
   t.end()
 })
 

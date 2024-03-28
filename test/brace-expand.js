@@ -1,5 +1,5 @@
-var tap = require('tap')
-const { minimatch } = require('../')
+import tap from 'tap'
+import { minimatch } from '../dist/esm/index.js'
 
 tap.test('brace expansion', function (t) {
   // [ pattern, [expanded] ]

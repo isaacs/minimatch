@@ -5,7 +5,7 @@
  * Make sure to inspect the output below.  Do not ignore changes!
  */
 'use strict'
-exports[`test/class-edge-cases.js TAP > must match snapshot 1`] = `
+exports[`test/class-edge-cases.js > TAP > must match snapshot 1`] = `
 Object {
   "files": Array [
     "a[]b",

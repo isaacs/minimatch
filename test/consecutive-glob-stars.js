@@ -1,5 +1,5 @@
-const t = require('tap')
-const { Minimatch, GLOBSTAR } = require('../')
+import t from 'tap'
+import { Minimatch } from '../dist/esm/index.js'
 
 const patterns = []
 for (const a of ['**', '**/**', '**/**/**']) {

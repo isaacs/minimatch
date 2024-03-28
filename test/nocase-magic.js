@@ -1,5 +1,5 @@
-const t = require('tap')
-const { Minimatch } = require('../')
+import t from 'tap'
+import { Minimatch } from '../dist/esm/index.js'
 
 const nomagic = '../1/2/3'
 const yesmagic = '../x'

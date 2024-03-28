@@ -1,5 +1,6 @@
-const t = require('tap')
-const mm = require('../').minimatch
+import t from 'tap'
+import { minimatch as mm } from '../dist/esm/index.js'
+
 const pattern = 'a/b/*/!(bar)/*'
 const nope = 'a/b/c/bar/x'
 const yup = 'a/b/c/baz/x'
