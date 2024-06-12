@@ -675,9 +675,11 @@ export class Minimatch {
           globParts[j],
           !this.preserveMultipleSlashes
         )
-        if (!matched) continue
-        globParts[i] = matched
-        globParts[j] = []
+        if (matched) {
+          globParts[i] = []
+          globParts[j] = matched
+          break
+        }
       }
     }
     return globParts.filter(gs => gs.length)
