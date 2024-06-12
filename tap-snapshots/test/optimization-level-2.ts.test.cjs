@@ -4510,6 +4510,78 @@ Array [
 ]
 `
 
+exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > linux > {*,a,b} > defaults 1`] = `
+Array [
+  Array [
+    "*",
+  ],
+]
+`
+
+exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > linux > {*,a,b} > multislash 1`] = `
+Array [
+  Array [
+    "*",
+  ],
+]
+`
+
+exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > linux > {*,a,b} > no globstar 1`] = `
+Array [
+  Array [
+    "*",
+  ],
+]
+`
+
+exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > linux > {a,*,b} > defaults 1`] = `
+Array [
+  Array [
+    "*",
+  ],
+]
+`
+
+exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > linux > {a,*,b} > multislash 1`] = `
+Array [
+  Array [
+    "*",
+  ],
+]
+`
+
+exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > linux > {a,*,b} > no globstar 1`] = `
+Array [
+  Array [
+    "*",
+  ],
+]
+`
+
+exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > linux > {a,b,*} > defaults 1`] = `
+Array [
+  Array [
+    "*",
+  ],
+]
+`
+
+exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > linux > {a,b,*} > multislash 1`] = `
+Array [
+  Array [
+    "*",
+  ],
+]
+`
+
+exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > linux > {a,b,*} > no globstar 1`] = `
+Array [
+  Array [
+    "*",
+  ],
+]
+`
+
 exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > linux > {a/**/b,a/b} > defaults 1`] = `
 Array [
   Array [
@@ -5834,6 +5906,78 @@ exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and op
 Array [
   Array [
     ".",
+  ],
+]
+`
+
+exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > win32 > {*,a,b} > defaults 1`] = `
+Array [
+  Array [
+    "*",
+  ],
+]
+`
+
+exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > win32 > {*,a,b} > multislash 1`] = `
+Array [
+  Array [
+    "*",
+  ],
+]
+`
+
+exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > win32 > {*,a,b} > no globstar 1`] = `
+Array [
+  Array [
+    "*",
+  ],
+]
+`
+
+exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > win32 > {a,*,b} > defaults 1`] = `
+Array [
+  Array [
+    "*",
+  ],
+]
+`
+
+exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > win32 > {a,*,b} > multislash 1`] = `
+Array [
+  Array [
+    "*",
+  ],
+]
+`
+
+exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > win32 > {a,*,b} > no globstar 1`] = `
+Array [
+  Array [
+    "*",
+  ],
+]
+`
+
+exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > win32 > {a,b,*} > defaults 1`] = `
+Array [
+  Array [
+    "*",
+  ],
+]
+`
+
+exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > win32 > {a,b,*} > multislash 1`] = `
+Array [
+  Array [
+    "*",
+  ],
+]
+`
+
+exports[`test/optimization-level-2.ts > TAP > explicit pattern coalescing and optimization > win32 > {a,b,*} > no globstar 1`] = `
+Array [
+  Array [
+    "*",
   ],
 ]
 `

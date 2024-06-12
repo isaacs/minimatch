@@ -60,6 +60,9 @@ t.test('explicit pattern coalescing and optimization', t => {
         './x/.././///.//./',
         '*/../**',
         '*/../**/?/*/[a-z]',
+        '{*,a,b}',
+        '{a,*,b}',
+        '{a,b,*}',
       ]
 
       const exp = (p: string) => braceExpand(p).map(s => s.split('/'))
