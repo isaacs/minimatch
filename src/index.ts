@@ -789,7 +789,7 @@ export class Minimatch {
         if (fd.toLowerCase() === pd.toLowerCase()) {
           pattern[pdi] = fd
           if (pdi > fdi) {
-            pattern = pattern.slice( pdi)
+            pattern = pattern.slice(pdi)
           } else if (fdi > pdi) {
             file = file.slice(fdi)
           }
