@@ -1,5 +1,9 @@
 # change log
 
+## 10.0
+
+- Require node 20 or 22 and higher
+
 ## 9.0
 
 - No default export, only named exports.
