@@ -804,7 +804,7 @@ export class Minimatch {
     }
 
     // resolve and reduce . and .. portions in the file as well.
-    // dont' need to do the second phase, because it's only one string[]
+    // don't need to do the second phase, because it's only one string[]
     const { optimizationLevel = 1 } = this.options
     if (optimizationLevel >= 2) {
       file = this.levelTwoFileOptimize(file)
