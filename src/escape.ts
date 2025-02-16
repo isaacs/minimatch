@@ -7,16 +7,25 @@ import { MinimatchOptions } from './index.js'
  * a magic character wrapped in a character class can only be satisfied by
  * that exact character.  In this mode, `\` is _not_ escaped, because it is
  * not interpreted as a magic character, but instead as a path separator.
+ *
+ * If the {@link magicalBraces | GlobOptions.magicalBraces} option is used,
+ * then braces (`{` and `}`) will be escaped.
  */
 export const escape = (
   s: string,
   {
     windowsPathsNoEscape = false,
-  }: Pick<MinimatchOptions, 'windowsPathsNoEscape'> = {},
+    magicalBraces = false,
+  }: Pick<MinimatchOptions, 'windowsPathsNoEscape' | 'magicalBraces'> = {},
 ) => {
   // don't need to escape +@! because we escape the parens
   // that make those magic, and escaping ! as [!] isn't valid,
   // because [!]] is a valid glob class meaning not ']'.
+  if (magicalBraces) {
+    return windowsPathsNoEscape
+      ? s.replace(/[?*()[\]{}]/g, '[$&]')
+      : s.replace(/[?*()[\]\\{}]/g, '\\$&')
+  }
   return windowsPathsNoEscape
     ? s.replace(/[?*()[\]]/g, '[$&]')
     : s.replace(/[?*()[\]\\]/g, '\\$&')

@@ -192,12 +192,18 @@ export const defaults = (def: MinimatchOptions): typeof minimatch => {
 
     unescape: (
       s: string,
-      options: Pick<MinimatchOptions, 'windowsPathsNoEscape'> = {},
+      options: Pick<
+        MinimatchOptions,
+        'windowsPathsNoEscape' | 'magicalBraces'
+      > = {},
     ) => orig.unescape(s, ext(def, options)),
 
     escape: (
       s: string,
-      options: Pick<MinimatchOptions, 'windowsPathsNoEscape'> = {},
+      options: Pick<
+        MinimatchOptions,
+        'windowsPathsNoEscape' | 'magicalBraces'
+      > = {},
     ) => orig.escape(s, ext(def, options)),
 
     filter: (pattern: string, options: MinimatchOptions = {}) =>
