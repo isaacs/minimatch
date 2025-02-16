@@ -34,7 +34,7 @@
     "presnap": "npm run prepare",
     "test": "tap",
     "snap": "tap",
-    "format": "prettier --write . --loglevel warn",
+    "format": "prettier --write . --log-level warn",
     "benchmark": "node benchmark/index.js",
     "typedoc": "typedoc --tsconfig tsconfig-esm.json ./src/*.ts"
   },
