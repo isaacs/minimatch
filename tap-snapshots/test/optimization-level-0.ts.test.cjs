@@ -3517,19 +3517,19 @@ exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe .x/**/*/** 2`
 `
 
 exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe .x/*/** 1`] = `
-/^\\.x\\/(?!\\.)[^/]+?(?:\\/|(?:(?!(?:\\/|^)\\.).)*?)?$/
+/^\\.x\\/(?!\\.)[^/]+?(?:\\/|\\/(?:(?!(?:\\/|^)\\.).)*?)?$/
 `
 
 exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe .x/*/** 2`] = `
-/^\\.x\\/(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]+?(?:\\/|(?:(?!(?:\\/|^)(?:\\.{1,2})($|\\/)).)*?)?$/
+/^\\.x\\/(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]+?(?:\\/|\\/(?:(?!(?:\\/|^)(?:\\.{1,2})($|\\/)).)*?)?$/
 `
 
 exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe .x/*/**/** 1`] = `
-/^\\.x\\/(?!\\.)[^/]+?(?:\\/|(?:(?!(?:\\/|^)\\.).)*?)?$/
+/^\\.x\\/(?!\\.)[^/]+?(?:\\/|\\/(?:(?!(?:\\/|^)\\.).)*?)?$/
 `
 
 exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe .x/*/**/** 2`] = `
-/^\\.x\\/(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]+?(?:\\/|(?:(?!(?:\\/|^)(?:\\.{1,2})($|\\/)).)*?)?$/
+/^\\.x\\/(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]+?(?:\\/|\\/(?:(?!(?:\\/|^)(?:\\.{1,2})($|\\/)).)*?)?$/
 `
 
 exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe [ 1`] = `
@@ -3849,7 +3849,7 @@ exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe *******c 1`] 
 `
 
 exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe **/.x/** 1`] = `
-/^(?:\\/|(?:(?!(?:\\/|^)\\.).)*?\\/)?\\.x(?:\\/|(?:(?!(?:\\/|^)\\.).)*?)?$/
+/^(?:\\/|(?:(?!(?:\\/|^)\\.).)*?\\/)?\\.x(?:\\/|\\/(?:(?!(?:\\/|^)\\.).)*?)?$/
 `
 
 exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe **/.x/** 2`] = `

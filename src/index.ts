@@ -1074,7 +1074,7 @@ export class Minimatch {
               pp[i] = twoStar
             }
           } else if (next === undefined) {
-            pp[i - 1] = prev + '(?:\\/|' + twoStar + ')?'
+            pp[i - 1] = prev + '(?:\\/|\\/' + twoStar + ')?'
           } else if (next !== GLOBSTAR) {
             pp[i - 1] = prev + '(?:\\/|\\/' + twoStar + '\\/)' + next
             pp[i + 1] = GLOBSTAR
