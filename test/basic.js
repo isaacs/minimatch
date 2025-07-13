@@ -182,6 +182,18 @@ t.test('GLOBSTAR marker exposed', t => {
 
 t.test('globstar re matches zero or more path portions', t => {
   const cases = {
+    'path/**': {
+      'path/x.html': true,
+      'path/x/y.html': true,
+      'path/x/y/z.html': true,
+      'path//x.html': true,
+      'path//x//y.html': true,
+      'path//x//y//z.html': true,
+      'path.html': false,
+      'pathx.html': false,
+      'pathx/y.html': false,
+      'pathx/y/z.html': false,
+    },
     'path/**/*.html': {
       'path/x.html': true,
       'path/x/y.html': true,
