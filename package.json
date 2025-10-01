@@ -36,7 +36,7 @@
     "snap": "tap",
     "format": "prettier --write . --loglevel warn",
     "benchmark": "node benchmark/index.js",
-    "typedoc": "typedoc --tsconfig tsconfig-esm.json ./src/*.ts"
+    "typedoc": "typedoc --tsconfig .tshy/esm.json ./src/*.ts"
   },
   "prettier": {
     "semi": false,
