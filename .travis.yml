@@ -1,7 +1,8 @@
 sudo: false
 language: node_js
 node_js:
-  - '0.10'
-  - '0.12'
   - '4'
+  - '0.12'
   - '5'
+  - '0.10'
+dist: precise
