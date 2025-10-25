@@ -64,7 +64,7 @@
   "funding": {
     "url": "https://github.com/sponsors/isaacs"
   },
-  "license": "ISC",
+  "license": "BlueOak-1.0.0",
   "tshy": {
     "exports": {
       "./package.json": "./package.json",
