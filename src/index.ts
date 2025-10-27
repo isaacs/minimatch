@@ -1080,7 +1080,20 @@ export class Minimatch {
             pp[i + 1] = GLOBSTAR
           }
         })
-        return pp.filter(p => p !== GLOBSTAR).join('/')
+        const filtered = pp.filter(p => p !== GLOBSTAR)
+        
+        // For partial matches, we need to make the pattern match
+        // any prefix of the full path. We do this by generating
+        // alternative patterns that match progressively longer prefixes.
+        if (this.partial && filtered.length >= 1) {
+          const prefixes: string[] = []
+          for (let i = 1; i <= filtered.length; i++) {
+            prefixes.push(filtered.slice(0, i).join('/'))
+          }
+          return '(?:' + prefixes.join('|') + ')'
+        }
+        
+        return filtered.join('/')
       })
       .join('|')
 
@@ -1090,6 +1103,11 @@ export class Minimatch {
     // must match entire pattern
     // ending in a * or ** will make it less strict.
     re = '^' + open + re + close + '$'
+    
+    // In partial mode, '/' should always match as it's a valid prefix for any pattern
+    if (this.partial) {
+      re = '^(?:\\/|' + open + re.slice(1, -1) + close + ')$'
+    }
 
     // can match anything, as long as it's not this.
     if (this.negate) re = '^(?!' + re + ').+$'
