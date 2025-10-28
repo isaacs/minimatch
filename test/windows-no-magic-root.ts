@@ -21,7 +21,7 @@ t.test('no magic the root', t => {
           platform: 'win32',
           nocase: true,
         }).set,
-        'default to true'
+        'default to true',
       )
       t.matchSnapshot(
         new Minimatch(p, {
@@ -29,7 +29,7 @@ t.test('no magic the root', t => {
           platform: 'win32',
           nocase: true,
         }).set,
-        'set explicitly false'
+        'set explicitly false',
       )
       t.end()
     })

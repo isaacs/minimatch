@@ -57,7 +57,6 @@
 
   This adds some slightly modified behavior when a pattern or path starts
   with `//` on Windows.
-
   - In the case of `//?/<drive letter>:/...`, the `?` is treated as a
     literal character, rather than a wildcard. That is, `//?/c:` will
     _not_ match `//x/c:`.

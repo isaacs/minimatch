@@ -12,7 +12,7 @@ export const escape = (
   s: string,
   {
     windowsPathsNoEscape = false,
-  }: Pick<MinimatchOptions, 'windowsPathsNoEscape'> = {}
+  }: Pick<MinimatchOptions, 'windowsPathsNoEscape'> = {},
 ) => {
   // don't need to escape +@! because we escape the parens
   // that make those magic, and escaping ! as [!] isn't valid,

@@ -95,7 +95,7 @@ export class AST {
   constructor(
     type: ExtglobType | null,
     parent?: AST,
-    options: MinimatchOptions = {}
+    options: MinimatchOptions = {},
   ) {
     this.type = type
     // extglobs are inherently magical
@@ -241,7 +241,7 @@ export class AST {
     str: string,
     ast: AST,
     pos: number,
-    opt: MinimatchOptions
+    opt: MinimatchOptions,
   ): number {
     let escaping = false
     let inBrace = false
@@ -472,7 +472,7 @@ export class AST {
   // is ^(?!\.), we can just prepend (?!\.) to the pattern (either root
   // or start or whatever) and prepend ^ or / at the Regexp construction.
   toRegExpSource(
-    allowDot?: boolean
+    allowDot?: boolean,
   ): [re: string, body: string, hasMagic: boolean, uflag: boolean] {
     const dot = allowDot ?? !!this.#options.dot
     if (this.#root === this) this.#fillNegs()
@@ -582,14 +582,14 @@ export class AST {
             star +
             ')'
           : this.type === '@'
-          ? ')'
-          : this.type === '?'
-          ? ')?'
-          : this.type === '+' && bodyDotAllowed
-          ? ')'
-          : this.type === '*' && bodyDotAllowed
-          ? `)?`
-          : `)${this.type}`
+            ? ')'
+            : this.type === '?'
+              ? ')?'
+              : this.type === '+' && bodyDotAllowed
+                ? ')'
+                : this.type === '*' && bodyDotAllowed
+                  ? `)?`
+                  : `)${this.type}`
       final = start + body + close
     }
     return [
@@ -621,7 +621,7 @@ export class AST {
   static #parseGlob(
     glob: string,
     hasMagic: boolean | undefined,
-    noEmpty: boolean = false
+    noEmpty: boolean = false,
   ): [re: string, body: string, hasMagic: boolean, uflag: boolean] {
     let escaping = false
     let re = ''

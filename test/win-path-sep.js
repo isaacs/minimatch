@@ -24,14 +24,14 @@ t.test('override with options', async t => {
     mm('c:\\foo\\bar', 'c:\\foo\\*', {
       windowsPathsNoEscape: true,
     }),
-    true
+    true,
   )
 
   t.equal(
     mm('c:\\foo\\bar', 'c:\\foo\\*', {
       allowWindowsEscape: false,
     }),
-    true
+    true,
   )
 
   t.equal(mm('c:\\foo\\bar', 'c:\\foo\\*', {}), false)
@@ -40,7 +40,7 @@ t.test('override with options', async t => {
     mm('c:\\foo\\bar', 'c:\\foo\\*', {
       allowWindowsEscape: null,
     }),
-    false
+    false,
   )
 
   t.end()

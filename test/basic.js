@@ -61,7 +61,7 @@ t.test('basic tests', function (t) {
         actual,
         expect,
         JSON.stringify(pattern) + ' ' + JSON.stringify(expect),
-        tapOpts
+        tapOpts,
       )
     } else {
       // optimization level 0 just doesn't match a lot of stuff
@@ -69,7 +69,7 @@ t.test('basic tests', function (t) {
       t.matchSnapshot(
         actual,
         JSON.stringify(pattern) + ' ' + JSON.stringify(expect),
-        tapOpts
+        tapOpts,
       )
     }
 
@@ -270,13 +270,13 @@ t.test('option to only nocase regexps, not strings', t => {
       nocase: true,
       nocaseMagicOnly: true,
     }).set,
-    [['test', /^(?!\.)[^/]*?\.js$/i]]
+    [['test', /^(?!\.)[^/]*?\.js$/i]],
   )
   t.match(
     new mm.Minimatch('test/*.js', {
       nocase: true,
     }).set,
-    [[/^test$/i, /^(?!\.)[^/]*?\.js$/i]]
+    [[/^test$/i, /^(?!\.)[^/]*?\.js$/i]],
   )
   t.end()
 })

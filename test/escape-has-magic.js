@@ -14,7 +14,7 @@ for (const p of patterns) {
       windowsPathsNoEscape: true,
     }),
     pattern,
-    'win32 unescape(' + pattern + ')'
+    'win32 unescape(' + pattern + ')',
   )
   const mmp = new Minimatch(escapep, { ...opts, nocaseMagicOnly: true })
   const mmw = new Minimatch(escapew, {

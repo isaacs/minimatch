@@ -53,7 +53,7 @@ t.test('UNC drive letter paths match normal paths', async t => {
             ...opt,
             windowsPathsNoEscape: true,
           }),
-          expect
+          expect,
         )
         t.end()
       })
@@ -63,7 +63,7 @@ t.test('UNC drive letter paths match normal paths', async t => {
             ...opt,
             windowsPathsNoEscape: true,
           }),
-          expect
+          expect,
         )
         t.end()
       })

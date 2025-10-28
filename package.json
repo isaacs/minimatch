@@ -34,7 +34,7 @@
     "presnap": "npm run prepare",
     "test": "tap",
     "snap": "tap",
-    "format": "prettier --write . --loglevel warn",
+    "format": "prettier --write . --log-level warn",
     "benchmark": "node benchmark/index.js",
     "typedoc": "typedoc --tsconfig .tshy/esm.json ./src/*.ts"
   },
@@ -56,7 +56,7 @@
     "@types/brace-expansion": "^1.1.2",
     "@types/node": "^24.0.0",
     "mkdirp": "^3.0.1",
-    "prettier": "^3.3.2",
+    "prettier": "^3.6.2",
     "tap": "^21.1.0",
     "tshy": "^3.0.2",
     "typedoc": "^0.28.5"

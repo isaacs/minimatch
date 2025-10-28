@@ -108,7 +108,7 @@ t.test('optimize the file as well', t => {
         t.test(file, t => {
           t.matchSnapshot(
             mm.levelTwoFileOptimize(mm.slashSplit(file)),
-            'default'
+            'default',
           )
           t.matchSnapshot(ms.levelTwoFileOptimize(file), 'multislash')
           t.end()

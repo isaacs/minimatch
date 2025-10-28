@@ -354,7 +354,6 @@ is equivalent in all cases).
   pattern are preserved.
 - `2` (or higher) - Much more aggressive optimizations, suitable
   for use with file-walking cases:
-
   - Remove cases where a double-dot `..` follows a pattern
     portion that is not `**`, `.`, or empty `''`. Remove empty
     and `.` portions of the pattern, where safe to do so (ie,

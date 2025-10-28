@@ -43,7 +43,7 @@ export interface MinimatchOptions {
 export const minimatch = (
   p: string,
   pattern: string,
-  options: MinimatchOptions = {}
+  options: MinimatchOptions = {},
 ) => {
   assertValidPattern(pattern)
 
@@ -179,7 +179,7 @@ export const defaults = (def: MinimatchOptions): typeof minimatch => {
       constructor(
         type: ExtglobType | null,
         parent?: AST,
-        options: MinimatchOptions = {}
+        options: MinimatchOptions = {},
       ) {
         super(type, parent, ext(def, options))
       }
@@ -192,12 +192,12 @@ export const defaults = (def: MinimatchOptions): typeof minimatch => {
 
     unescape: (
       s: string,
-      options: Pick<MinimatchOptions, 'windowsPathsNoEscape'> = {}
+      options: Pick<MinimatchOptions, 'windowsPathsNoEscape'> = {},
     ) => orig.unescape(s, ext(def, options)),
 
     escape: (
       s: string,
-      options: Pick<MinimatchOptions, 'windowsPathsNoEscape'> = {}
+      options: Pick<MinimatchOptions, 'windowsPathsNoEscape'> = {},
     ) => orig.escape(s, ext(def, options)),
 
     filter: (pattern: string, options: MinimatchOptions = {}) =>
@@ -232,7 +232,7 @@ minimatch.defaults = defaults
 // a{b}c -> a{b}c
 export const braceExpand = (
   pattern: string,
-  options: MinimatchOptions = {}
+  options: MinimatchOptions = {},
 ) => {
   assertValidPattern(pattern)
 
@@ -266,7 +266,7 @@ minimatch.makeRe = makeRe
 export const match = (
   list: string[],
   pattern: string,
-  options: MinimatchOptions = {}
+  options: MinimatchOptions = {},
 ) => {
   const mm = new Minimatch(pattern, options)
   list = list.filter(f => mm.match(f))
@@ -422,7 +422,7 @@ export class Minimatch {
 
     // filter out everything that didn't compile properly.
     this.set = set.filter(
-      s => s.indexOf(false) === -1
+      s => s.indexOf(false) === -1,
     ) as ParseReturnFiltered[][]
 
     // do not treat the ? in UNC paths as magic
@@ -673,7 +673,7 @@ export class Minimatch {
         const matched = this.partsMatch(
           globParts[i],
           globParts[j],
-          !this.preserveMultipleSlashes
+          !this.preserveMultipleSlashes,
         )
         if (matched) {
           globParts[i] = []
@@ -688,7 +688,7 @@ export class Minimatch {
   partsMatch(
     a: string[],
     b: string[],
-    emptyGSMatch: boolean = false
+    emptyGSMatch: boolean = false,
   ): false | string[] {
     let ai = 0
     let bi = 0
@@ -992,8 +992,8 @@ export class Minimatch {
             ? starDotExtTestNocaseDot
             : starDotExtTestNocase
           : options.dot
-          ? starDotExtTestDot
-          : starDotExtTest
+            ? starDotExtTestDot
+            : starDotExtTest
       )(m[1])
     } else if ((m = pattern.match(qmarksRE))) {
       fastTest = (
@@ -1002,8 +1002,8 @@ export class Minimatch {
             ? qmarksTestNocaseDot
             : qmarksTestNocase
           : options.dot
-          ? qmarksTestDot
-          : qmarksTest
+            ? qmarksTestDot
+            : qmarksTest
       )(m)
     } else if ((m = pattern.match(starDotStarRE))) {
       fastTest = options.dot ? starDotStarTestDot : starDotStarTest
@@ -1039,8 +1039,8 @@ export class Minimatch {
     const twoStar = options.noglobstar
       ? star
       : options.dot
-      ? twoStarDot
-      : twoStarNoDot
+        ? twoStarDot
+        : twoStarNoDot
     const flags = new Set(options.nocase ? ['i'] : [])
 
     // regexpify non-globstar patterns
@@ -1058,8 +1058,8 @@ export class Minimatch {
           return typeof p === 'string'
             ? regExpEscape(p)
             : p === GLOBSTAR
-            ? GLOBSTAR
-            : p._src
+              ? GLOBSTAR
+              : p._src
         }) as (string | typeof GLOBSTAR)[]
         pp.forEach((p, i) => {
           const next = pp[i + 1]
@@ -1081,7 +1081,7 @@ export class Minimatch {
           }
         })
         const filtered = pp.filter(p => p !== GLOBSTAR)
-        
+
         // For partial matches, we need to make the pattern match
         // any prefix of the full path. We do this by generating
         // alternative patterns that match progressively longer prefixes.
@@ -1092,7 +1092,7 @@ export class Minimatch {
           }
           return '(?:' + prefixes.join('|') + ')'
         }
-        
+
         return filtered.join('/')
       })
       .join('|')
@@ -1103,7 +1103,7 @@ export class Minimatch {
     // must match entire pattern
     // ending in a * or ** will make it less strict.
     re = '^' + open + re + close + '$'
-    
+
     // In partial mode, '/' should always match as it's a valid prefix for any pattern
     if (this.partial) {
       re = '^(?:\\/|' + open + re.slice(1, -1) + close + ')$'

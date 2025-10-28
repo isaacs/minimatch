@@ -17,7 +17,7 @@ export const unescape = (
   s: string,
   {
     windowsPathsNoEscape = false,
-  }: Pick<MinimatchOptions, 'windowsPathsNoEscape'> = {}
+  }: Pick<MinimatchOptions, 'windowsPathsNoEscape'> = {},
 ) => {
   return windowsPathsNoEscape
     ? s.replace(/\[([^\/\\])\]/g, '$1')

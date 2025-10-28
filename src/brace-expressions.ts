@@ -33,7 +33,7 @@ export type ParseClassResult = [
   src: string,
   uFlag: boolean,
   consumed: number,
-  hasMagic: boolean
+  hasMagic: boolean,
 ]
 
 // takes a glob string at a posix brace expression, and returns
@@ -44,7 +44,7 @@ export type ParseClassResult = [
 // entire class just no good.
 export const parseClass = (
   glob: string,
-  position: number
+  position: number,
 ): ParseClassResult => {
   const pos = position
   /* c8 ignore start */
@@ -166,8 +166,8 @@ export const parseClass = (
     ranges.length && negs.length
       ? '(' + sranges + '|' + snegs + ')'
       : ranges.length
-      ? sranges
-      : snegs
+        ? sranges
+        : snegs
 
   return [comb, uflag, endPos - pos, true]
 }

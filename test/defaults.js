@@ -39,7 +39,7 @@ t.test('basic tests', function (t) {
       actual,
       expect,
       JSON.stringify(pattern) + ' ' + JSON.stringify(expect),
-      tapOpts
+      tapOpts,
     )
   })
 
