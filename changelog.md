@@ -1,5 +1,11 @@
 # change log
 
+## 10.1
+
+- Add `magicalBraces` option for `escape`
+- Fix `makeRe` when `partial: true` is set.
+- Fix `makeRe` when pattern ends in a final `**` path part.
+
 ## 10.0
 
 - Require node 20 or 22 and higher
