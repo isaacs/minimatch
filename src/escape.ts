@@ -1,14 +1,15 @@
 import { MinimatchOptions } from './index.js'
+
 /**
  * Escape all magic characters in a glob pattern.
  *
- * If the {@link windowsPathsNoEscape | GlobOptions.windowsPathsNoEscape}
+ * If the {@link MinimatchOptions.windowsPathsNoEscape}
  * option is used, then characters are escaped by wrapping in `[]`, because
  * a magic character wrapped in a character class can only be satisfied by
  * that exact character.  In this mode, `\` is _not_ escaped, because it is
  * not interpreted as a magic character, but instead as a path separator.
  *
- * If the {@link magicalBraces | GlobOptions.magicalBraces} option is used,
+ * If the {@link MinimatchOptions.magicalBraces} option is used,
  * then braces (`{` and `}`) will be escaped.
  */
 export const escape = (

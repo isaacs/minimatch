@@ -4,7 +4,7 @@ import { AST, ExtglobType } from './ast.js'
 import { escape } from './escape.js'
 import { unescape } from './unescape.js'
 
-type Platform =
+export type Platform =
   | 'aix'
   | 'android'
   | 'darwin'
@@ -116,7 +116,9 @@ const defaultPlatform: Platform = (
       process.platform
     : 'posix'
 ) as Platform
-type Sep = '\\' | '/'
+
+export type Sep = '\\' | '/'
+
 const path: { [k: string]: { sep: Sep } } = {
   win32: { sep: '\\' },
   posix: { sep: '/' },
