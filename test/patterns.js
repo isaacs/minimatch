@@ -579,6 +579,9 @@ const patterns = [
   ],
 
   ['+(a|.)', ['a.a', 'aa', 'aa.', '.aa']],
+  
+  () => (files = ['foo', 'fool', 'oof']),
+  ['@(foo)*', ['foo', 'fool']],
 ]
 
 Object.defineProperty(patterns, 'files', {

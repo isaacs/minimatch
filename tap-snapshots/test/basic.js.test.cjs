@@ -1701,6 +1701,29 @@ Array [
 ]
 `
 
+exports[`test/basic.js > TAP > basic tests > @(foo)* hasMagic known 1`] = `
+true
+`
+
+exports[`test/basic.js > TAP > basic tests > @(foo)* hasMagic pre-generate 1`] = `
+true
+`
+
+exports[`test/basic.js > TAP > basic tests > @(foo)* parsed 1`] = `
+Array [
+  Array [],
+  Array [
+    "@",
+    Array [
+      Array [],
+      "foo",
+    ],
+  ],
+  "*",
+  Object {},
+]
+`
+
 exports[`test/basic.js > TAP > basic tests > @(js|.*) hasMagic known 1`] = `
 true
 `
@@ -3734,6 +3757,10 @@ exports[`test/basic.js > TAP > basic tests > makeRe @(a|a[(])b 1`] = `
 
 exports[`test/basic.js > TAP > basic tests > makeRe @(a|a[)])b 1`] = `
 /^(?:a|a\\))b$/
+`
+
+exports[`test/basic.js > TAP > basic tests > makeRe @(foo)* 1`] = `
+/^(?:foo)[^/]*?$/
 `
 
 exports[`test/basic.js > TAP > basic tests > makeRe @(js|.*) 1`] = `

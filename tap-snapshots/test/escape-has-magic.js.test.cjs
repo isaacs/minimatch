@@ -1085,6 +1085,17 @@ Array [
 ]
 `
 
+exports[`test/escape-has-magic.js > TAP > @(foo)* 1`] = `
+Array [
+  Array [
+    Array [
+      /^(?:foo)[^/]*?$/,
+    ],
+  ],
+  true,
+]
+`
+
 exports[`test/escape-has-magic.js > TAP > @(js|.*) 1`] = `
 Array [
   Array [
