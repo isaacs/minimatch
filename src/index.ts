@@ -1,4 +1,4 @@
-import { expand } from '@isaacs/brace-expansion'
+import { expand } from 'brace-expansion'
 import { assertValidPattern } from './assert-valid-pattern.js'
 import { AST, ExtglobType } from './ast.js'
 import { escape } from './escape.js'
