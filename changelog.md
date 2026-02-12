@@ -1,5 +1,9 @@
 # change log
 
+## 10.2
+
+- Add `braceExpandMax` option
+
 ## 10.1
 
 - Add `magicalBraces` option for `escape`
