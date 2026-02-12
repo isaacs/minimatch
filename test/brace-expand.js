@@ -1,9 +1,9 @@
-import tap from 'tap'
-import { minimatch } from '../dist/esm/index.js'
+import t from 'tap'
+import { braceExpand, minimatch } from '../dist/esm/index.js'
 
-tap.test('brace expansion', function (t) {
+t.test('brace expansion', function (t) {
   // [ pattern, [expanded] ]
-  var patterns = [
+  const patterns = [
     [
       'a{b,c{d,e},{f,g}h}x{y,z}',
       [
@@ -37,9 +37,15 @@ tap.test('brace expansion', function (t) {
     ['${a}${b}{c,d}', ['${a}${b}c', '${a}${b}d']],
   ]
   patterns.forEach(function (tc) {
-    var p = tc[0],
-      expect = tc[1]
+    const [p, expect] = tc
     t.same(minimatch.braceExpand(p), expect, p)
   })
+  t.end()
+})
+
+t.test('limit brace expansion', t => {
+  const p = '{' + 'a,'.repeat(1000) + 'x}'
+  const expanded = braceExpand(p, { braceExpandMax: 10 })
+  t.strictSame(expanded, 'a'.repeat(10).split(''))
   t.end()
 })

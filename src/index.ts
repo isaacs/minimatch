@@ -18,26 +18,76 @@ export type Platform =
   | 'netbsd'
 
 export interface MinimatchOptions {
+  /** do not expand `{x,y}` style braces */
   nobrace?: boolean
+  /** do not treat patterns starting with `#` as a comment */
   nocomment?: boolean
+  /** do not treat patterns starting with `!` as a negation */
   nonegate?: boolean
+  /** print LOTS of debugging output */
   debug?: boolean
+  /** treat `**` the same as `*` */
   noglobstar?: boolean
+  /** do not expand extglobs like `+(a|b)` */
   noext?: boolean
+  /** return the pattern if nothing matches */
   nonull?: boolean
+  /** treat `\\` as a path separator, not an escape character */
   windowsPathsNoEscape?: boolean
+  /**
+   * inverse of {@link MinimatchOptions.windowsPathsNoEscape}
+   * @deprecated
+   */
   allowWindowsEscape?: boolean
+  /**
+   * Compare a partial path to a pattern. As long as the parts
+   * of the path that are present are not contradicted by the
+   * pattern, it will be treated as a match. This is useful in
+   * applications where you're walking through a folder structure,
+   * and don't yet have the full path, but want to ensure that you
+   * do not walk down paths that can never be a match.
+   */
   partial?: boolean
+  /** allow matches that start with `.` even if the pattern does not */
   dot?: boolean
+  /** ignore case */
   nocase?: boolean
+  /** ignore case only in wildcard patterns */
   nocaseMagicOnly?: boolean
+  /** consider braces to be "magic" for the purpose of `hasMagic` */
   magicalBraces?: boolean
+  /**
+   * If set, then patterns without slashes will be matched
+   * against the basename of the path if it contains slashes.
+   * For example, `a?b` would match the path `/xyz/123/acb`, but
+   * not `/xyz/acb/123`.
+   */
   matchBase?: boolean
+  /** invert the results of negated matches */
   flipNegate?: boolean
+  /** do not collapse multiple `/` into a single `/` */
   preserveMultipleSlashes?: boolean
+  /**
+   * A number indicating the level of optimization that should be done
+   * to the pattern prior to parsing and using it for matches.
+   */
   optimizationLevel?: number
+  /** operating system platform */
   platform?: Platform
+  /**
+   * When a pattern starts with a UNC path or drive letter, and in
+   * `nocase:true` mode, do not convert the root portions of the
+   * pattern into a case-insensitive regular expression, and instead
+   * leave them as strings.
+   *
+   * This is the default when the platform is `win32` and
+   * `nocase:true` is set.
+   */
   windowsNoMagicRoot?: boolean
+  /**
+   * max number of `{...}` patterns to expand. Default 100_000.
+   */
+  braceExpandMax?: number
 }
 
 export const minimatch = (
@@ -69,14 +119,17 @@ const starDotExtTestNocaseDot = (ext: string) => {
   return (f: string) => f.toLowerCase().endsWith(ext)
 }
 const starDotStarRE = /^\*+\.\*+$/
-const starDotStarTest = (f: string) => !f.startsWith('.') && f.includes('.')
+const starDotStarTest = (f: string) =>
+  !f.startsWith('.') && f.includes('.')
 const starDotStarTestDot = (f: string) =>
   f !== '.' && f !== '..' && f.includes('.')
 const dotStarRE = /^\.\*+$/
-const dotStarTest = (f: string) => f !== '.' && f !== '..' && f.startsWith('.')
+const dotStarTest = (f: string) =>
+  f !== '.' && f !== '..' && f.startsWith('.')
 const starRE = /^\*+$/
 const starTest = (f: string) => f.length !== 0 && !f.startsWith('.')
-const starTestDot = (f: string) => f.length !== 0 && f !== '.' && f !== '..'
+const starTestDot = (f: string) =>
+  f.length !== 0 && f !== '.' && f !== '..'
 const qmarksRE = /^\?+([^+@!?\*\[\(]*)?$/
 const qmarksTestNocase = ([$0, ext = '']: RegExpMatchArray) => {
   const noext = qmarksTestNoExt([$0])
@@ -109,13 +162,12 @@ const qmarksTestNoExtDot = ([$0]: RegExpMatchArray) => {
 
 /* c8 ignore start */
 const defaultPlatform: Platform = (
-  typeof process === 'object' && process
-    ? (typeof process.env === 'object' &&
-        process.env &&
-        process.env.__MINIMATCH_TESTING_PLATFORM__) ||
-      process.platform
-    : 'posix'
-) as Platform
+  typeof process === 'object' && process ?
+    (typeof process.env === 'object' &&
+      process.env &&
+      process.env.__MINIMATCH_TESTING_PLATFORM__) ||
+    process.platform
+  : 'posix') as Platform
 
 export type Sep = '\\' | '/'
 
@@ -125,7 +177,8 @@ const path: { [k: string]: { sep: Sep } } = {
 }
 /* c8 ignore stop */
 
-export const sep = defaultPlatform === 'win32' ? path.win32.sep : path.posix.sep
+export const sep =
+  defaultPlatform === 'win32' ? path.win32.sep : path.posix.sep
 minimatch.sep = sep
 
 export const GLOBSTAR = Symbol('globstar **')
@@ -211,7 +264,8 @@ export const defaults = (def: MinimatchOptions): typeof minimatch => {
     filter: (pattern: string, options: MinimatchOptions = {}) =>
       orig.filter(pattern, ext(def, options)),
 
-    defaults: (options: MinimatchOptions) => orig.defaults(ext(def, options)),
+    defaults: (options: MinimatchOptions) =>
+      orig.defaults(ext(def, options)),
 
     makeRe: (pattern: string, options: MinimatchOptions = {}) =>
       orig.makeRe(pattern, ext(def, options)),
@@ -219,8 +273,11 @@ export const defaults = (def: MinimatchOptions): typeof minimatch => {
     braceExpand: (pattern: string, options: MinimatchOptions = {}) =>
       orig.braceExpand(pattern, ext(def, options)),
 
-    match: (list: string[], pattern: string, options: MinimatchOptions = {}) =>
-      orig.match(list, pattern, ext(def, options)),
+    match: (
+      list: string[],
+      pattern: string,
+      options: MinimatchOptions = {},
+    ) => orig.match(list, pattern, ext(def, options)),
 
     sep: orig.sep,
     GLOBSTAR: GLOBSTAR as typeof GLOBSTAR,
@@ -251,7 +308,7 @@ export const braceExpand = (
     return [pattern]
   }
 
-  return expand(pattern)
+  return expand(pattern, { max: options.braceExpandMax })
 }
 minimatch.braceExpand = braceExpand
 
@@ -327,8 +384,10 @@ export class Minimatch {
     this.pattern = pattern
     this.platform = options.platform || defaultPlatform
     this.isWindows = this.platform === 'win32'
+    // avoid the annoying deprecation flag lol
+    const awe = ('allowWindow' + 'sEscape') as keyof MinimatchOptions
     this.windowsPathsNoEscape =
-      !!options.windowsPathsNoEscape || options.allowWindowsEscape === false
+      !!options.windowsPathsNoEscape || options[awe] === false
     if (this.windowsPathsNoEscape) {
       this.pattern = this.pattern.replace(/\\/g, '/')
     }
@@ -341,9 +400,9 @@ export class Minimatch {
     this.partial = !!options.partial
     this.nocase = !!this.options.nocase
     this.windowsNoMagicRoot =
-      options.windowsNoMagicRoot !== undefined
-        ? options.windowsNoMagicRoot
-        : !!(this.isWindows && this.nocase)
+      options.windowsNoMagicRoot !== undefined ?
+        options.windowsNoMagicRoot
+      : !!(this.isWindows && this.nocase)
 
     this.globSet = []
     this.globParts = []
@@ -418,7 +477,10 @@ export class Minimatch {
           !globMagic.test(s[3])
         const isDrive = /^[a-z]:/i.test(s[0])
         if (isUNC) {
-          return [...s.slice(0, 4), ...s.slice(4).map(ss => this.parse(ss))]
+          return [
+            ...s.slice(0, 4),
+            ...s.slice(4).map(ss => this.parse(ss)),
+          ]
         } else if (isDrive) {
           return [s[0], ...s.slice(1).map(ss => this.parse(ss))]
         }
@@ -765,14 +827,19 @@ export class Minimatch {
   // Partial means, if you run out of file before you run
   // out of pattern, then that's fine, as long as all
   // the parts match.
-  matchOne(file: string[], pattern: ParseReturn[], partial: boolean = false) {
+  matchOne(
+    file: string[],
+    pattern: ParseReturn[],
+    partial: boolean = false,
+  ) {
     const options = this.options
 
     // UNC paths like //?/X:/... can match X:/... and vice versa
     // Drive letters in absolute drive or unc paths are always compared
     // case-insensitively.
     if (this.isWindows) {
-      const fileDrive = typeof file[0] === 'string' && /^[a-z]:$/i.test(file[0])
+      const fileDrive =
+        typeof file[0] === 'string' && /^[a-z]:$/i.test(file[0])
       const fileUNC =
         !fileDrive &&
         file[0] === '' &&
@@ -790,10 +857,19 @@ export class Minimatch {
         typeof pattern[3] === 'string' &&
         /^[a-z]:$/i.test(pattern[3])
 
-      const fdi = fileUNC ? 3 : fileDrive ? 0 : undefined
-      const pdi = patternUNC ? 3 : patternDrive ? 0 : undefined
+      const fdi =
+        fileUNC ? 3
+        : fileDrive ? 0
+        : undefined
+      const pdi =
+        patternUNC ? 3
+        : patternDrive ? 0
+        : undefined
       if (typeof fdi === 'number' && typeof pdi === 'number') {
-        const [fd, pd]: [string, string] = [file[fdi], pattern[pdi] as string]
+        const [fd, pd]: [string, string] = [
+          file[fdi],
+          pattern[pdi] as string,
+        ]
         if (fd.toLowerCase() === pd.toLowerCase()) {
           pattern[pdi] = fd
           if (pdi > fdi) {
@@ -995,24 +1071,20 @@ export class Minimatch {
       fastTest = options.dot ? starTestDot : starTest
     } else if ((m = pattern.match(starDotExtRE))) {
       fastTest = (
-        options.nocase
-          ? options.dot
-            ? starDotExtTestNocaseDot
-            : starDotExtTestNocase
-          : options.dot
-            ? starDotExtTestDot
-            : starDotExtTest
-      )(m[1])
+        options.nocase ?
+          options.dot ?
+            starDotExtTestNocaseDot
+          : starDotExtTestNocase
+        : options.dot ? starDotExtTestDot
+        : starDotExtTest)(m[1])
     } else if ((m = pattern.match(qmarksRE))) {
       fastTest = (
-        options.nocase
-          ? options.dot
-            ? qmarksTestNocaseDot
-            : qmarksTestNocase
-          : options.dot
-            ? qmarksTestDot
-            : qmarksTest
-      )(m)
+        options.nocase ?
+          options.dot ?
+            qmarksTestNocaseDot
+          : qmarksTestNocase
+        : options.dot ? qmarksTestDot
+        : qmarksTest)(m)
     } else if ((m = pattern.match(starDotStarRE))) {
       fastTest = options.dot ? starDotStarTestDot : starDotStarTest
     } else if ((m = pattern.match(dotStarRE))) {
@@ -1044,11 +1116,10 @@ export class Minimatch {
     }
     const options = this.options
 
-    const twoStar = options.noglobstar
-      ? star
-      : options.dot
-        ? twoStarDot
-        : twoStarNoDot
+    const twoStar =
+      options.noglobstar ? star
+      : options.dot ? twoStarDot
+      : twoStarNoDot
     const flags = new Set(options.nocase ? ['i'] : [])
 
     // regexpify non-globstar patterns
@@ -1063,11 +1134,11 @@ export class Minimatch {
           if (p instanceof RegExp) {
             for (const f of p.flags.split('')) flags.add(f)
           }
-          return typeof p === 'string'
-            ? regExpEscape(p)
-            : p === GLOBSTAR
-              ? GLOBSTAR
-              : p._src
+          return (
+            typeof p === 'string' ? regExpEscape(p)
+            : p === GLOBSTAR ? GLOBSTAR
+            : p._src
+          )
         }) as (string | typeof GLOBSTAR)[]
         pp.forEach((p, i) => {
           const next = pp[i + 1]

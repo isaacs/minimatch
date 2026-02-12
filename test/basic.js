@@ -8,13 +8,16 @@ const globalBefore = Object.keys(global)
 import { GLOBSTAR, minimatch } from '../dist/esm/index.js'
 import patterns from './patterns.js'
 
-const mm = process.env._MINIMATCH_TEST_OPTIMIZATION_LEVEL
-  ? minimatch.defaults({
+const mm =
+  process.env._MINIMATCH_TEST_OPTIMIZATION_LEVEL ?
+    minimatch.defaults({
       optimizationLevel: +process.env._MINIMATCH_TEST_OPTIMIZATION_LEVEL,
     })
   : minimatch
 
-const optimizationLevel = +(process.env._MINIMATCH_TEST_OPTIMIZATION_LEVEL ?? 1)
+const optimizationLevel = +(
+  process.env._MINIMATCH_TEST_OPTIMIZATION_LEVEL ?? 1
+)
 
 t.test('basic tests', function (t) {
   var start = Date.now()
@@ -97,7 +100,16 @@ t.test('invalid patterns', t => {
   t.throws(() => mm.match(['xy'], toolong), expectTooLong)
 
   const invalid = { message: 'invalid pattern' }
-  const invalids = [null, 1234, NaN, Infinity, undefined, { a: 1 }, true, false]
+  const invalids = [
+    null,
+    1234,
+    NaN,
+    Infinity,
+    undefined,
+    { a: 1 },
+    true,
+    false,
+  ]
   for (const i of invalids) {
     t.throws(() => mm.braceExpand(i), invalid)
     t.throws(() => new mm.Minimatch(i), invalid)

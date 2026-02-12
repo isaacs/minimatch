@@ -17,7 +17,10 @@ t.test('explicit pattern coalescing and optimization', t => {
       process.env.__MINIMATCH_TESTING_PLATFORM__ = platform
       const { Minimatch } = await t.mockImport('../dist/esm/index.js', {})
       const m = new Minimatch('*', { optimizationLevel })
-      const noGS = new Minimatch('*', { noglobstar: true, optimizationLevel })
+      const noGS = new Minimatch('*', {
+        noglobstar: true,
+        optimizationLevel,
+      })
       const ms = new Minimatch('*', {
         preserveMultipleSlashes: true,
         optimizationLevel,

@@ -2,22 +2,23 @@
 // this works across all unicode locales
 
 // { <posix class>: [<translation>, /u flag required, negated]
-const posixClasses: { [k: string]: [e: string, u: boolean, n?: boolean] } = {
-  '[:alnum:]': ['\\p{L}\\p{Nl}\\p{Nd}', true],
-  '[:alpha:]': ['\\p{L}\\p{Nl}', true],
-  '[:ascii:]': ['\\x' + '00-\\x' + '7f', false],
-  '[:blank:]': ['\\p{Zs}\\t', true],
-  '[:cntrl:]': ['\\p{Cc}', true],
-  '[:digit:]': ['\\p{Nd}', true],
-  '[:graph:]': ['\\p{Z}\\p{C}', true, true],
-  '[:lower:]': ['\\p{Ll}', true],
-  '[:print:]': ['\\p{C}', true],
-  '[:punct:]': ['\\p{P}', true],
-  '[:space:]': ['\\p{Z}\\t\\r\\n\\v\\f', true],
-  '[:upper:]': ['\\p{Lu}', true],
-  '[:word:]': ['\\p{L}\\p{Nl}\\p{Nd}\\p{Pc}', true],
-  '[:xdigit:]': ['A-Fa-f0-9', false],
-}
+const posixClasses: { [k: string]: [e: string, u: boolean, n?: boolean] } =
+  {
+    '[:alnum:]': ['\\p{L}\\p{Nl}\\p{Nd}', true],
+    '[:alpha:]': ['\\p{L}\\p{Nl}', true],
+    '[:ascii:]': ['\\x' + '00-\\x' + '7f', false],
+    '[:blank:]': ['\\p{Zs}\\t', true],
+    '[:cntrl:]': ['\\p{Cc}', true],
+    '[:digit:]': ['\\p{Nd}', true],
+    '[:graph:]': ['\\p{Z}\\p{C}', true, true],
+    '[:lower:]': ['\\p{Ll}', true],
+    '[:print:]': ['\\p{C}', true],
+    '[:punct:]': ['\\p{P}', true],
+    '[:space:]': ['\\p{Z}\\t\\r\\n\\v\\f', true],
+    '[:upper:]': ['\\p{Lu}', true],
+    '[:word:]': ['\\p{L}\\p{Nl}\\p{Nd}\\p{Pc}', true],
+    '[:xdigit:]': ['A-Fa-f0-9', false],
+  }
 
 // only need to escape a few things inside of brace expressions
 // escapes: [ \ ] -
@@ -163,11 +164,9 @@ export const parseClass = (
   const sranges = '[' + (negate ? '^' : '') + rangesToString(ranges) + ']'
   const snegs = '[' + (negate ? '' : '^') + rangesToString(negs) + ']'
   const comb =
-    ranges.length && negs.length
-      ? '(' + sranges + '|' + snegs + ')'
-      : ranges.length
-        ? sranges
-        : snegs
+    ranges.length && negs.length ? '(' + sranges + '|' + snegs + ')'
+    : ranges.length ? sranges
+    : snegs
 
   return [comb, uflag, endPos - pos, true]
 }

@@ -60,7 +60,10 @@ const patterns = [
 
   'character classes',
   ['[a-c]b*', ['abc', 'abd', 'abe', 'bb', 'cb']],
-  ['[a-y]*[^c]', ['abd', 'abe', 'bb', 'bcd', 'bdir/', 'ca', 'cb', 'dd', 'de']],
+  [
+    '[a-y]*[^c]',
+    ['abd', 'abe', 'bb', 'bcd', 'bdir/', 'ca', 'cb', 'dd', 'de'],
+  ],
   ['a*[^c]', ['abd', 'abe']],
   () => files.push('a-b', 'aXb'),
   ['a[X-]b', ['a-b', 'aXb']],
@@ -151,7 +154,12 @@ const patterns = [
   // this also tests that changing the options needs
   // to change the cache key, even if the pattern is
   // the same!
-  ['**', ['a/b', 'a/.d', '.a/.d'], { dot: true }, ['.a/.d', 'a/.d', 'a/b']],
+  [
+    '**',
+    ['a/b', 'a/.d', '.a/.d'],
+    { dot: true },
+    ['.a/.d', 'a/.d', 'a/b'],
+  ],
 
   'paren sets cannot contain slashes',
   ['*(a/b)', ['*(a/b)'], { nonull: true }, ['a/b']],
@@ -220,7 +228,11 @@ const patterns = [
   ['*(a|{b|c,c})', ['a', 'b', 'c', 'ab', 'ac', 'bc', 'cb']],
 
   // test various flag settings.
-  ['*(a|{b|c,c})', ['x(a|b|c)', 'x(a|c)', '(a|b|c)', '(a|c)'], { noext: true }],
+  [
+    '*(a|{b|c,c})',
+    ['x(a|b|c)', 'x(a|c)', '(a|b|c)', '(a|c)'],
+    { noext: true },
+  ],
   [
     'a?b',
     ['x/y/acb', 'acb/'],
@@ -409,11 +421,29 @@ const patterns = [
   ['*', ['a', 'a.js', 'js', 'a.JS', 'JS']],
   [
     '*',
-    ['.a', '.a.js', '.js', 'a', 'a.js', 'js', 'a.JS', '.a.JS', '.JS', 'JS'],
+    [
+      '.a',
+      '.a.js',
+      '.js',
+      'a',
+      'a.js',
+      'js',
+      'a.JS',
+      '.a.JS',
+      '.JS',
+      'JS',
+    ],
     { dot: true },
   ],
 
-  () => (files = ['x/y/z/a/b/c', 'x/y/a/b/c', 'x/z/a/b/c', 'x/a/b/c', 'a/b/c']),
+  () =>
+    (files = [
+      'x/y/z/a/b/c',
+      'x/y/a/b/c',
+      'x/z/a/b/c',
+      'x/a/b/c',
+      'a/b/c',
+    ]),
   ['x/*/../a/b/c', ['x/a/b/c']],
   ['x/z/../*/a/b/c', ['x/y/a/b/c', 'x/z/a/b/c']],
   ['x/*/../../a/b/c', ['a/b/c']],
@@ -447,7 +477,18 @@ const patterns = [
 
   'fast track the *.ext patterns',
   () =>
-    (files = ['x.y', 'a.y', 'x.z', 'a.z', 'xy', 'ay', 'x', 'a', '.y', '.z']),
+    (files = [
+      'x.y',
+      'a.y',
+      'x.z',
+      'a.z',
+      'xy',
+      'ay',
+      'x',
+      'a',
+      '.y',
+      '.z',
+    ]),
   ['*.y', ['x.y', 'a.y']],
   ['*.z', ['x.z', 'a.z', '.z'], { dot: true }],
   ['*.Y', ['x.y', 'a.y'], { nocase: true }],
@@ -458,7 +499,11 @@ const patterns = [
   ['+()*(x|a)', ['x', 'a']],
   ['+(x|a[^)]y)', ['x', 'a.y']],
   ['!()y', ['x.y', 'a.y', 'xy', 'ay'], { nonegate: true }],
-  ['!()y', ['x.y', 'a.y', 'xy', 'ay', '.y'], { dot: true, nonegate: true }],
+  [
+    '!()y',
+    ['x.y', 'a.y', 'xy', 'ay', '.y'],
+    { dot: true, nonegate: true },
+  ],
 
   () => (files = ['x-a', 'x-ab', 'x-z', 'a-z', 'zb']),
   ['?(x-!(y)|z)', ['x-a', 'x-ab', 'x-z']],
@@ -579,7 +624,7 @@ const patterns = [
   ],
 
   ['+(a|.)', ['a.a', 'aa', 'aa.', '.aa']],
-  
+
   () => (files = ['foo', 'fool', 'oof']),
   ['@(foo)*', ['foo', 'fool']],
 ]

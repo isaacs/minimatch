@@ -37,27 +37,59 @@ t.equal(new Minimatch('{a,b}', { magicalBraces: true }).hasMagic(), true)
 
 /** @type {[string, string, { magicalBraces: boolean, windowsPathsNoEscape: boolean }][]} */
 const bracedEscapeTests = [
-  ['{a,b}', '\\{a,b\\}', { magicalBraces: true, windowsPathsNoEscape: false }],
-  ['{a,b}', '[{]a,b[}]', { magicalBraces: true, windowsPathsNoEscape: true }],
-  ['[{]', '\\[\\{\\]', { magicalBraces: true, windowsPathsNoEscape: false }],
-  ['[{]', '[[][{][]]', { magicalBraces: true, windowsPathsNoEscape: true }],
+  [
+    '{a,b}',
+    '\\{a,b\\}',
+    { magicalBraces: true, windowsPathsNoEscape: false },
+  ],
+  [
+    '{a,b}',
+    '[{]a,b[}]',
+    { magicalBraces: true, windowsPathsNoEscape: true },
+  ],
+  [
+    '[{]',
+    '\\[\\{\\]',
+    { magicalBraces: true, windowsPathsNoEscape: false },
+  ],
+  [
+    '[{]',
+    '[[][{][]]',
+    { magicalBraces: true, windowsPathsNoEscape: true },
+  ],
   [
     '[\\{]',
     '\\[\\\\\\{\\]',
     { magicalBraces: true, windowsPathsNoEscape: false },
   ],
-  ['[\\{]', '[[]\\[{][]]', { magicalBraces: true, windowsPathsNoEscape: true }],
+  [
+    '[\\{]',
+    '[[]\\[{][]]',
+    { magicalBraces: true, windowsPathsNoEscape: true },
+  ],
 
-  ['{a,b}', '{a,b}', { magicalBraces: false, windowsPathsNoEscape: false }],
+  [
+    '{a,b}',
+    '{a,b}',
+    { magicalBraces: false, windowsPathsNoEscape: false },
+  ],
   ['{a,b}', '{a,b}', { magicalBraces: false, windowsPathsNoEscape: true }],
-  ['[{]', '\\[{\\]', { magicalBraces: false, windowsPathsNoEscape: false }],
+  [
+    '[{]',
+    '\\[{\\]',
+    { magicalBraces: false, windowsPathsNoEscape: false },
+  ],
   ['[{]', '[[]{[]]', { magicalBraces: false, windowsPathsNoEscape: true }],
   [
     '[\\{]',
     '\\[\\\\{\\]',
     { magicalBraces: false, windowsPathsNoEscape: false },
   ],
-  ['[\\{]', '[[]\\{[]]', { magicalBraces: false, windowsPathsNoEscape: true }],
+  [
+    '[\\{]',
+    '[[]\\{[]]',
+    { magicalBraces: false, windowsPathsNoEscape: true },
+  ],
 ]
 
 for (const [pattern, escaped, opts] of bracedEscapeTests) {

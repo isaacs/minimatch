@@ -1,5 +1,9 @@
 import t from 'tap'
-import { minimatch, Minimatch, MinimatchOptions } from '../dist/esm/index.js'
+import {
+  minimatch,
+  Minimatch,
+  MinimatchOptions,
+} from '../dist/esm/index.js'
 
 t.test('UNC patterns do not lose their //', async t => {
   const share = new Minimatch('//host/share/*', { platform: 'win32' })
@@ -59,10 +63,14 @@ t.test('UNC drive letter paths match normal paths', async t => {
       })
       t.test('both \\', t => {
         t.equal(
-          minimatch(file.replace(/\//g, '\\'), pattern.replace(/\//g, '\\'), {
-            ...opt,
-            windowsPathsNoEscape: true,
-          }),
+          minimatch(
+            file.replace(/\//g, '\\'),
+            pattern.replace(/\//g, '\\'),
+            {
+              ...opt,
+              windowsPathsNoEscape: true,
+            },
+          ),
           expect,
         )
         t.end()

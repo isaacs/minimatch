@@ -105,7 +105,10 @@ t.test('defaults applied to minimatch.escape()', t => {
 
 t.test('defaults applied to AST class', t => {
   const { AST } = mm
-  const { AST: ASTx } = mm.defaults({ nocaseMagicOnly: true, nocase: true })
+  const { AST: ASTx } = mm.defaults({
+    nocaseMagicOnly: true,
+    nocase: true,
+  })
   t.equal(new AST().options.nocaseMagicOnly, undefined)
   t.equal(new ASTx().options.nocaseMagicOnly, true)
   const fg = ASTx.fromGlob('*')

@@ -172,7 +172,10 @@ export class AST {
     for (const p of parts) {
       if (p === '') continue
       /* c8 ignore start */
-      if (typeof p !== 'string' && !(p instanceof AST && p.#parent === this)) {
+      if (
+        typeof p !== 'string' &&
+        !(p instanceof AST && p.#parent === this)
+      ) {
         throw new Error('invalid part: ' + p)
       }
       /* c8 ignore stop */
@@ -182,9 +185,11 @@ export class AST {
 
   toJSON() {
     const ret: any[] =
-      this.type === null
-        ? this.#parts.slice().map(p => (typeof p === 'string' ? p : p.toJSON()))
-        : [this.type, ...this.#parts.map(p => (p as AST).toJSON())]
+      this.type === null ?
+        this.#parts
+          .slice()
+          .map(p => (typeof p === 'string' ? p : p.toJSON()))
+      : [this.type, ...this.#parts.map(p => (p as AST).toJSON())]
     if (this.isStart() && !this.type) ret.unshift([])
     if (
       this.isEnd() &&
@@ -484,9 +489,9 @@ export class AST {
       const src = this.#parts
         .map(p => {
           const [re, _, hasMagic, uflag] =
-            typeof p === 'string'
-              ? AST.#parseGlob(p, this.#hasMagic, noEmpty)
-              : p.toRegExpSource(allowDot)
+            typeof p === 'string' ?
+              AST.#parseGlob(p, this.#hasMagic, noEmpty)
+            : p.toRegExpSource(allowDot)
           this.#hasMagic = this.#hasMagic || hasMagic
           this.#uflag = this.#uflag || uflag
           return re
@@ -518,7 +523,10 @@ export class AST {
             // sub-pattern will be preventing it anyway.
             const needNoDot = !dot && !allowDot && aps.has(src.charAt(0))
 
-            start = needNoTrav ? startNoTraversal : needNoDot ? startNoDot : ''
+            start =
+              needNoTrav ? startNoTraversal
+              : needNoDot ? startNoDot
+              : ''
           }
         }
       }
@@ -562,9 +570,9 @@ export class AST {
 
     // XXX abstract out this map method
     let bodyDotAllowed =
-      !repeated || allowDot || dot || !startNoDot
-        ? ''
-        : this.#partsToRegExp(true)
+      !repeated || allowDot || dot || !startNoDot ?
+        ''
+      : this.#partsToRegExp(true)
     if (bodyDotAllowed === body) {
       bodyDotAllowed = ''
     }
@@ -578,21 +586,17 @@ export class AST {
       final = (this.isStart() && !dot ? startNoDot : '') + starNoEmpty
     } else {
       const close =
-        this.type === '!'
-          ? // !() must match something,but !(x) can match ''
-            '))' +
-            (this.isStart() && !dot && !allowDot ? startNoDot : '') +
-            star +
-            ')'
-          : this.type === '@'
-            ? ')'
-            : this.type === '?'
-              ? ')?'
-              : this.type === '+' && bodyDotAllowed
-                ? ')'
-                : this.type === '*' && bodyDotAllowed
-                  ? `)?`
-                  : `)${this.type}`
+        this.type === '!' ?
+          // !() must match something,but !(x) can match ''
+          '))' +
+          (this.isStart() && !dot && !allowDot ? startNoDot : '') +
+          star +
+          ')'
+        : this.type === '@' ? ')'
+        : this.type === '?' ? ')?'
+        : this.type === '+' && bodyDotAllowed ? ')'
+        : this.type === '*' && bodyDotAllowed ? `)?`
+        : `)${this.type}`
       final = start + body + close
     }
     return [
