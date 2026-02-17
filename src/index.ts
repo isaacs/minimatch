@@ -520,7 +520,7 @@ export class Minimatch {
   // to the right as possible, even if it increases the number
   // of patterns that we have to process.
   preprocess(globParts: string[][]) {
-    // if we're not in globstar mode, then turn all ** into *
+    // if we're not in globstar mode, then turn ** into *
     if (this.options.noglobstar) {
       for (let i = 0; i < globParts.length; i++) {
         for (let j = 0; j < globParts[i].length; j++) {
