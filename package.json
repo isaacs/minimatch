@@ -28,5 +28,8 @@
   "files": [
     "minimatch.js",
     "browser.js"
-  ]
+  ],
+  "publishConfig": {
+    "tag": "legacy-v2"
+  }
 }
