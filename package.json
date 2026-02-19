@@ -24,5 +24,8 @@
   "license": {
     "type": "MIT",
     "url": "http://github.com/isaacs/minimatch/raw/master/LICENSE"
+  },
+  "publishConfig": {
+    "tag": "legacy-v0"
   }
 }
