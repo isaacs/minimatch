@@ -82,5 +82,8 @@
   "funding": {
     "url": "https://github.com/sponsors/isaacs"
   },
-  "license": "ISC"
+  "license": "ISC",
+  "publishConfig": {
+    "tag": "legacy-v8"
+  }
 }
