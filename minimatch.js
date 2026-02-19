@@ -165,6 +165,8 @@ class Minimatch {
   constructor (pattern, options) {
     assertValidPattern(pattern)
 
+    pattern = pattern.replace(new RegExp("\\*\\*+", "g"), "**");
+
     if (!options) options = {}
 
     // windows support: need to use /, not \
