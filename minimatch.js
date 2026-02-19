@@ -136,6 +136,8 @@ function Minimatch (pattern, options) {
 
   pattern = pattern.trim()
 
+  pattern = pattern.replace(new RegExp("\\*\\*+", "g"), "**");
+
   // windows support: need to use /, not \
   if (!options.allowWindowsEscape && path.sep !== '/') {
     pattern = pattern.split(path.sep).join('/')
