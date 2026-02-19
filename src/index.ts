@@ -1138,6 +1138,9 @@ export class Minimatch {
         case '!':
           this.debug('%s\t%s %s %j <-- stateChar', pattern, i, re, c)
 
+          // coalesce consecutive non-globstar * characters
+          if (c === '*' && stateChar === '*') continue
+
           // if we already have a stateChar, then it means
           // that there was something like ** or +? in there.
           // Handle the stateChar, then proceed with this one.
