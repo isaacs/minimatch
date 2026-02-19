@@ -39,7 +39,7 @@
     "typedoc": "typedoc --tsconfig .tshy/esm.json ./src/*.ts"
   },
   "engines": {
-    "node": "20 || >=22"
+    "node": "18 || 20 || >=22"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
