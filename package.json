@@ -78,5 +78,8 @@
       ".": "./src/index.ts"
     }
   },
-  "type": "module"
+  "type": "module",
+  "publishConfig": {
+    "tag": "legacy-v9"
+  }
 }
