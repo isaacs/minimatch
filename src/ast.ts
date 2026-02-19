@@ -596,8 +596,11 @@ export class AST {
     let escaping = false
     let re = ''
     let uflag = false
+    // multiple stars that aren't globstars coalesce into one *
+    let inStar = false
     for (let i = 0; i < glob.length; i++) {
       const c = glob.charAt(i)
+      if (c !== '*') inStar = false
       if (escaping) {
         escaping = false
         re += (reSpecials.has(c) ? '\\' : '') + c
@@ -622,8 +625,9 @@ export class AST {
         }
       }
       if (c === '*') {
-        if (noEmpty && glob === '*') re += starNoEmpty
-        else re += star
+        if (inStar) continue
+        inStar = true
+        re += noEmpty && /^[*]+$/.test(glob) ? starNoEmpty : star
         hasMagic = true
         continue
       }
