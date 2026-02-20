@@ -1297,15 +1297,15 @@ exports[`test/optimization-level-0.ts TAP basic tests > makeRe ** 3`] = `
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe *******? 1`] = `
-/^(?:(?!\\.)(?=.)[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/])$/
+/^(?:(?!\\.)(?=.)[^/]*?[^/])$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe *******c 1`] = `
-/^(?:(?!\\.)(?=.)[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?c)$/
+/^(?:(?!\\.)(?=.)[^/]*?c)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe *****?? 1`] = `
-/^(?:(?!\\.)(?=.)[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/])$/
+/^(?:(?!\\.)(?=.)[^/]*?[^/][^/])$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe **/**/** 1`] = `
@@ -1365,7 +1365,7 @@ exports[`test/optimization-level-0.ts TAP basic tests > makeRe *\\\\!* 1`] = `
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe *c*?** 1`] = `
-/^(?:(?!\\.)(?=.)[^/]*?c[^/]*?[^/][^/]*?[^/]*?)$/
+/^(?:(?!\\.)(?=.)[^/]*?c[^/]*?[^/][^/]*?)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe *js 1`] = `
@@ -1441,27 +1441,27 @@ exports[`test/optimization-level-0.ts TAP basic tests > makeRe ? 1`] = `
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe ?************c****?**** 1`] = `
-/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?c[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?)$/
+/^(?:(?!\\.)(?=.)[^/][^/]*?c[^/]*?[^/][^/]*?)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe ?*****?? 1`] = `
-/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/])$/
+/^(?:(?!\\.)(?=.)[^/][^/]*?[^/][^/])$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe ?*****?c 1`] = `
-/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]c)$/
+/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]c)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe ?***?**** 1`] = `
-/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?)$/
+/^(?:(?!\\.)(?=.)[^/][^/]*?[^/][^/]*?)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe ?***?****? 1`] = `
-/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/])$/
+/^(?:(?!\\.)(?=.)[^/][^/]*?[^/][^/]*?[^/])$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe ?***?****c 1`] = `
-/^(?:(?!\\.)(?=.)[^/][^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?c)$/
+/^(?:(?!\\.)(?=.)[^/][^/]*?[^/][^/]*?c)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe ?.js 1`] = `
@@ -1497,11 +1497,11 @@ exports[`test/optimization-level-0.ts TAP basic tests > makeRe ?? 4`] = `
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe ??**********?****? 1`] = `
-/^(?:(?!\\.)(?=.)[^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?[^/])$/
+/^(?:(?!\\.)(?=.)[^/][^/][^/]*?[^/][^/]*?[^/])$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe ??**********?****c 1`] = `
-/^(?:(?!\\.)(?=.)[^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/]*?[^/]*?c)$/
+/^(?:(?!\\.)(?=.)[^/][^/][^/]*?[^/][^/]*?c)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe ??? 1`] = `
@@ -1749,39 +1749,39 @@ exports[`test/optimization-level-0.ts TAP basic tests > makeRe a* 1`] = `
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe a********???******* 1`] = `
-/^(?:(?=.)a[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/][^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?)$/
+/^(?:(?=.)a[^/]*?[^/][^/][^/][^/]*?)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe a*****?c 1`] = `
-/^(?:(?=.)a[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?[^/]c)$/
+/^(?:(?=.)a[^/]*?[^/]c)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe a*****c*?** 1`] = `
-/^(?:(?=.)a[^/]*?[^/]*?[^/]*?[^/]*?[^/]*?c[^/]*?[^/][^/]*?[^/]*?)$/
+/^(?:(?=.)a[^/]*?c[^/]*?[^/][^/]*?)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe a****c**?**??***** 1`] = `
-/^(?:(?=.)a[^/]*?[^/]*?[^/]*?[^/]*?c[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/][^/]*?[^/]*?[^/]*?[^/]*?[^/]*?)$/
+/^(?:(?=.)a[^/]*?c[^/]*?[^/][^/]*?[^/][^/][^/]*?)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe a***c 1`] = `
-/^(?:(?=.)a[^/]*?[^/]*?[^/]*?c)$/
+/^(?:(?=.)a[^/]*?c)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe a**?**cd**?**??***k 1`] = `
-/^(?:(?=.)a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/][^/]*?[^/]*?[^/]*?k)$/
+/^(?:(?=.)a[^/]*?[^/][^/]*?cd[^/]*?[^/][^/]*?[^/][^/][^/]*?k)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe a**?**cd**?**??***k** 1`] = `
-/^(?:(?=.)a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/][^/]*?[^/]*?[^/]*?k[^/]*?[^/]*?)$/
+/^(?:(?=.)a[^/]*?[^/][^/]*?cd[^/]*?[^/][^/]*?[^/][^/][^/]*?k[^/]*?)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe a**?**cd**?**??k 1`] = `
-/^(?:(?=.)a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/]k)$/
+/^(?:(?=.)a[^/]*?[^/][^/]*?cd[^/]*?[^/][^/]*?[^/][^/]k)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe a**?**cd**?**??k*** 1`] = `
-/^(?:(?=.)a[^/]*?[^/]*?[^/][^/]*?[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/]k[^/]*?[^/]*?[^/]*?)$/
+/^(?:(?=.)a[^/]*?[^/][^/]*?cd[^/]*?[^/][^/]*?[^/][^/]k[^/]*?)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe a*[^c] 1`] = `
@@ -1789,7 +1789,7 @@ exports[`test/optimization-level-0.ts TAP basic tests > makeRe a*[^c] 1`] = `
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe a*cd**?**??k 1`] = `
-/^(?:(?=.)a[^/]*?cd[^/]*?[^/]*?[^/][^/]*?[^/]*?[^/][^/]k)$/
+/^(?:(?=.)a[^/]*?cd[^/]*?[^/][^/]*?[^/][^/]k)$/
 `
 
 exports[`test/optimization-level-0.ts TAP basic tests > makeRe a/*/b 1`] = `
