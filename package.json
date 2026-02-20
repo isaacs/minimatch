@@ -58,15 +58,13 @@
   "devDependencies": {
     "@types/brace-expansion": "^1.1.0",
     "@types/node": "^18.15.11",
-    "@types/tap": "^15.0.8",
     "eslint-config-prettier": "^8.6.0",
     "mkdirp": "1",
     "prettier": "^2.8.2",
-    "tap": "^18.7.2",
-    "ts-node": "^10.9.1",
-    "tshy": "^1.12.0",
-    "typedoc": "^0.23.21",
-    "typescript": "^4.9.3"
+    "tap": "^21.6.1",
+    "tshy": "^3.0.2",
+    "typedoc": "^0.28.5",
+    "typescript": "^5.5.3"
   },
   "funding": {
     "url": "https://github.com/sponsors/isaacs"
@@ -81,5 +79,6 @@
   "type": "module",
   "publishConfig": {
     "tag": "legacy-v9"
-  }
+  },
+  "module": "./dist/esm/index.js"
 }
