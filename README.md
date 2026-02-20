@@ -396,6 +396,22 @@ separators in file paths for comparison.)
 
 Defaults to the value of `process.platform`.
 
+### maxGlobstarRecursion
+
+Max number of non-adjacent `**` patterns to recursively walk
+down.
+
+The default of `200` is almost certainly high enough for most
+purposes, and can handle absurdly excessive patterns.
+
+If the limit is exceeded (which would require very excessively
+long patterns and paths containing lots of `**` patterns!), then
+it is treated as non-matching, even if the path would normally
+match the pattern provided.
+
+That is, this is an intentional false negative, deemed an
+acceptable break in correctness for security and performance.
+
 ## Comparisons to other fnmatch/glob implementations
 
 While strict compliance with the existing standards is a
