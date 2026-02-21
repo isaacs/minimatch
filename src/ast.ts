@@ -43,8 +43,65 @@ import { unescape } from './unescape.js'
 
 export type ExtglobType = '!' | '?' | '+' | '*' | '@'
 const types = new Set<ExtglobType>(['!', '?', '+', '*', '@'])
-const isExtglobType = (c: string): c is ExtglobType =>
+const isExtglobType = (c: string | null): c is ExtglobType =>
   types.has(c as ExtglobType)
+const isExtglobAST = (c: AST): c is AST & { type: ExtglobType } =>
+  isExtglobType(c.type)
+
+// Map of which extglob types can adopt the children of a nested extglob
+//
+// anything but ! can adopt a matching type:
+// +(a|+(b|c)|d) => +(a|b|c|d)
+// *(a|*(b|c)|d) => *(a|b|c|d)
+// @(a|@(b|c)|d) => @(a|b|c|d)
+// ?(a|?(b|c)|d) => ?(a|b|c|d)
+//
+// * can adopt anything, because 0 or repetition is allowed
+// *(a|?(b|c)|d) => *(a|b|c|d)
+// *(a|+(b|c)|d) => *(a|b|c|d)
+// *(a|@(b|c)|d) => *(a|b|c|d)
+//
+// + can adopt @, because 1 or repetition is allowed
+// +(a|@(b|c)|d) => +(a|b|c|d)
+//
+// + and @ CANNOT adopt *, because 0 would be allowed
+// +(a|*(b|c)|d) => would match "", on *(b|c)
+// @(a|*(b|c)|d) => would match "", on *(b|c)
+//
+// + and @ CANNOT adopt ?, because 0 would be allowed
+// +(a|?(b|c)|d) => would match "", on ?(b|c)
+// @(a|?(b|c)|d) => would match "", on ?(b|c)
+//
+// ? can adopt @, because 0 or 1 is allowed
+// ?(a|@(b|c)|d) => ?(a|b|c|d)
+//
+// ? and @ CANNOT adopt * or +, because >1 would be allowed
+// ?(a|*(b|c)|d) => would match bbb on *(b|c)
+// @(a|*(b|c)|d) => would match bbb on *(b|c)
+// ?(a|+(b|c)|d) => would match bbb on +(b|c)
+// @(a|+(b|c)|d) => would match bbb on +(b|c)
+//
+// ! CANNOT adopt ! (nothing else can either)
+// !(a|!(b|c)|d) => !(a|b|c|d) would fail to match on b (not not b|c)
+//
+// ! can adopt @
+// !(a|@(b|c)|d) => !(a|b|c|d)
+//
+// ! CANNOT adopt *
+// !(a|*(b|c)|d) => !(a|b|c|d) would match on bbb, not allowed
+//
+// ! CANNOT adopt +
+// !(a|+(b|c)|d) => !(a|b|c|d) would match on bbb, not allowed
+//
+// ! CANNOT adopt ?
+// x!(a|?(b|c)|d) => x!(a|b|c|d) would fail to match "x"
+const adoptionMap = new Map<ExtglobType, ExtglobType[]>([
+  ['*', ['*', '+', '?', '@']],
+  ['+', ['+', '@']],
+  ['?', ['?', '@']],
+  ['@', ['@']],
+  ['!', ['!', '@']],
+])
 
 // Patterns that get prepended to bind to the start of either the
 // entire string, or just a single path portion, to prevent dots
@@ -75,15 +132,16 @@ const starNoEmpty = qmark + '+?'
 // remove the \ chars that we added if we end up doing a nonmagic compare
 // const deslash = (s: string) => s.replace(/\\(.)/g, '$1')
 
+let ID = 0
 export class AST {
   type: ExtglobType | null
   readonly #root: AST
 
   #hasMagic?: boolean
   #uflag: boolean = false
-  #parts: (string | AST)[] = []
-  readonly #parent?: AST
-  readonly #parentIndex: number
+  parts: (string | AST)[] = []
+  #parent?: AST
+  #parentIndex: number
   #negs: AST[]
   #filledNegs: boolean = false
   #options: MinimatchOptions
@@ -91,6 +149,24 @@ export class AST {
   // set to true if it's an extglob with no children
   // (which really means one child of '')
   #emptyExt: boolean = false
+  id = ++ID
+
+  get depth(): number {
+    return (this.#parent?.depth ?? -1) + 1
+  }
+
+  [Symbol.for('nodejs.util.inspect.custom')]() {
+    return {
+      '@@type': 'AST',
+      id: this.id,
+      type: this.type,
+      root: this.#root.id,
+      parent: this.#parent?.id,
+      depth: this.depth,
+      partsLength: this.parts.length,
+      parts: this.parts,
+    }
+  }
 
   constructor(
     type: ExtglobType | null,
@@ -105,14 +181,14 @@ export class AST {
     this.#options = this.#root === this ? options : this.#root.#options
     this.#negs = this.#root === this ? [] : this.#root.#negs
     if (type === '!' && !this.#root.#filledNegs) this.#negs.push(this)
-    this.#parentIndex = this.#parent ? this.#parent.#parts.length : 0
+    this.#parentIndex = this.#parent ? this.#parent.parts.length : 0
   }
 
   get hasMagic(): boolean | undefined {
     /* c8 ignore start */
     if (this.#hasMagic !== undefined) return this.#hasMagic
     /* c8 ignore stop */
-    for (const p of this.#parts) {
+    for (const p of this.parts) {
       if (typeof p === 'string') continue
       if (p.type || p.hasMagic) return (this.#hasMagic = true)
     }
@@ -124,10 +200,10 @@ export class AST {
   toString(): string {
     if (this.#toString !== undefined) return this.#toString
     if (!this.type) {
-      return (this.#toString = this.#parts.map(p => String(p)).join(''))
+      return (this.#toString = this.parts.map(p => String(p)).join(''))
     } else {
       return (this.#toString =
-        this.type + '(' + this.#parts.map(p => String(p)).join('|') + ')')
+        this.type + '(' + this.parts.map(p => String(p)).join('|') + ')')
     }
   }
 
@@ -149,16 +225,16 @@ export class AST {
       while (pp) {
         for (
           let i = p.#parentIndex + 1;
-          !pp.type && i < pp.#parts.length;
+          !pp.type && i < pp.parts.length;
           i++
         ) {
-          for (const part of n.#parts) {
+          for (const part of n.parts) {
             /* c8 ignore start */
             if (typeof part === 'string') {
               throw new Error('string part in extglob AST??')
             }
             /* c8 ignore stop */
-            part.copyIn(pp.#parts[i])
+            part.copyIn(pp.parts[i])
           }
         }
         p = pp
@@ -179,17 +255,17 @@ export class AST {
         throw new Error('invalid part: ' + p)
       }
       /* c8 ignore stop */
-      this.#parts.push(p)
+      this.parts.push(p)
     }
   }
 
   toJSON() {
     const ret: any[] =
       this.type === null ?
-        this.#parts
+        this.parts
           .slice()
           .map(p => (typeof p === 'string' ? p : p.toJSON()))
-      : [this.type, ...this.#parts.map(p => (p as AST).toJSON())]
+      : [this.type, ...this.parts.map(p => (p as AST).toJSON())]
     if (this.isStart() && !this.type) ret.unshift([])
     if (
       this.isEnd() &&
@@ -209,7 +285,7 @@ export class AST {
     // if everything AHEAD of this is a negation, then it's still the "start"
     const p = this.#parent
     for (let i = 0; i < this.#parentIndex; i++) {
-      const pp = p.#parts[i]
+      const pp = p.parts[i]
       if (!(pp instanceof AST && pp.type === '!')) {
         return false
       }
@@ -224,7 +300,7 @@ export class AST {
     if (!this.type) return this.#parent?.isEnd()
     // if not root, it'll always have a parent
     /* c8 ignore start */
-    const pl = this.#parent ? this.#parent.#parts.length : 0
+    const pl = this.#parent ? this.#parent.parts.length : 0
     /* c8 ignore stop */
     return this.#parentIndex === pl - 1
   }
@@ -236,7 +312,7 @@ export class AST {
 
   clone(parent: AST) {
     const c = new AST(this.type, parent)
-    for (const p of this.#parts) {
+    for (const p of this.parts) {
       c.copyIn(p)
     }
     return c
@@ -247,7 +323,9 @@ export class AST {
     ast: AST,
     pos: number,
     opt: MinimatchOptions,
+    extDepth: number,
   ): number {
+    const maxDepth = opt.maxExtglobRecursion ?? 2
     let escaping = false
     let inBrace = false
     let braceStart = -1
@@ -284,11 +362,18 @@ export class AST {
           continue
         }
 
-        if (!opt.noext && isExtglobType(c) && str.charAt(i) === '(') {
+        // we don't have to check for adoption here, because that's
+        // done at the other recursion point.
+        const doRecurse =
+          !opt.noext &&
+          isExtglobType(c) &&
+          str.charAt(i) === '(' &&
+          extDepth <= maxDepth
+        if (doRecurse) {
           ast.push(acc)
           acc = ''
           const ext = new AST(c, ast)
-          i = AST.#parseAST(str, ext, i, opt)
+          i = AST.#parseAST(str, ext, i, opt, extDepth + 1)
           ast.push(ext)
           continue
         }
@@ -332,12 +417,19 @@ export class AST {
         continue
       }
 
-      if (isExtglobType(c) && str.charAt(i) === '(') {
+      //const parent = ast.#parent
+      const doRecurse =
+        !opt.noext &&
+        isExtglobType(c) &&
+        str.charAt(i) === '(' &&
+        (extDepth <= maxDepth || (ast && ast.#canAdoptType(c)))
+      if (doRecurse) {
+        const depthAdd = ast && ast.#canAdoptType(c) ? 0 : 1
         part.push(acc)
         acc = ''
         const ext = new AST(c, part)
         part.push(ext)
-        i = AST.#parseAST(str, ext, i, opt)
+        i = AST.#parseAST(str, ext, i, opt, extDepth + depthAdd)
         continue
       }
       if (c === '|') {
@@ -348,7 +440,7 @@ export class AST {
         continue
       }
       if (c === ')') {
-        if (acc === '' && ast.#parts.length === 0) {
+        if (acc === '' && ast.parts.length === 0) {
           ast.#emptyExt = true
         }
         part.push(acc)
@@ -364,13 +456,52 @@ export class AST {
     // maybe something else in there.
     ast.type = null
     ast.#hasMagic = undefined
-    ast.#parts = [str.substring(pos - 1)]
+    ast.parts = [str.substring(pos - 1)]
     return i
+  }
+
+  #canAdopt(child?: AST | string): child is AST & {
+    type: null
+    parts: [AST & { type: ExtglobType }]
+  } {
+    if (
+      !child ||
+      typeof child !== 'object' ||
+      child.type !== null ||
+      child.parts.length !== 1 ||
+      this.type === null
+    ) {
+      return false
+    }
+    const gc = child.parts[0]
+    if (!gc || typeof gc !== 'object' || gc.type === null) {
+      return false
+    }
+    return (this as AST & { type: ExtglobType }).#canAdoptType(gc.type)
+  }
+  #canAdoptType(c: string): c is ExtglobType {
+    return !!adoptionMap
+      .get(this.type as ExtglobType)
+      ?.includes(c as ExtglobType)
+  }
+
+  adopt(
+    child: AST & {
+      type: null
+      parts: [AST & { type: ExtglobType }]
+    },
+    index: number,
+  ) {
+    const [gc] = child.parts
+    this.parts.splice(index, 1, ...gc.parts)
+    for (const p of gc.parts) {
+      if (typeof p === 'object') p.#parent = this
+    }
   }
 
   static fromGlob(pattern: string, options: MinimatchOptions = {}) {
     const ast = new AST(null, undefined, options)
-    AST.#parseAST(pattern, ast, 0, options)
+    AST.#parseAST(pattern, ast, 0, options, 0)
     return ast
   }
 
@@ -480,13 +611,16 @@ export class AST {
     allowDot?: boolean,
   ): [re: string, body: string, hasMagic: boolean, uflag: boolean] {
     const dot = allowDot ?? !!this.#options.dot
-    if (this.#root === this) this.#fillNegs()
-    if (!this.type) {
+    if (this.#root === this) {
+      this.#fillNegs()
+      this.#flatten()
+    }
+    if (!isExtglobAST(this)) {
       const noEmpty =
         this.isStart() &&
         this.isEnd() &&
-        !this.#parts.some(s => typeof s !== 'string')
-      const src = this.#parts
+        !this.parts.some(s => typeof s !== 'string')
+      const src = this.parts
         .map(p => {
           const [re, _, hasMagic, uflag] =
             typeof p === 'string' ?
@@ -500,14 +634,14 @@ export class AST {
 
       let start = ''
       if (this.isStart()) {
-        if (typeof this.#parts[0] === 'string') {
+        if (typeof this.parts[0] === 'string') {
           // this is the string that will match the start of the pattern,
           // so we need to protect against dots and such.
 
           // '.' and '..' cannot match unless the pattern is that exactly,
           // even if it starts with . or dot:true is set.
           const dotTravAllowed =
-            this.#parts.length === 1 && justDots.has(this.#parts[0])
+            this.parts.length === 1 && justDots.has(this.parts[0])
           if (!dotTravAllowed) {
             const aps = addPatternStart
             // check if we have a possibility of matching . or ..,
@@ -556,15 +690,16 @@ export class AST {
     const repeated = this.type === '*' || this.type === '+'
     // some kind of extglob
     const start = this.type === '!' ? '(?:(?!(?:' : '(?:'
-    let body = this.#partsToRegExp(dot)
+    let body = this.partsToRegExp(dot)
 
     if (this.isStart() && this.isEnd() && !body && this.type !== '!') {
       // invalid extglob, has to at least be *something* present, if it's
       // the entire path portion.
       const s = this.toString()
-      this.#parts = [s]
-      this.type = null
-      this.#hasMagic = undefined
+      const me = this as AST
+      me.parts = [s]
+      me.type = null
+      me.#hasMagic = undefined
       return [s, unescape(this.toString()), false, false]
     }
 
@@ -572,7 +707,7 @@ export class AST {
     let bodyDotAllowed =
       !repeated || allowDot || dot || !startNoDot ?
         ''
-      : this.#partsToRegExp(true)
+      : this.partsToRegExp(true)
     if (bodyDotAllowed === body) {
       bodyDotAllowed = ''
     }
@@ -607,8 +742,35 @@ export class AST {
     ]
   }
 
-  #partsToRegExp(dot: boolean) {
-    return this.#parts
+  #flatten() {
+    if (!isExtglobAST(this)) {
+      for (const p of this.parts) {
+        if (typeof p === 'object') {
+          p.#flatten()
+        }
+      }
+      return
+    }
+    // do up to 10 passes to flatten as much as possible
+    let iterations = 0
+    let done = false
+    do {
+      done = true
+      for (let i = 0; i < this.parts.length; i++) {
+        const c = this.parts[i]
+        if (typeof c === 'object') {
+          c.#flatten()
+          if (this.#canAdopt(c)) {
+            done = false
+            this.adopt(c, i)
+          }
+        }
+      }
+    } while (!done && ++iterations < 10)
+  }
+
+  partsToRegExp(dot: boolean) {
+    return this.parts
       .map(p => {
         // extglob ASTs should only contain parent ASTs
         /* c8 ignore start */
