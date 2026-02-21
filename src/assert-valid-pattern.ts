@@ -1,5 +1,5 @@
 const MAX_PATTERN_LENGTH = 1024 * 64
-export const assertValidPattern: (pattern: any) => void = (
+export const assertValidPattern: (pattern: unknown) => void = (
   pattern: unknown,
 ): asserts pattern is string => {
   if (typeof pattern !== 'string') {
