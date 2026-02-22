@@ -1,4 +1,4 @@
-import expand from 'brace-expansion'
+import { expand } from 'brace-expansion'
 import { assertValidPattern } from './assert-valid-pattern.js'
 import { AST, ExtglobType } from './ast.js'
 import { escape } from './escape.js'
@@ -378,7 +378,7 @@ export class Minimatch {
     this.parseNegate()
 
     // step 2: expand braces
-    this.globSet = [...new Set(this.braceExpand())]
+    this.globSet = [...new Set<string>(this.braceExpand())]
 
     if (options.debug) {
       this.debug = (...args: any[]) => console.error(...args)
@@ -966,7 +966,7 @@ export class Minimatch {
     /* c8 ignore stop */
   }
 
-  braceExpand() {
+  braceExpand(): string[] {
     return braceExpand(this.pattern, this.options)
   }
 
