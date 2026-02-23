@@ -43,8 +43,39 @@ import { unescape } from './unescape.js'
 
 export type ExtglobType = '!' | '?' | '+' | '*' | '@'
 const types = new Set<ExtglobType>(['!', '?', '+', '*', '@'])
-const isExtglobType = (c: string): c is ExtglobType =>
+const isExtglobType = (c: string | null): c is ExtglobType =>
   types.has(c as ExtglobType)
+const isExtglobAST = (c: AST): c is AST & { type: ExtglobType } =>
+  isExtglobType(c.type)
+
+const adoptionMap = new Map<ExtglobType, ExtglobType[]>([
+  ['!', ['@']],
+  ['?', ['?', '@']],
+  ['@', ['@']],
+  ['*', ['*', '+', '?', '@']],
+  ['+', ['+', '@']],
+])
+
+const adoptionWithSpaceMap = new Map<ExtglobType, ExtglobType[]>([
+  ['!', ['?']],
+  ['@', ['?']],
+  ['+', ['?', '*']],
+])
+
+const adoptionAnyMap = new Map<ExtglobType, ExtglobType[]>([
+  ['!', ['?', '@']],
+  ['?', ['?', '@']],
+  ['@', ['?', '@']],
+  ['*', ['*', '+', '?', '@']],
+  ['+', ['+', '@', '?', '*']],
+])
+
+const usurpMap = new Map<ExtglobType, Map<ExtglobType | null, ExtglobType | null>>([
+  ['!', new Map([['!', '@']])],
+  ['?', new Map([['*', '*'], ['+', '*']])],
+  ['@', new Map([['!', '!'], ['?', '?'], ['@', '@'], ['*', '*'], ['+', '+']])],
+  ['+', new Map([['?', '*'], ['*', '*']])],
+])
 
 // Patterns that get prepended to bind to the start of either the
 // entire string, or just a single path portion, to prevent dots
@@ -82,8 +113,8 @@ export class AST {
   #hasMagic?: boolean
   #uflag: boolean = false
   #parts: (string | AST)[] = []
-  readonly #parent?: AST
-  readonly #parentIndex: number
+  #parent?: AST
+  #parentIndex: number
   #negs: AST[]
   #filledNegs: boolean = false
   #options: MinimatchOptions
@@ -241,8 +272,10 @@ export class AST {
     str: string,
     ast: AST,
     pos: number,
-    opt: MinimatchOptions
+    opt: MinimatchOptions,
+    extDepth: number
   ): number {
+    const maxDepth = opt.maxExtglobRecursion ?? 2
     let escaping = false
     let inBrace = false
     let braceStart = -1
@@ -279,11 +312,16 @@ export class AST {
           continue
         }
 
-        if (!opt.noext && isExtglobType(c) && str.charAt(i) === '(') {
+        const doRecurse =
+          !opt.noext &&
+          isExtglobType(c) &&
+          str.charAt(i) === '(' &&
+          extDepth <= maxDepth
+        if (doRecurse) {
           ast.push(acc)
           acc = ''
           const ext = new AST(c, ast)
-          i = AST.#parseAST(str, ext, i, opt)
+          i = AST.#parseAST(str, ext, i, opt, extDepth + 1)
           ast.push(ext)
           continue
         }
@@ -327,12 +365,19 @@ export class AST {
         continue
       }
 
-      if (isExtglobType(c) && str.charAt(i) === '(') {
+      const doRecurse =
+        isExtglobType(c) &&
+        str.charAt(i) === '(' &&
+        /* c8 ignore start - the maxDepth is sufficient here */
+        (extDepth <= maxDepth || (ast && ast.#canAdoptType(c)))
+      /* c8 ignore stop */
+      if (doRecurse) {
+        const depthAdd = ast && ast.#canAdoptType(c) ? 0 : 1
         part.push(acc)
         acc = ''
         const ext = new AST(c, part)
         part.push(ext)
-        i = AST.#parseAST(str, ext, i, opt)
+        i = AST.#parseAST(str, ext, i, opt, extDepth + depthAdd)
         continue
       }
       if (c === '|') {
@@ -363,9 +408,143 @@ export class AST {
     return i
   }
 
+  #canAdoptWithSpace(child?: AST | string): child is AST & {
+    type: null
+    parts: [AST & { type: ExtglobType }]
+  } {
+    return this.#canAdopt(child, adoptionWithSpaceMap)
+  }
+
+  #canAdopt(
+    child?: AST | string,
+    map: Map<ExtglobType, ExtglobType[]> = adoptionMap
+  ): child is AST & {
+    type: null
+    parts: [AST & { type: ExtglobType }]
+  } {
+    if (
+      !child ||
+      typeof child !== 'object' ||
+      child.type !== null ||
+      child.#parts.length !== 1 ||
+      this.type === null
+    ) {
+      return false
+    }
+    const gc = child.#parts[0]
+    if (!gc || typeof gc !== 'object' || gc.type === null) {
+      return false
+    }
+    return (this as AST & { type: ExtglobType }).#canAdoptType(
+      gc.type,
+      map
+    )
+  }
+
+  #canAdoptType(
+    c: string,
+    map: Map<ExtglobType, ExtglobType[]> = adoptionAnyMap
+  ): c is ExtglobType {
+    return !!map.get(this.type as ExtglobType)?.includes(c as ExtglobType)
+  }
+
+  #adoptWithSpace(
+    this: AST & { type: ExtglobType },
+    child: AST & { type: null },
+    index: number
+  ) {
+    const gc = child.#parts[0] as AST & { type: ExtglobType }
+    const blank = new AST(null, gc, this.options)
+    blank.#parts.push('')
+    gc.push(blank)
+    this.#adopt(child, index)
+  }
+
+  #adopt(child: AST & { type: null }, index: number) {
+    const gc = child.#parts[0] as AST & { type: ExtglobType }
+    this.#parts.splice(index, 1, ...gc.#parts)
+    for (const p of gc.#parts) {
+      if (typeof p === 'object') p.#parent = this
+    }
+    this.#toString = undefined
+  }
+
+  #canUsurpType(c: string): boolean {
+    const m = usurpMap.get(this.type as ExtglobType)
+    return !!(m?.has(c as ExtglobType))
+  }
+
+  #canUsurp(child?: AST | string): child is AST & {
+    type: null
+    parts: [AST & { type: ExtglobType }]
+  } {
+    if (
+      !child ||
+      typeof child !== 'object' ||
+      child.type !== null ||
+      child.#parts.length !== 1 ||
+      this.type === null ||
+      this.#parts.length !== 1
+    ) {
+      return false
+    }
+    const gc = child.#parts[0]
+    if (!gc || typeof gc !== 'object' || gc.type === null) {
+      return false
+    }
+    return (this as AST & { type: ExtglobType }).#canUsurpType(gc.type)
+  }
+
+  #usurp(this: AST & { type: ExtglobType }, child: AST & { type: null }) {
+    const m = usurpMap.get(this.type as ExtglobType)
+    const gc = child.#parts[0] as AST & { type: ExtglobType }
+    const nt = m?.get(gc.type)
+    /* c8 ignore start - impossible */
+    if (!nt) return false
+    /* c8 ignore stop */
+    this.#parts = gc.#parts
+    for (const p of this.#parts) {
+      if (typeof p === 'object') p.#parent = this
+    }
+    this.type = nt
+    this.#toString = undefined
+    this.#emptyExt = false
+  }
+
+  #flatten() {
+    if (!isExtglobAST(this)) {
+      for (const p of this.#parts) {
+        if (typeof p === 'object') p.#flatten()
+      }
+    } else {
+      let iterations = 0
+      let done = false
+      do {
+        done = true
+        for (let i = 0; i < this.#parts.length; i++) {
+          const c = this.#parts[i]
+          if (typeof c === 'object') {
+            c.#flatten()
+            if (this.#canAdopt(c)) {
+              done = false
+              this.#adopt(c, i)
+            } else if (this.#canAdoptWithSpace(c)) {
+              done = false
+              this.#adoptWithSpace(c, i)
+            } else if (this.#canUsurp(c)) {
+              done = false
+              this.#usurp(c)
+            }
+          }
+        }
+      } while (!done && ++iterations < 10)
+    }
+    this.#toString = undefined
+  }
+
   static fromGlob(pattern: string, options: MinimatchOptions = {}) {
     const ast = new AST(null, undefined, options)
-    AST.#parseAST(pattern, ast, 0, options)
+    AST.#parseAST(pattern, ast, 0, options, 0)
     return ast
   }
 
@@ -475,8 +654,11 @@ export class AST {
     allowDot?: boolean
   ): [re: string, body: string, hasMagic: boolean, uflag: boolean] {
     const dot = allowDot ?? !!this.#options.dot
-    if (this.#root === this) this.#fillNegs()
-    if (!this.type) {
+    if (this.#root === this) {
+      this.#flatten()
+      this.#fillNegs()
+    }
+    if (!isExtglobAST(this)) {
       const noEmpty = this.isStart() && this.isEnd()
       const src = this.#parts
         .map(p => {
@@ -551,9 +733,10 @@ export class AST {
       // invalid extglob, has to at least be *something* present, if it's
       // the entire path portion.
       const s = this.toString()
-      this.#parts = [s]
-      this.type = null
-      this.#hasMagic = undefined
+      const me = this as AST
+      me.#parts = [s]
+      me.type = null
+      me.#hasMagic = undefined
       return [s, unescape(this.toString()), false, false]
     }
 
