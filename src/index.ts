@@ -835,7 +835,11 @@ export class Minimatch {
     const firstgs = pattern.indexOf(GLOBSTAR, patternIndex)
     const lastgs = pattern.lastIndexOf(GLOBSTAR)
 
-    const [head, body, tail] = [
+    const [head, body, tail] = partial ? [
+      pattern.slice(patternIndex, firstgs),
+      pattern.slice(firstgs + 1),
+      [],
+    ] : [
       pattern.slice(patternIndex, firstgs),
       pattern.slice(firstgs + 1, lastgs),
       pattern.slice(lastgs + 1),
@@ -878,7 +882,7 @@ export class Minimatch {
           return false
         }
       }
-      return sawSome
+      return partial || sawSome
     }
 
     const bodySegments: [ParseReturn[], number][] = [[[], 0]]
@@ -952,7 +956,7 @@ export class Minimatch {
       }
       fileIndex++
     }
-    return null
+    return partial || null
   }
 
   #matchOne(
