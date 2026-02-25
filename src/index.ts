@@ -538,8 +538,8 @@ export class Minimatch {
     }
 
     const head = pattern.slice(patternIndex, firstgs)
-    const body = pattern.slice(firstgs + 1, lastgs)
-    const tail = pattern.slice(lastgs + 1)
+    const body = partial ? pattern.slice(firstgs + 1) : pattern.slice(firstgs + 1, lastgs)
+    const tail = partial ? [] : pattern.slice(lastgs + 1)
 
     // check the head
     if (head.length) {
@@ -587,7 +587,7 @@ export class Minimatch {
           return false
         }
       }
-      return sawSome
+      return partial || sawSome
     }
 
     // split body into segments at each GLOBSTAR
@@ -676,7 +676,7 @@ export class Minimatch {
       }
       fileIndex++
     }
-    return null
+    return partial || null
   }
 
   _matchOne(

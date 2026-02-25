@@ -1,7 +1,16 @@
 const t = require('tap')
-const mm = require('../').default
+const { minimatch: mm } = require('../dist/cjs/index.js')
+
 t.equal(mm('/a/b', '/*/b/x/y/z', { partial: true }), true)
 t.equal(mm('/a/b/c', '/*/b/x/y/z', { partial: true }), false)
 t.equal(mm('/', 'x', { partial: true }), true)
 const m = new mm.Minimatch('/*/b/x/y/z')
 t.equal(m.match('/a/b', true), true)
+t.equal(mm('/b/c/d/a', '/**/a/b/c', { partial: true }), true)
+t.equal(mm('/b/c/d/a', '/**/a/b/c/**', { partial: true }), true)
+
+t.equal(mm('a', 'a/**', { partial: true }), true)
+t.equal(mm('a', '**', { partial: true }), true)
+t.equal(mm('b/a', 'a/**', { partial: true }), false)
+t.equal(mm('/b/c/d/a', '/**/a/**/b/c/**', { partial: true }), true)
+t.equal(mm('/b/c/d/a', '/**/a/**', { partial: true }), true)
