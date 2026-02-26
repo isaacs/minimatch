@@ -53,9 +53,10 @@
     "node": ">=16 || 14 >=14.17"
   },
   "dependencies": {
-    "brace-expansion": "^5.0.2"
+    "brace-expansion": "^2.0.2"
   },
   "devDependencies": {
+    "@types/brace-expansion": "^1.1.2",
     "@types/node": "^25.3.0",
     "mkdirp": "^3.0.1",
     "prettier": "^3.8.1",
