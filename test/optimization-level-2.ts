@@ -143,10 +143,16 @@ t.test('do not eat the drive letter on Windows', t => {
   })
   // drive letters are a root on Windows
   t.equal(mw1.match('C:/../public/secret'), false)
+  t.equal(mw1.match('//?/C:/../public/secret'), false)
   t.equal(mw2.match('C:/../public/secret'), false)
+  t.equal(mw2.match('//?/C:/../public/secret'), false)
   // level 1 doesn't optimize out ..
   t.equal(mu1.match('C:/../public/secret'), false)
+  // not special on unix, so this is just /?/C:/../public/secret
+  t.equal(mu1.match('//?/C:/../public/secret'), false)
   // not special on unix systems, so .. eats the drive letter
   t.equal(mu2.match('C:/../public/secret'), true)
+  // not special on unix, so this is just /?/C:/../public/secret
+  t.equal(mu2.match('//?/C:/../public/secret'), false)
   t.end()
 })
