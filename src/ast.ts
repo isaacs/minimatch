@@ -169,8 +169,12 @@ const addPatternStart = new Set(['[', '.'])
 // cases where traversal is A-OK, no dot prevention needed
 const justDots = new Set(['..', '.'])
 const reSpecials = new Set('().*{}+?[]^$\\!')
+// Characters that need escaping in a regexp, and are valid to escape with
+// backslash in unicode mode. Characters like ,#- and whitespace are NOT
+// valid to escape in unicode mode, and don't need escaping anyway since
+// they're not regexp metacharacters outside of character classes.
 const regExpEscape = (s: string) =>
-  s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
+  s.replace(/[[\]{}()*+?.\\^$|]/g, '\\$&')
 
 // any single thing other than /
 const qmark = '[^/]'
