@@ -624,6 +624,7 @@ export class Minimatch {
       parts = this.slashSplit(parts)
     }
     let didSomething: boolean = false
+
     do {
       didSomething = false
       // <pre>/<e>/<rest> -> <pre>/<rest>
@@ -652,7 +653,13 @@ export class Minimatch {
       let dd: number = 0
       while (-1 !== (dd = parts.indexOf('..', dd + 1))) {
         const p = parts[dd - 1]
-        if (p && p !== '.' && p !== '..' && p !== '**') {
+        if (
+          p &&
+          p !== '.' &&
+          p !== '..' &&
+          p !== '**' &&
+          !(this.isWindows && /^[a-z]:$/i.test(p))
+        ) {
           didSomething = true
           parts.splice(dd - 1, 2)
           dd -= 2

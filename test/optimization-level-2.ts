@@ -9,6 +9,7 @@ process.env._MINIMATCH_TEST_OPTIMIZATION_LEVEL = String(optimizationLevel)
 
 // run all the basic tests with this setting
 import './basic.js'
+import { Minimatch } from '../src/index.js'
 
 t.test('explicit pattern coalescing and optimization', t => {
   t.plan(2)
@@ -120,5 +121,32 @@ t.test('optimize the file as well', t => {
       t.end()
     })
   }
+  t.end()
+})
+
+t.test('do not eat the drive letter on Windows', t => {
+  const mw1 = new Minimatch('public/**', {
+    optimizationLevel: 1,
+    platform: 'win32',
+  })
+  const mw2 = new Minimatch('public/**', {
+    optimizationLevel: 2,
+    platform: 'win32',
+  })
+  const mu1 = new Minimatch('public/**', {
+    optimizationLevel: 1,
+    platform: 'darwin',
+  })
+  const mu2 = new Minimatch('public/**', {
+    optimizationLevel: 2,
+    platform: 'darwin',
+  })
+  // drive letters are a root on Windows
+  t.equal(mw1.match('C:/../public/secret'), false)
+  t.equal(mw2.match('C:/../public/secret'), false)
+  // level 1 doesn't optimize out ..
+  t.equal(mu1.match('C:/../public/secret'), false)
+  // not special on unix systems, so .. eats the drive letter
+  t.equal(mu2.match('C:/../public/secret'), true)
   t.end()
 })
