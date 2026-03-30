@@ -82,6 +82,7 @@ t.test('call defaults mm function', t => {
   t.same(['x', '#nc', 'y'].filter(f), ['#nc'])
   t.same(defmm.match(['x', '#nc', 'y'], '#nc'), ['#nc'])
   t.same(defmm.braceExpand('# {a,b}'), ['# a', '# b'])
+  //oxlint-disable-next-linex no-useless-escape
   t.same(defmm.makeRe('# {a,b}'), /^(?:\#\ a|\#\ b)$/)
   t.end()
 })

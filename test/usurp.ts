@@ -48,7 +48,6 @@ for (const p of patterns) {
 
 // make sure we didn't break @(!(..))
 t.test('do not break @!', async t => {
-
   t.equal(minimatch('by', '@(!(a|b))y', o), false)
   t.equal(minimatch('by', '!(a|b)y', o), false)
   t.equal(minimatch('xy', '@(!(a|b))y', o), true)

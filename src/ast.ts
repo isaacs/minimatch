@@ -1,7 +1,7 @@
 // parse a single path portion
 
 import { parseClass } from './brace-expressions.js'
-import { MinimatchOptions, MMRegExp } from './index.js'
+import type { MinimatchOptions, MMRegExp } from './index.js'
 import { unescape } from './unescape.js'
 
 // classes [] are handled by the parseClass method
@@ -124,7 +124,10 @@ const adoptionAnyMap = new Map<ExtglobType, ExtglobType[]>([
 // the key is parent, value maps child to resulting extglob parent type
 // '@' is omitted because it's a special case. An `@` extglob with a single
 // member can always be usurped by that subpattern.
-const usurpMap = new Map<ExtglobType, Map<ExtglobType | null, ExtglobType | null>>([
+const usurpMap = new Map<
+  ExtglobType,
+  Map<ExtglobType | null, ExtglobType | null>
+>([
   ['!', new Map([['!', '@']])],
   [
     '?',
@@ -247,13 +250,16 @@ export class AST {
 
   // reconstructs the pattern
   toString(): string {
-    if (this.#toString !== undefined) return this.#toString
-    if (!this.type) {
-      return (this.#toString = this.#parts.map(p => String(p)).join(''))
-    } else {
-      return (this.#toString =
-        this.type + '(' + this.#parts.map(p => String(p)).join('|') + ')')
-    }
+    return (
+      this.#toString !== undefined ? this.#toString
+      : !this.type ?
+        (this.#toString = this.#parts.map(p => String(p)).join(''))
+      : (this.#toString =
+          this.type +
+          '(' +
+          this.#parts.map(p => String(p)).join('|') +
+          ')')
+    )
   }
 
   #fillNegs() {
@@ -309,7 +315,7 @@ export class AST {
   }
 
   toJSON() {
-    const ret: any[] =
+    const ret: unknown[] =
       this.type === null ?
         this.#parts
           .slice()
@@ -579,12 +585,10 @@ export class AST {
 
   #canUsurpType(c: string): boolean {
     const m = usurpMap.get(this.type as ExtglobType)
-    return !!(m?.has(c as ExtglobType))
+    return !!m?.has(c as ExtglobType)
   }
 
-  #canUsurp (
-    child?: AST | string,
-  ): child is AST & {
+  #canUsurp(child?: AST | string): child is AST & {
     type: null
     parts: [AST & { type: ExtglobType }]
   } {
@@ -814,7 +818,7 @@ export class AST {
     const repeated = this.type === '*' || this.type === '+'
     // some kind of extglob
     const start = this.type === '!' ? '(?:(?!(?:' : '(?:'
-    let body = this.#partsToRegExp(dot)
+    let body = (this as AST & { type: ExtglobType }).#partsToRegExp(dot)
 
     if (this.isStart() && this.isEnd() && !body && this.type !== '!') {
       // invalid extglob, has to at least be *something* present, if it's
@@ -887,10 +891,10 @@ export class AST {
               this.#adopt(c, i)
             } else if (this.#canAdoptWithSpace(c)) {
               done = false
-              this.#adoptWithSpace(c, i)
+              ;(this as AST & { type: ExtglobType }).#adoptWithSpace(c, i)
             } else if (this.#canUsurp(c)) {
               done = false
-              this.#usurp(c)
+              ;(this as AST & { type: ExtglobType }).#usurp(c)
             }
           }
         }

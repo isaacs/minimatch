@@ -1,4 +1,4 @@
-import { MinimatchOptions } from './index.js'
+import type { MinimatchOptions } from './index.js'
 
 /**
  * Un-escape a string that has been escaped with {@link escape}.
@@ -29,14 +29,14 @@ export const unescape = (
 ) => {
   if (magicalBraces) {
     return windowsPathsNoEscape ?
-        s.replace(/\[([^\/\\])\]/g, '$1')
+        s.replace(/\[([^/\\])\]/g, '$1')
       : s
-          .replace(/((?!\\).|^)\[([^\/\\])\]/g, '$1$2')
-          .replace(/\\([^\/])/g, '$1')
+          .replace(/((?!\\).|^)\[([^/\\])\]/g, '$1$2')
+          .replace(/\\([^/])/g, '$1')
   }
   return windowsPathsNoEscape ?
-      s.replace(/\[([^\/\\{}])\]/g, '$1')
+      s.replace(/\[([^/\\{}])\]/g, '$1')
     : s
-        .replace(/((?!\\).|^)\[([^\/\\{}])\]/g, '$1$2')
-        .replace(/\\([^\/{}])/g, '$1')
+        .replace(/((?!\\).|^)\[([^/\\{}])\]/g, '$1$2')
+        .replace(/\\([^/{}])/g, '$1')
 }

@@ -1,6 +1,7 @@
 import { expand } from 'brace-expansion'
 import { assertValidPattern } from './assert-valid-pattern.js'
-import { AST, ExtglobType } from './ast.js'
+import type { ExtglobType } from './ast.js'
+import { AST } from './ast.js'
 import { escape } from './escape.js'
 import { unescape } from './unescape.js'
 
@@ -135,7 +136,7 @@ export const minimatch = (
 }
 
 // Optimized checking for the most common glob patterns.
-const starDotExtRE = /^\*+([^+@!?\*\[\(]*)$/
+const starDotExtRE = /^\*+([^+@!?*[(]*)$/
 const starDotExtTest = (ext: string) => (f: string) =>
   !f.startsWith('.') && f.endsWith(ext)
 const starDotExtTestDot = (ext: string) => (f: string) => f.endsWith(ext)
@@ -159,7 +160,7 @@ const starRE = /^\*+$/
 const starTest = (f: string) => f.length !== 0 && !f.startsWith('.')
 const starTestDot = (f: string) =>
   f.length !== 0 && f !== '.' && f !== '..'
-const qmarksRE = /^\?+([^+@!?\*\[\(]*)?$/
+const qmarksRE = /^\?+([^+@!?*[(]*)?$/
 const qmarksTestNocase = ([$0, ext = '']: RegExpMatchArray) => {
   const noext = qmarksTestNoExt([$0])
   if (!ext) return noext
@@ -455,7 +456,7 @@ export class Minimatch {
     return false
   }
 
-  debug(..._: any[]) {}
+  debug(..._: unknown[]) {}
 
   make() {
     const pattern = this.pattern
@@ -479,7 +480,8 @@ export class Minimatch {
     this.globSet = [...new Set(this.braceExpand())]
 
     if (options.debug) {
-      this.debug = (...args: any[]) => console.error(...args)
+      //oxlint-disable-next-line no-console
+      this.debug = (...args: unknown[]) => console.error(...args)
     }
 
     this.debug(this.pattern, this.globSet)
@@ -553,10 +555,10 @@ export class Minimatch {
   preprocess(globParts: string[][]) {
     // if we're not in globstar mode, then turn ** into *
     if (this.options.noglobstar) {
-      for (let i = 0; i < globParts.length; i++) {
-        for (let j = 0; j < globParts[i].length; j++) {
-          if (globParts[i][j] === '**') {
-            globParts[i][j] = '*'
+      for (const partset of globParts) {
+        for (let j = 0; j < partset.length; j++) {
+          if (partset[j] === '**') {
+            partset[j] = '*'
           }
         }
       }
@@ -951,15 +953,18 @@ export class Minimatch {
     // split the pattern up into globstar-delimited sections
     // the tail has to be at the end, and the others just have
     // to be found in order from the head.
-    const [head, body, tail] = partial ? [
-      pattern.slice(patternIndex, firstgs),
-      pattern.slice(firstgs + 1),
-      [],
-    ] : [
-      pattern.slice(patternIndex, firstgs),
-      pattern.slice(firstgs + 1, lastgs),
-      pattern.slice(lastgs + 1),
-    ]
+    const [head, body, tail] =
+      partial ?
+        [
+          pattern.slice(patternIndex, firstgs),
+          pattern.slice(firstgs + 1),
+          [],
+        ]
+      : [
+          pattern.slice(patternIndex, firstgs),
+          pattern.slice(firstgs + 1, lastgs),
+          pattern.slice(lastgs + 1),
+        ]
 
     // check the head, from the current file/pattern index.
     if (head.length) {
@@ -1371,7 +1376,7 @@ export class Minimatch {
     try {
       this.regexp = new RegExp(re, [...flags].join(''))
       /* c8 ignore start */
-    } catch (ex) {
+    } catch {
       // should be impossible
       this.regexp = false
     }
@@ -1386,7 +1391,7 @@ export class Minimatch {
     // preserveMultipleSlashes is set to true.
     if (this.preserveMultipleSlashes) {
       return p.split('/')
-    } else if (this.isWindows && /^\/\/[^\/]+/.test(p)) {
+    } else if (this.isWindows && /^\/\/[^/]+/.test(p)) {
       // add an extra '' for the one we lose
       return ['', ...p.split(/\/+/)]
     } else {
@@ -1436,8 +1441,7 @@ export class Minimatch {
       }
     }
 
-    for (let i = 0; i < set.length; i++) {
-      const pattern = set[i]
+    for (const pattern of set) {
       let file = ff
       if (options.matchBase && pattern.length === 1) {
         file = [filename]
