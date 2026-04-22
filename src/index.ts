@@ -120,6 +120,45 @@ export interface MinimatchOptions {
   maxExtglobRecursion?: number
 }
 
+// Simple LRU cache for Minimatch instances
+class MinimatchCache {
+  private cache = new Map<string, Minimatch>()
+  private readonly maxSize = 100
+
+  private makeKey(pattern: string, options: MinimatchOptions): string {
+    // Create a stable key from pattern and options
+    // For simplicity, stringify the options object
+    return `${pattern}\n${JSON.stringify(options)}`
+  }
+
+  get(pattern: string, options: MinimatchOptions): Minimatch | undefined {
+    const key = this.makeKey(pattern, options)
+    const value = this.cache.get(key)
+    if (value !== undefined) {
+      // Move to end (most recently used)
+      this.cache.delete(key)
+      this.cache.set(key, value)
+    }
+    return value
+  }
+
+  set(pattern: string, options: MinimatchOptions, mm: Minimatch): void {
+    const key = this.makeKey(pattern, options)
+    // Remove if exists (to re-add at end)
+    this.cache.delete(key)
+    this.cache.set(key, mm)
+    // Evict oldest if over max size
+    if (this.cache.size > this.maxSize) {
+      const firstKey = this.cache.keys().next().value
+      if (firstKey !== undefined) {
+        this.cache.delete(firstKey)
+      }
+    }
+  }
+}
+
+const minimatchCache = new MinimatchCache()
+
 export const minimatch = (
   p: string,
   pattern: string,
@@ -132,7 +171,14 @@ export const minimatch = (
     return false
   }
 
-  return new Minimatch(pattern, options).match(p)
+  // Check cache first
+  let mm = minimatchCache.get(pattern, options)
+  if (!mm) {
+    mm = new Minimatch(pattern, options)
+    minimatchCache.set(pattern, options, mm)
+  }
+
+  return mm.match(p)
 }
 
 // Optimized checking for the most common glob patterns.
