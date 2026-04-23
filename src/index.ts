@@ -453,6 +453,7 @@ export class Minimatch {
   maxGlobstarRecursion: number
 
   regexp: false | null | MMRegExp
+  fastPathGlobstarExt: string | null = null
   constructor(pattern: string, options: MinimatchOptions = {}) {
     assertValidPattern(pattern)
 
@@ -591,6 +592,41 @@ export class Minimatch {
     }
 
     this.debug(this.pattern, this.set)
+
+    // Detect **/*.ext fast-path pattern
+    this.detectFastPathGlobstarExt()
+  }
+
+  // Detect if pattern matches **/*.ext for fast-path optimization
+  detectFastPathGlobstarExt() {
+    // Only apply fast-path if:
+    // - Not negated
+    // - Single pattern in set
+    // - Pattern has exactly 2 parts: GLOBSTAR and a simple *.ext
+    if (
+      this.negate ||
+      this.set.length !== 1 ||
+      this.set[0].length !== 2 ||
+      this.set[0][0] !== GLOBSTAR
+    ) {
+      return
+    }
+
+    const secondPart = this.set[0][1]
+    // Check if second part is a regex matching *.ext (where ext is literal)
+    if (typeof secondPart !== 'object' || !('source' in secondPart)) {
+      return
+    }
+
+    const regex = secondPart as MMRegExp
+    // Match patterns like /^(?!\.)[^/]*?\.js$/ (with dot file exclusion)
+    // or /^[^/]*?\.js$/ (without dot file exclusion)
+    // This matches *.ext patterns compiled to regex
+    const extMatch = regex.source.match(/^\^\(\?\!\\.\)\[\^\/\]\*\?\\\.([a-zA-Z0-9]+)\$/) ||
+                     regex.source.match(/^\^\[\^\/\]\*\?\\\.([a-zA-Z0-9]+)\$/)
+    if (extMatch) {
+      this.fastPathGlobstarExt = '.' + extMatch[1]
+    }
   }
 
   // various transforms to equivalent pattern sets that are
@@ -1475,6 +1511,21 @@ export class Minimatch {
     // windows: need to use /, not \
     if (this.isWindows) {
       f = f.split('\\').join('/')
+    }
+
+    // Fast-path for **/*.ext patterns
+    if (this.fastPathGlobstarExt && !partial) {
+      const ext = this.fastPathGlobstarExt
+      if (this.nocase) {
+        // Case-insensitive: check if path ends with extension (ignoring case) and contains slash
+        return (
+          f.toLowerCase().endsWith(ext.toLowerCase()) &&
+          f.includes('/')
+        )
+      } else {
+        // Case-sensitive: check if path ends with extension and contains slash
+        return f.endsWith(ext) && f.includes('/')
+      }
     }
 
     // treat the test path as a set of pathparts.
