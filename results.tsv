@@ -1,2 +1,3 @@
 thesis	attempt	metric	baseline	status	summary
 #1	thesis/1-cache-compiled-minimatch-instances	1677201.2600	265849.5700	accepted	Added LRU cache for Minimatch instances with maxSize=100. The benchmark repeatedly uses the same pattern '**/*.js', so caching eliminates redundant parsing and compilation. Achieved 6.3x speedup (533% improvement) from ~266K to ~1.677M ops/sec.
+#2	thesis/2-optimize-ast-globstar-matching	1719051.0000	1680475.0900	accepted	Reduced overhead in globstar matching hot path by hoisting !this.options.dot check outside loops in #matchGlobStarBodySections (3 locations). Removed redundant String() conversion since slashSplit already returns string arrays. Achieved ~2.3% improvement (1.68M -> 1.72M ops/sec).
