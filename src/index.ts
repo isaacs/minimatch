@@ -1069,13 +1069,14 @@ export class Minimatch {
     // after the head, or it's not a matc
     if (!body.length) {
       let sawSome = !!fileTailMatch
+      const checkDot = !this.options.dot
       for (let i = fileIndex; i < file.length - fileTailMatch; i++) {
-        const f = String(file[i])
+        const f = file[i]
         sawSome = true
         if (
           f === '.' ||
           f === '..' ||
-          (!this.options.dot && f.startsWith('.'))
+          (checkDot && f.startsWith('.'))
         ) {
           return false
         }
@@ -1145,13 +1146,14 @@ export class Minimatch {
     const bs = bodySegments[bodyIndex]
     if (!bs) {
       // just make sure that there's no bad dots
+      const checkDot = !this.options.dot
       for (let i = fileIndex; i < file.length; i++) {
         sawTail = true
         const f = file[i]
         if (
           f === '.' ||
           f === '..' ||
-          (!this.options.dot && f.startsWith('.'))
+          (checkDot && f.startsWith('.'))
         ) {
           return false
         }
@@ -1161,6 +1163,7 @@ export class Minimatch {
 
     // have a non-globstar body section to test
     const [body, after] = bs
+    const checkDot = !this.options.dot
     while (fileIndex <= after) {
       const m = this.#matchOne(
         file.slice(0, fileIndex + body.length),
@@ -1190,7 +1193,7 @@ export class Minimatch {
       if (
         f === '.' ||
         f === '..' ||
-        (!this.options.dot && f.startsWith('.'))
+        (checkDot && f.startsWith('.'))
       ) {
         return false
       }
