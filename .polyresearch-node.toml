@@ -2,6 +2,7 @@ node_id = "hetzner-dfc9"
 capacity = 75
 api_budget = 5000
 request_delay_ms = 100
+repo = "alanzabihi/minimatch"
 
 [agent]
 command = "claude -p --dangerously-skip-permissions"
