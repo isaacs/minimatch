@@ -207,6 +207,135 @@ const path: { [k: string]: { sep: Sep } } = {
 }
 /* c8 ignore stop */
 
+const isExtglobStart = (c: string) =>
+  c === '!' || c === '?' || c === '+' || c === '*' || c === '@'
+
+const splitExtglobAlternatives = (p: string) => {
+  const parts: string[] = []
+  let part = ''
+  let extglobDepth = 0
+  let escaping = false
+
+  for (let i = 0; i < p.length; i++) {
+    const c = p.charAt(i)
+    if (escaping) {
+      escaping = false
+      part += c
+      continue
+    }
+
+    if (c === '\\') {
+      escaping = true
+      part += c
+      continue
+    }
+
+    if (isExtglobStart(c) && p.charAt(i + 1) === '(') {
+      extglobDepth++
+      part += c + '('
+      i++
+      continue
+    }
+
+    if (extglobDepth && c === ')') {
+      extglobDepth--
+      part += c
+      continue
+    }
+
+    if (!extglobDepth && c === '|') {
+      parts.push(part)
+      part = ''
+      continue
+    }
+
+    part += c
+  }
+
+  parts.push(part)
+  return parts
+}
+
+const hasSlash = (p: string) => p.includes('/')
+
+const filterExtglobAlternatives = (p: string): string => {
+  let result = ''
+  let escaping = false
+
+  for (let i = 0; i < p.length; i++) {
+    const c = p.charAt(i)
+    if (escaping) {
+      escaping = false
+      result += c
+      continue
+    }
+
+    if (c === '\\') {
+      escaping = true
+      result += c
+      continue
+    }
+
+    if (!isExtglobStart(c) || p.charAt(i + 1) !== '(') {
+      result += c
+      continue
+    }
+
+    let depth = 1
+    let j = i + 2
+    let body = ''
+    let bodyEscaping = false
+
+    for (; j < p.length; j++) {
+      const bc = p.charAt(j)
+      if (bodyEscaping) {
+        bodyEscaping = false
+        body += bc
+        continue
+      }
+
+      if (bc === '\\') {
+        bodyEscaping = true
+        body += bc
+        continue
+      }
+
+      if (isExtglobStart(bc) && p.charAt(j + 1) === '(') {
+        depth++
+        body += bc + '('
+        j++
+        continue
+      }
+
+      if (bc === ')') {
+        depth--
+        if (!depth) {
+          break
+        }
+      }
+
+      body += bc
+    }
+
+    if (depth) {
+      result += p.slice(i)
+      break
+    }
+
+    const alternatives = splitExtglobAlternatives(body).map(alt =>
+      filterExtglobAlternatives(alt),
+    )
+    const valid = alternatives.filter(alt => !hasSlash(alt))
+    result +=
+      valid.length === 0 ?
+        p.slice(i, j + 1)
+      : c + '(' + valid.join('|') + ')'
+    i = j
+  }
+
+  return result
+}
+
 export const sep =
   defaultPlatform === 'win32' ? path.win32.sep : path.posix.sep
 minimatch.sep = sep
@@ -1396,13 +1525,14 @@ export class Minimatch {
     // so that UNC paths aren't broken.  Otherwise, any number of
     // / characters are coalesced into one, unless
     // preserveMultipleSlashes is set to true.
+    const filtered = filterExtglobAlternatives(p)
     if (this.preserveMultipleSlashes) {
-      return p.split('/')
+      return filtered.split('/')
     } else if (this.isWindows && /^\/\/[^/]+/.test(p)) {
       // add an extra '' for the one we lose
-      return ['', ...p.split(/\/+/)]
+      return ['', ...filtered.split(/\/+/)]
     } else {
-      return p.split(/\/+/)
+      return filtered.split(/\/+/)
     }
   }
 
