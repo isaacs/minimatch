@@ -5,7 +5,7 @@
   "version": "10.2.5",
   "repository": {
     "type": "git",
-    "url": "git@github.com:isaacs/minimatch"
+    "url": "https://github.com/isaacs/minimatch.git"
   },
   "main": "./dist/commonjs/index.js",
   "types": "./dist/commonjs/index.d.ts",
