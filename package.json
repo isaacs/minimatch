@@ -68,6 +68,6 @@
   "type": "module",
   "module": "./dist/esm/index.js",
   "dependencies": {
-    "brace-expansion": "^5.0.6"
+    "brace-expansion": "^5.0.7"
   }
 }
