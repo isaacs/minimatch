@@ -3,6 +3,7 @@
   "categories": {},
   "options": {},
   "rules": {
+    "no-useless-escape": "off",
     "no-empty-file": "error",
     "no-unsafe-finally": "off",
     "no-param-reassign": "off",
@@ -41,16 +42,7 @@
         "allowImplicit": true
       }
     ],
-    "quotes": [
-      "error",
-      "single",
-      {
-        "avoidEscape": true
-      }
-    ],
-    "no-return-await": "error",
     "import/namespace": "off",
-    "import/no-unresolved": "off",
     "no-control-regex": "off",
     "jsdoc/check-tag-names": "off",
     "jsdoc/require-yields": "off",
@@ -144,12 +136,6 @@
         "typescript/require-array-sort-compare": "off",
         "typescript/no-base-to-string": "off",
         "typescript/await-thenable": "off"
-      }
-    },
-    {
-      "files": ["*.tsx"],
-      "rules": {
-        "jsdoc/require-jsdoc": "off"
       }
     },
     {
