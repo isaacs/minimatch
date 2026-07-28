@@ -12,7 +12,7 @@ const posixClasses: { [k: string]: [e: string, u: boolean, n?: boolean] } =
     '[:digit:]': ['\\p{Nd}', true],
     '[:graph:]': ['\\p{Z}\\p{C}', true, true],
     '[:lower:]': ['\\p{Ll}', true],
-    '[:print:]': ['\\p{C}', true],
+    '[:print:]': ['\\p{C}', true, true],
     '[:punct:]': ['\\p{P}', true],
     '[:space:]': ['\\p{Z}\\t\\r\\n\\v\\f', true],
     '[:upper:]': ['\\p{Lu}', true],
