@@ -134,6 +134,17 @@ t.test('filter function', t => {
   t.end()
 })
 
+t.test('extglob alternatives with slashes do not break pattern', t => {
+  const files = ['a/b', 'a/x', 'a/b/c', 'x/y']
+
+  t.same(mm.match(files, '@(x|a|a/b)/*'), ['a/b', 'a/x', 'x/y'])
+  t.same(mm.match(files, '@(a|a/b)/*'), ['a/b', 'a/x'])
+  t.same(mm.match(files, '@(a/b)/*'), [])
+  t.same(mm.match(files, '@(a\\|a/b)/*'), [])
+
+  t.end()
+})
+
 t.test('whitespace handling', t => {
   t.equal(mm('x/y', 'y'), false)
   t.equal(mm('x/y', 'y', { matchBase: true }), true)
