@@ -229,7 +229,7 @@ exports[`test/escape-has-magic.js > TAP > ?(x-!(y)|z) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:x\\-(?:(?!(?:y(?:$|\\/)))[^/]*?)|z)?$/,
+      /^(?:x-(?:(?!(?:y(?:$|\\/)))[^/]*?)|z)?$/,
     ],
   ],
   true,
@@ -240,7 +240,7 @@ exports[`test/escape-has-magic.js > TAP > ?(x-!(y)|z)b 1`] = `
 Array [
   Array [
     Array [
-      /^(?:x\\-(?:(?!(?:yb(?:$|\\/)))[^/]*?)|z)?b$/,
+      /^(?:x-(?:(?!(?:yb(?:$|\\/)))[^/]*?)|z)?b$/,
     ],
   ],
   true,
@@ -724,7 +724,7 @@ exports[`test/escape-has-magic.js > TAP > [#a* 1`] = `
 Array [
   Array [
     Array [
-      /^\\[\\#a[^/]*?$/,
+      /^\\[#a[^/]*?$/,
     ],
   ],
   true,
@@ -1611,7 +1611,7 @@ exports[`test/escape-has-magic.js > TAP > #* 1`] = `
 Array [
   Array [
     Array [
-      /^\\#[^/]*?$/,
+      /^#[^/]*?$/,
     ],
   ],
   true,
