@@ -1,7 +1,7 @@
 import { expand } from 'brace-expansion'
 import { assertValidPattern } from './assert-valid-pattern.js'
 import type { ExtglobType } from './ast.js'
-import { AST } from './ast.js'
+import { AST, regExpEscape } from './ast.js'
 import { escape } from './escape.js'
 import { unescape } from './unescape.js'
 
@@ -374,8 +374,6 @@ minimatch.match = match
 
 // replace stuff like \* with *
 const globMagic = /[?*]|[+@!]\(.*?\)|\[|\]/
-const regExpEscape = (s: string) =>
-  s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
 
 export type MMRegExp = RegExp & {
   _src?: string

@@ -169,8 +169,16 @@ const addPatternStart = new Set(['[', '.'])
 // cases where traversal is A-OK, no dot prevention needed
 const justDots = new Set(['..', '.'])
 const reSpecials = new Set('().*{}+?[]^$\\!')
-const regExpEscape = (s: string) =>
-  s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
+// Only escape characters that are actually regular expression syntax outside
+// of a character class, which is the only context this output is used in.
+// `,` `-` `#` and whitespace are literals there, and backslash-escaping them
+// produces an "Invalid escape" SyntaxError as soon as the `u` flag is set,
+// which happens whenever a pattern contains a POSIX class like `[[:digit:]]`.
+// (`-` is only special inside a class, `,` only inside a `{n,m}` quantifier -
+// unreachable here because `{` and `}` are themselves escaped - and `#` and
+// whitespace only under the `x` flag, which JavaScript does not have.)
+export const regExpEscape = (s: string) =>
+  s.replace(/[[\]{}()*+?.\\^$|]/g, '\\$&')
 
 // any single thing other than /
 const qmark = '[^/]'

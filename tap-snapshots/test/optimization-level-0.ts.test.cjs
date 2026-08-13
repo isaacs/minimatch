@@ -3464,11 +3464,11 @@ exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe ?.js 4`] = `
 `
 
 exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe ?(x-!(y)|z) 1`] = `
-/^(?:x\\-(?:(?!(?:y(?:$|\\/)))[^/]*?)|z)?$/
+/^(?:x-(?:(?!(?:y(?:$|\\/)))[^/]*?)|z)?$/
 `
 
 exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe ?(x-!(y)|z)b 1`] = `
-/^(?:x\\-(?:(?!(?:yb(?:$|\\/)))[^/]*?)|z)?b$/
+/^(?:x-(?:(?!(?:yb(?:$|\\/)))[^/]*?)|z)?b$/
 `
 
 exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe ?***?**** 1`] = `
@@ -3636,7 +3636,7 @@ exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe [\\z-a] 1`] =
 `
 
 exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe [#a* 1`] = `
-/^\\[\\#a[^/]*?$/
+/^\\[#a[^/]*?$/
 `
 
 exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe [^a-c]* 1`] = `
@@ -3940,7 +3940,7 @@ false
 `
 
 exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe #* 1`] = `
-/^\\#[^/]*?$/
+/^#[^/]*?$/
 `
 
 exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe +(?) 1`] = `
@@ -4096,7 +4096,7 @@ exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe a/[2015-03-10
 `
 
 exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe a/[2015-03-10T00:23:08.647Z\\]/z 1`] = `
-/^a\\/\\[2015\\-03\\-10T00:23:08\\.647Z\\]\\/z$/
+/^a\\/\\[2015-03-10T00:23:08\\.647Z\\]\\/z$/
 `
 
 exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe a/*/b 1`] = `
