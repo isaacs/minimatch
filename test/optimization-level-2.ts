@@ -158,14 +158,18 @@ t.test('do not eat the drive letter on Windows', t => {
 })
 
 t.test('do not let .. walk up out of a Windows root', t => {
-  for (const optimizationLevel of [1, 2]) {
+  for (const level of [1, 2]) {
     const drive = new Minimatch('C:/foo/../..', {
-      optimizationLevel,
+      optimizationLevel: level,
       platform: 'win32',
     })
     const unc = new Minimatch('//srv/share/../x', {
-      optimizationLevel,
+      optimizationLevel: level,
       platform: 'win32',
+    })
+    const uncPosix = new Minimatch('//srv/share/../x', {
+      optimizationLevel: level,
+      platform: 'darwin',
     })
     // consecutive .. must not chew through the drive letter
     t.equal(drive.match('C:/'), true)
@@ -173,6 +177,8 @@ t.test('do not let .. walk up out of a Windows root', t => {
     // the share is part of the UNC root, not a normal path portion
     t.equal(unc.match('//srv/share/x'), true)
     t.equal(unc.match('//srv/x'), false)
+    // not special on unix, so .. eats the share
+    t.equal(uncPosix.match('//srv/x'), true)
   }
   t.end()
 })
