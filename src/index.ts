@@ -598,6 +598,16 @@ export class Minimatch {
     })
   }
 
+  // a drive letter or the //server/share prefix of a UNC path is a
+  // root on Windows, so .. cannot travel up out of it
+  isWindowsRoot(parts: string[], i: number) {
+    return (
+      this.isWindows &&
+      (/^[a-z]:$/i.test(parts[i]) ||
+        (parts[0] === '' && parts[1] === '' && i <= 3))
+    )
+  }
+
   // get rid of adjascent ** and resolve .. portions
   levelOneOptimize(globParts: string[][]) {
     return globParts.map(parts => {
@@ -608,7 +618,9 @@ export class Minimatch {
         }
         if (part === '..') {
           if (prev && prev !== '..' && prev !== '.' && prev !== '**') {
-            set.pop()
+            if (!this.isWindowsRoot(set, set.length - 1)) {
+              set.pop()
+            }
             return set
           }
         }
@@ -653,16 +665,15 @@ export class Minimatch {
       let dd: number = 0
       while (-1 !== (dd = parts.indexOf('..', dd + 1))) {
         const p = parts[dd - 1]
-        if (
-          p &&
-          p !== '.' &&
-          p !== '..' &&
-          p !== '**' &&
-          !(this.isWindows && /^[a-z]:$/i.test(p))
-        ) {
+        if (p && p !== '.' && p !== '..' && p !== '**') {
           didSomething = true
-          parts.splice(dd - 1, 2)
-          dd -= 2
+          if (this.isWindowsRoot(parts, dd - 1)) {
+            parts.splice(dd, 1)
+            dd -= 1
+          } else {
+            parts.splice(dd - 1, 2)
+            dd -= 2
+          }
         }
       }
     } while (didSomething)
@@ -757,11 +768,16 @@ export class Minimatch {
           const p = parts[dd - 1]
           if (p && p !== '.' && p !== '..' && p !== '**') {
             didSomething = true
-            const needDot = dd === 1 && parts[dd + 1] === '**'
-            const splin = needDot ? ['.'] : []
-            parts.splice(dd - 1, 2, ...splin)
-            if (parts.length === 0) parts.push('')
-            dd -= 2
+            if (this.isWindowsRoot(parts, dd - 1)) {
+              parts.splice(dd, 1)
+              dd -= 1
+            } else {
+              const needDot = dd === 1 && parts[dd + 1] === '**'
+              const splin = needDot ? ['.'] : []
+              parts.splice(dd - 1, 2, ...splin)
+              if (parts.length === 0) parts.push('')
+              dd -= 2
+            }
           }
         }
       }
