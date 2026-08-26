@@ -1314,7 +1314,7 @@ export class Minimatch {
     // regexpify non-globstar patterns
     // if ** is only item, then we just do one twoStar
     // if ** is first, and there are more, prepend (\/|twoStar\/)? to next
-    // if ** is last, append (\/twoStar|) to previous
+    // if ** is last, append (\/|\/twoStar) to previous
     // if ** is in the middle, append (\/|\/twoStar\/) to previous
     // then filter out GLOBSTAR symbols
     let re = set
@@ -1342,7 +1342,7 @@ export class Minimatch {
               pp[i] = twoStar
             }
           } else if (next === undefined) {
-            pp[i - 1] = prev + '(?:\\/|\\/' + twoStar + ')?'
+            pp[i - 1] = prev + '(?:\\/|\\/' + twoStar + ')'
           } else if (next !== GLOBSTAR) {
             pp[i - 1] = prev + '(?:\\/|\\/' + twoStar + '\\/)' + next
             pp[i + 1] = GLOBSTAR

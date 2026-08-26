@@ -195,6 +195,27 @@ t.test('GLOBSTAR marker exposed', t => {
   t.end()
 })
 
+t.test('trailing globstar re agrees with match on bare dir', t => {
+  // a trailing /** requires the slash: it matches the directory 'a/'
+  // and its descendants, but not the bare name 'a'. makeRe must agree
+  // with the minimatch() method here.
+  for (const [pattern, path, expected] of [
+    ['a/**', 'a', false],
+    ['a/**', 'a/', true],
+    ['a/**', 'a/b', true],
+    ['some/path/**', 'some/path', false],
+    ['some/path/**', 'some/path/', true],
+  ]) {
+    t.equal(
+      mm.makeRe(pattern).test(path),
+      expected,
+      `makeRe ${pattern} ~ ${path}`,
+    )
+    t.equal(mm(path, pattern), expected, `minimatch ${pattern} ~ ${path}`)
+  }
+  t.end()
+})
+
 t.test('globstar re matches zero or more path portions', t => {
   const cases = {
     'path/**': {
