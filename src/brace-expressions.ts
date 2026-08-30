@@ -168,5 +168,7 @@ export const parseClass = (
     : ranges.length ? sranges
     : snegs
 
-  return [comb, uflag, endPos - pos, true]
+  // Character classes match a single path portion, so they must not consume
+  // the path separator when their regexp is used by makeRe().
+  return ['(?!/)' + comb, uflag, endPos - pos, true]
 }

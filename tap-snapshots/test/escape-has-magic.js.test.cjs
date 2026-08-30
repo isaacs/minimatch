@@ -515,7 +515,7 @@ exports[`test/escape-has-magic.js > TAP > [-abc] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[\\-abc]$/,
+      /^(?!\\.)(?!\\/)[\\-abc]$/,
     ],
   ],
   true,
@@ -537,7 +537,7 @@ exports[`test/escape-has-magic.js > TAP > [[:alnum:]][[:alnum:]][[:alnum:]][[:al
 Array [
   Array [
     Array [
-      /^(?!\\.)[\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}]$/u,
+      /^(?!\\.)(?!\\/)[\\p{L}\\p{Nl}\\p{Nd}](?!\\/)[\\p{L}\\p{Nl}\\p{Nd}](?!\\/)[\\p{L}\\p{Nl}\\p{Nd}](?!\\/)[\\p{L}\\p{Nl}\\p{Nd}](?!\\/)[\\p{L}\\p{Nl}\\p{Nd}]$/u,
     ],
   ],
   true,
@@ -548,7 +548,7 @@ exports[`test/escape-has-magic.js > TAP > [[:alpha:]][[:alpha:]][[:alpha:]][[:al
 Array [
   Array [
     Array [
-      /^(?!\\.)[\\p{L}\\p{Nl}][\\p{L}\\p{Nl}][\\p{L}\\p{Nl}][\\p{L}\\p{Nl}][\\p{L}\\p{Nl}]$/u,
+      /^(?!\\.)(?!\\/)[\\p{L}\\p{Nl}](?!\\/)[\\p{L}\\p{Nl}](?!\\/)[\\p{L}\\p{Nl}](?!\\/)[\\p{L}\\p{Nl}](?!\\/)[\\p{L}\\p{Nl}]$/u,
     ],
   ],
   true,
@@ -559,7 +559,7 @@ exports[`test/escape-has-magic.js > TAP > [[:ascii:]][[:ascii:]][[:ascii:]][[:as
 Array [
   Array [
     Array [
-      /^(?!\\.)[\\x00-\\x7f][\\x00-\\x7f][\\x00-\\x7f][\\x00-\\x7f][\\x00-\\x7f]$/,
+      /^(?!\\.)(?!\\/)[\\x00-\\x7f](?!\\/)[\\x00-\\x7f](?!\\/)[\\x00-\\x7f](?!\\/)[\\x00-\\x7f](?!\\/)[\\x00-\\x7f]$/,
     ],
   ],
   true,
@@ -570,7 +570,7 @@ exports[`test/escape-has-magic.js > TAP > [[:graph:][:digit:]]f* 1`] = `
 Array [
   Array [
     Array [
-      /^([\\p{Nd}]|[^\\p{Z}\\p{C}])f[^/]*?$/u,
+      /^(?!\\/)([\\p{Nd}]|[^\\p{Z}\\p{C}])f[^/]*?$/u,
     ],
   ],
   true,
@@ -581,7 +581,7 @@ exports[`test/escape-has-magic.js > TAP > [[:graph:]]f* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^\\p{Z}\\p{C}]f[^/]*?$/u,
+      /^(?!\\.)(?!\\/)[^\\p{Z}\\p{C}]f[^/]*?$/u,
     ],
   ],
   true,
@@ -592,7 +592,7 @@ exports[`test/escape-has-magic.js > TAP > [[:xdigit:]][[:xdigit:]]??? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[A-Fa-f0-9][A-Fa-f0-9][^/][^/][^/]$/,
+      /^(?!\\.)(?!\\/)[A-Fa-f0-9](?!\\/)[A-Fa-f0-9][^/][^/][^/]$/,
     ],
   ],
   true,
@@ -603,7 +603,7 @@ exports[`test/escape-has-magic.js > TAP > [[:xdigit:]][[:xdigit:]][[:xdigit:]][[
 Array [
   Array [
     Array [
-      /^(?!\\.)[A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9]$/,
+      /^(?!\\.)(?!\\/)[A-Fa-f0-9](?!\\/)[A-Fa-f0-9](?!\\/)[A-Fa-f0-9](?!\\/)[A-Fa-f0-9](?!\\/)[A-Fa-f0-9]$/,
     ],
   ],
   true,
@@ -636,7 +636,7 @@ exports[`test/escape-has-magic.js > TAP > []-] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[\\]\\-]$/,
+      /^(?!\\.)(?!\\/)[\\]\\-]$/,
     ],
   ],
   true,
@@ -658,7 +658,7 @@ exports[`test/escape-has-magic.js > TAP > []+*] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[\\]+*]$/,
+      /^(?!\\.)(?!\\/)[\\]+*]$/,
     ],
   ],
   true,
@@ -680,7 +680,7 @@ exports[`test/escape-has-magic.js > TAP > [\\-\\]] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[\\-\\]]$/,
+      /^(?!\\.)(?!\\/)[\\-\\]]$/,
     ],
   ],
   true,
@@ -735,7 +735,7 @@ exports[`test/escape-has-magic.js > TAP > [^a-c]* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^a-c][^/]*?$/,
+      /^(?!\\.)(?!\\/)[^a-c][^/]*?$/,
     ],
   ],
   true,
@@ -768,7 +768,7 @@ exports[`test/escape-has-magic.js > TAP > [a-b-c] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[a-b\\-c]$/,
+      /^(?!\\.)(?!\\/)[a-b\\-c]$/,
     ],
   ],
   true,
@@ -779,7 +779,7 @@ exports[`test/escape-has-magic.js > TAP > [a-c]b* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[a-c]b[^/]*?$/,
+      /^(?!\\.)(?!\\/)[a-c]b[^/]*?$/,
     ],
   ],
   true,
@@ -790,7 +790,7 @@ exports[`test/escape-has-magic.js > TAP > [a-y]*[^c] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[a-y][^/]*?[^c]$/,
+      /^(?!\\.)(?!\\/)[a-y][^/]*?(?!\\/)[^c]$/,
     ],
   ],
   true,
@@ -801,7 +801,7 @@ exports[`test/escape-has-magic.js > TAP > [a-z] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[a-z]$/,
+      /^(?!\\.)(?!\\/)[a-z]$/,
     ],
   ],
   true,
@@ -823,7 +823,7 @@ exports[`test/escape-has-magic.js > TAP > [abc-] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[abc\\-]$/,
+      /^(?!\\.)(?!\\/)[abc\\-]$/,
     ],
   ],
   true,
@@ -845,7 +845,7 @@ exports[`test/escape-has-magic.js > TAP > [f-gz-a]* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[f-g][^/]*?$/,
+      /^(?!\\.)(?!\\/)[f-g][^/]*?$/,
     ],
   ],
   true,
@@ -867,7 +867,7 @@ exports[`test/escape-has-magic.js > TAP > [ia]?[ck] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[ia][^/][ck]$/i,
+      /^(?!\\.)(?!\\/)[ia][^/](?!\\/)[ck]$/i,
     ],
   ],
   true,
@@ -911,7 +911,7 @@ exports[`test/escape-has-magic.js > TAP > [z\\-a] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[z\\-a]$/,
+      /^(?!\\.)(?!\\/)[z\\-a]$/,
     ],
   ],
   true,
@@ -1518,7 +1518,7 @@ Array [
       "",
       "^root:",
       "{s",
-      /^\\^[^:][^/]*?:[^:][^/]*?:\\([^:][^/]*?\\)\\.[^/]*?\\$$/,
+      /^\\^(?!\\/)[^:][^/]*?:(?!\\/)[^:][^/]*?:\\((?!\\/)[^:][^/]*?\\)\\.[^/]*?\\$$/,
       "\\u0001",
       "",
     ],
@@ -1534,7 +1534,7 @@ Array [
       "",
       "^root:",
       "{s",
-      /^\\^[^:][^/]*?:[^:][^/]*?:\\([^:][^/]*?\\)\\.[^/]*?\\$$/,
+      /^\\^(?!\\/)[^:][^/]*?:(?!\\/)[^:][^/]*?:\\((?!\\/)[^:][^/]*?\\)\\.[^/]*?\\$$/,
       "1",
       "",
     ],
@@ -1721,7 +1721,7 @@ exports[`test/escape-has-magic.js > TAP > +(x|a[^)]y) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:x|a[^)]y)+$/,
+      /^(?:x|a(?!\\/)[^)]y)+$/,
     ],
   ],
   true,
@@ -1864,7 +1864,7 @@ exports[`test/escape-has-magic.js > TAP > a[X-]b 1`] = `
 Array [
   Array [
     Array [
-      /^a[X\\-]b$/,
+      /^a(?!\\/)[X\\-]b$/,
     ],
   ],
   true,
@@ -1886,7 +1886,7 @@ exports[`test/escape-has-magic.js > TAP > a*[^c] 1`] = `
 Array [
   Array [
     Array [
-      /^a[^/]*?[^c]$/,
+      /^a[^/]*?(?!\\/)[^c]$/,
     ],
   ],
   true,
@@ -2034,7 +2034,7 @@ Array [
   Array [
     Array [
       "a",
-      /^(?!\\.)[2010T00:23:08.647Z]$/,
+      /^(?!\\.)(?!\\/)[2010T00:23:08.647Z]$/,
       "z",
     ],
   ],

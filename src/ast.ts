@@ -763,6 +763,8 @@ export class AST {
       let start = ''
       if (this.isStart()) {
         if (typeof this.#parts[0] === 'string') {
+          const startSrc =
+            src.startsWith('(?!/)') ? src.slice('(?!/)'.length) : src
           // this is the string that will match the start of the pattern,
           // so we need to protect against dots and such.
 
@@ -776,14 +778,17 @@ export class AST {
             // and prevent that.
             const needNoTrav =
               // dots are allowed, and the pattern starts with [ or .
-              (dot && aps.has(src.charAt(0))) ||
+              (dot && aps.has(startSrc.charAt(0))) ||
               // the pattern starts with \., and then [ or .
-              (src.startsWith('\\.') && aps.has(src.charAt(2))) ||
+              (startSrc.startsWith('\\.') &&
+                aps.has(startSrc.charAt(2))) ||
               // the pattern starts with \.\., and then [ or .
-              (src.startsWith('\\.\\.') && aps.has(src.charAt(4)))
+              (startSrc.startsWith('\\.\\.') &&
+                aps.has(startSrc.charAt(4)))
             // no need to prevent dots if it can't match a dot, or if a
             // sub-pattern will be preventing it anyway.
-            const needNoDot = !dot && !allowDot && aps.has(src.charAt(0))
+            const needNoDot =
+              !dot && !allowDot && aps.has(startSrc.charAt(0))
 
             start =
               needNoTrav ? startNoTraversal
