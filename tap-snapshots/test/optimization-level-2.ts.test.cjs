@@ -3976,7 +3976,7 @@ exports[`test/optimization-level-2.ts > TAP > basic tests > makeRe +(a|.) 1`] = 
 `
 
 exports[`test/optimization-level-2.ts > TAP > basic tests > makeRe +(a|*\\|c\\\\|d\\\\\\|e\\\\\\\\|f\\\\\\\\\\|g 1`] = `
-/^\\+\\(a\\|[^/]*?|c\\\\\\|d\\\\|e\\\\\\\\\\|f\\\\\\\\|g$/
+/^\\+\\(a\\|[^/]*?\\|c\\\\\\|d\\\\\\|e\\\\\\\\\\|f\\\\\\\\\\|g$/
 `
 
 exports[`test/optimization-level-2.ts > TAP > basic tests > makeRe +(x|a[^)]y) 1`] = `

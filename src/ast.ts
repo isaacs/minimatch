@@ -168,7 +168,11 @@ const startNoDot = '(?!\\.)'
 const addPatternStart = new Set(['[', '.'])
 // cases where traversal is A-OK, no dot prevention needed
 const justDots = new Set(['..', '.'])
-const reSpecials = new Set('().*{}+?[]^$\\!')
+// characters that must be backslash-escaped in the regexp when they appear
+// escaped in the glob. `|` is included because an unescaped `|` in the
+// generated regexp is an alternation, which would let `\|` split the
+// pattern in two.
+const reSpecials = new Set('().*{}+?[]^$\\!|')
 const regExpEscape = (s: string) =>
   s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
 
