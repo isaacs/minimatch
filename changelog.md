@@ -3,6 +3,7 @@
 ## 10.2
 
 - Add `braceExpandMax` option
+- Pin `brace-expansion` to 5.0.7 to remain installable on Node 18
 
 ## 10.1
 
