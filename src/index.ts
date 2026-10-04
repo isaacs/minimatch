@@ -755,19 +755,32 @@ export class Minimatch {
         let dd: number = 0
         while (-1 !== (dd = parts.indexOf('..', dd + 1))) {
           const p = parts[dd - 1]
-          if (p && p !== '.' && p !== '..' && p !== '**') {
-            didSomething = true
-            const needDot = dd === 1 && parts[dd + 1] === '**'
-            const splin = needDot ? ['.'] : []
-            parts.splice(dd - 1, 2, ...splin)
-            if (parts.length === 0) parts.push('')
-            dd -= 2
+          if (!p || p === '.' || p === '..' || p === '**') {
+            continue
           }
+          if (this.#isWindowsPathRoot(parts, dd - 1)) {
+            didSomething = true
+            parts.splice(dd, 1)
+            dd--
+            continue
+          }
+          didSomething = true
+          const needDot = dd === 1 && parts[dd + 1] === '**'
+          const splin = needDot ? ['.'] : []
+          parts.splice(dd - 1, 2, ...splin)
+          if (parts.length === 0) parts.push('')
+          dd -= 2
         }
       }
     } while (didSomething)
 
     return globParts
+  }
+
+  #isWindowsPathRoot(parts: string[], index: number) {
+    if (!this.isWindows) return false
+    if (/^[a-z]:$/i.test(parts[index])) return true
+    return parts[0] === '' && parts[1] === '' && (index === 2 || index === 3)
   }
 
   // second phase: multi-pattern dedupes
