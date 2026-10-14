@@ -1287,8 +1287,7 @@ exports[`test/escape-has-magic.js > TAP > *(a/b) 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]*?\\(a$/,
-      "b)",
+      /^(?:(?!))*$/,
     ],
   ],
   true,

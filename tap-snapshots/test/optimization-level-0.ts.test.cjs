@@ -3832,7 +3832,7 @@ exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe *(?) 1`] = `
 `
 
 exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe *(a/b) 1`] = `
-/^(?!\\.)[^/]*?\\(a\\/b\\)$/
+/^(?:(?!))*$/
 `
 
 exports[`test/optimization-level-0.ts > TAP > basic tests > makeRe *(a|{b,c}) 1`] = `

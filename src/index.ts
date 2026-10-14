@@ -495,7 +495,20 @@ export class Minimatch {
     // First, we preprocess to make the glob pattern sets a bit simpler
     // and deduped.  There are some perf-killing patterns that can cause
     // problems with a glob walk, but we can simplify them down a bit.
-    const rawGlobParts = this.globSet.map(s => this.slashSplit(s))
+    const rawGlobParts = this.globSet.map(s => {
+      if (options.noext || !s.includes('/') || !/[?*+@!]\(/.test(s)) {
+        return this.slashSplit(s)
+      }
+      const parts = AST.splitGlob(s, options)
+      if (options.preserveMultipleSlashes) return parts
+      return parts.filter(
+        (p, i) =>
+          p !== '' ||
+          i === 0 ||
+          i === parts.length - 1 ||
+          (this.isWindows && i === 1 && /^\/\/[^/]+/.test(s)),
+      )
+    })
     this.globParts = this.preprocess(rawGlobParts)
     this.debug(this.pattern, this.globParts)
 

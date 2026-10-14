@@ -185,6 +185,23 @@ const starNoEmpty = qmark + '+?'
 // const deslash = (s: string) => s.replace(/\\(.)/g, '$1')
 
 let ID = 0
+// Adoptable extglobs can nest beyond maxExtglobRecursion. Walk those
+// trees with an explicit stack instead of consuming the JS call stack.
+type ASTWalk<T> = Generator<ASTWalk<T>, T, T>
+const walk = <T>(root: ASTWalk<T>): T => {
+  const stack = [root]
+  let step = root.next()
+  while (!step.done || stack.length > 1) {
+    if (step.done) {
+      stack.pop()
+      step = stack[stack.length - 1].next(step.value)
+    } else {
+      stack.push(step.value)
+      step = step.value.next()
+    }
+  }
+  return step.value
+}
 export class AST {
   type: ExtglobType | null
   readonly #root: AST
@@ -201,6 +218,9 @@ export class AST {
   // set to true if it's an extglob with no children
   // (which really means one child of '')
   #emptyExt: boolean = false
+  #invalidSlash: boolean = false
+  #containsSlash: boolean = false
+  #source?: { pattern: string; start: number; end: number }
   id = ++ID
 
   get depth(): number {
@@ -250,16 +270,23 @@ export class AST {
 
   // reconstructs the pattern
   toString(): string {
-    return (
-      this.#toString !== undefined ? this.#toString
-      : !this.type ?
-        (this.#toString = this.#parts.map(p => String(p)).join(''))
-      : (this.#toString =
-          this.type +
-          '(' +
-          this.#parts.map(p => String(p)).join('|') +
-          ')')
-    )
+    return walk(this.#stringify())
+  }
+
+  *#stringify(): ASTWalk<string> {
+    if (this.#invalidSlash && this.#source) {
+      return this.#source.pattern.slice(
+        this.#source.start,
+        this.#source.end,
+      )
+    }
+    if (this.#toString !== undefined) return this.#toString
+    const parts: string[] = []
+    for (const p of this.#parts) {
+      parts.push(typeof p === 'string' ? p : yield p.#stringify())
+    }
+    return (this.#toString =
+      this.type ? this.type + '(' + parts.join('|') + ')' : parts.join(''))
   }
 
   #fillNegs() {
@@ -271,9 +298,21 @@ export class AST {
     // call toString() once to fill this out
     this.toString()
     this.#filledNegs = true
+    // Impossible alternatives do not contribute negative lookaheads.
+    const ignored = new Set<AST>()
+    const pending: [AST, boolean][] =
+      this.#containsSlash ? [[this, false]] : []
+    while (pending.length) {
+      const [node, ancestorIgnored] = pending.pop() as [AST, boolean]
+      const skip = ancestorIgnored || node.#invalidSlash
+      if (skip) ignored.add(node)
+      for (const part of node.#parts) {
+        if (typeof part === 'object') pending.push([part, skip])
+      }
+    }
     let n: AST | undefined
     while ((n = this.#negs.pop())) {
-      if (n.type !== '!') continue
+      if (n.type !== '!' || ignored.has(n)) continue
       // walk up the tree, appending everthing that comes AFTER parentIndex
       let p: AST | undefined = n
       let pp = p.#parent
@@ -367,19 +406,126 @@ export class AST {
 
   clone(parent: AST) {
     const c = new AST(this.type, parent)
+    c.#invalidSlash = this.#invalidSlash
+    c.#containsSlash = this.#containsSlash
+    c.#source = this.#source
+    if (this.#invalidSlash) return c
     for (const p of this.#parts) {
       c.copyIn(p)
     }
     return c
   }
 
-  static #parseAST(
+  static #parse(
+    pattern: string,
+    ast: AST,
+    options: MinimatchOptions,
+    splitPaths = false,
+  ) {
+    if (options.noext || !/[?*+@!]\(/.test(pattern)) {
+      ast.push(pattern)
+      return
+    }
+    const ends =
+      splitPaths ? AST.#extglobEnds(pattern, options) : undefined
+    walk(AST.#parseAST(pattern, ast, 0, options, 0, ends))
+  }
+
+  // Index class boundaries once, then memoize group boundaries using the
+  // same recursion and adoption rules as compilation. Unfinished components
+  // can recover without scanning a class or a parser state repeatedly.
+  static #extglobEnds(pattern: string, options: MinimatchOptions) {
+    const length = pattern.length
+    const brackets = new Uint32Array(length + 2)
+    const classes = new Uint32Array(length + 2)
+    const closings = new Uint32Array(length + 2)
+    for (let i = length - 1; i >= 0; i--) {
+      const c = pattern.charAt(i)
+      brackets[i] =
+        c === '\\' ? brackets[i + 2]
+        : c === ']' ? i + 1
+        : brackets[i + 1]
+      if (c === '[') {
+        // A leading ] is literal, including after a leading ! or ^.
+        const first = pattern.charAt(i + 1)
+        let content = i + 2
+        if (first === '\\') content++
+        else if (
+          (first === '!' || first === '^') &&
+          pattern.charAt(content) === ']'
+        )
+          content++
+        classes[i] = brackets[content]
+      }
+      closings[i] =
+        c === '\\' ? closings[i + 2]
+        : c === '[' ?
+          classes[i] ?
+            closings[classes[i]]
+          : 0
+        : closings[i + 1] + (c === ')' ? 1 : 0)
+    }
+    const maxDepth = options.maxExtglobRecursion ?? 2
+    const states = new Map<string, Map<number, number>>()
+    function* body(
+      pos: number,
+      type: ExtglobType,
+      depth: number,
+    ): ASTWalk<number> {
+      // A budget at least as large as the remaining closing delimiters
+      // cannot affect this result: exhausting it would leave more open
+      // groups than the suffix can close. Share the unlimited state then.
+      if (maxDepth - depth + 1 >= closings[pos]) depth = -Infinity
+      const key = depth === -Infinity ? '' : `${depth}${type}`
+      let memo = states.get(key)
+      if (!memo) states.set(key, (memo = new Map()))
+      const visited: number[] = []
+      let result = 0
+      while (pos < length) {
+        const cached = memo.get(pos)
+        if (cached !== undefined) {
+          result = cached
+          break
+        }
+        visited.push(pos)
+        const c = pattern.charAt(pos)
+        if (c === '\\') {
+          pos += 2
+        } else if (c === '[') {
+          const close = classes[pos]
+          if (!close) break
+          pos = close
+        } else if (c === ')') {
+          result = pos + 1
+          break
+        } else if (isExtglobType(c) && pattern.charAt(pos + 1) === '(') {
+          const adopt = adoptionAnyMap.get(type)?.includes(c)
+          if (depth <= maxDepth || adopt) {
+            const close = yield body(pos + 2, c, depth + (adopt ? 0 : 1))
+            if (!close) break
+            pos = close
+          } else {
+            pos++
+          }
+        } else {
+          pos++
+        }
+      }
+      for (const start of visited) memo.set(start, result)
+      return result
+    }
+    return (start: number, type: ExtglobType) =>
+      maxDepth >= 0 ? walk(body(start + 2, type, 1)) : 0
+  }
+
+  static *#parseAST(
     str: string,
     ast: AST,
     pos: number,
     opt: MinimatchOptions,
     extDepth: number,
-  ): number {
+    ends?: (start: number, type: ExtglobType) => number,
+  ): ASTWalk<number> {
     const maxDepth = opt.maxExtglobRecursion ?? 2
     let escaping = false
     let inBrace = false
@@ -389,8 +535,16 @@ export class AST {
       // outside of a extglob, append until we find a start
       let i = pos
       let acc = ''
+      let unfinished = false
       while (i < str.length) {
         const c = str.charAt(i++)
+        if (ends && c === '/') {
+          escaping = false
+          inBrace = false
+          unfinished = false
+          acc += c
+          continue
+        }
         // still accumulate escapes at this point, but we do ignore
         // starts that are escaped
         if (escaping || c === '\\') {
@@ -419,16 +573,25 @@ export class AST {
 
         // we don't have to check for adoption here, because that's
         // done at the other recursion point.
+        const extStart =
+          !opt.noext && isExtglobType(c) && str.charAt(i) === '('
+        const end =
+          ends && extStart && !unfinished ?
+            ends(i - 1, c as ExtglobType)
+          : 0
+        if (ends && extStart && !end) unfinished = true
         const doRecurse =
-          !opt.noext &&
-          isExtglobType(c) &&
-          str.charAt(i) === '(' &&
-          extDepth <= maxDepth
+          extStart && (ends ? !unfinished && !!end : extDepth <= maxDepth)
         if (doRecurse) {
           ast.push(acc)
           acc = ''
-          const ext = new AST(c, ast)
-          i = AST.#parseAST(str, ext, i, opt, extDepth + 1)
+          const ext = new AST(c as ExtglobType, ast)
+          if (ends) {
+            ext.#source = { pattern: str, start: i - 1, end }
+            i = end
+          } else {
+            i = yield AST.#parseAST(str, ext, i, opt, extDepth + 1)
+          }
           ast.push(ext)
           continue
         }
@@ -441,11 +604,13 @@ export class AST {
     // some kind of extglob, pos is at the (
     // find the next | or )
     let i = pos + 1
+    let partStart = i
     let part = new AST(null, ast)
     const parts: AST[] = []
     let acc = ''
     while (i < str.length) {
       const c = str.charAt(i++)
+      if (c === '/') ast.#containsSlash = true
       // still accumulate escapes at this point, but we do ignore
       // starts that are escaped
       if (escaping || c === '\\') {
@@ -485,14 +650,21 @@ export class AST {
         acc = ''
         const ext = new AST(c, part)
         part.push(ext)
-        i = AST.#parseAST(str, ext, i, opt, extDepth + depthAdd)
+        i = yield AST.#parseAST(str, ext, i, opt, extDepth + depthAdd)
+        ast.#containsSlash ||= ext.#containsSlash
         continue
       }
       if (c === '|') {
         part.push(acc)
+        part.#invalidSlash = part.#parts.some(
+          p => typeof p === 'string' && p.includes('/'),
+        )
+        if (part.#invalidSlash)
+          part.#source = { pattern: str, start: partStart, end: i - 1 }
         acc = ''
         parts.push(part)
         part = new AST(null, ast)
+        partStart = i
         continue
       }
       if (c === ')') {
@@ -500,8 +672,14 @@ export class AST {
           ast.#emptyExt = true
         }
         part.push(acc)
+        part.#invalidSlash = part.#parts.some(
+          p => typeof p === 'string' && p.includes('/'),
+        )
+        if (part.#invalidSlash)
+          part.#source = { pattern: str, start: partStart, end: i - 1 }
         acc = ''
         ast.push(...parts, part)
+        if (ast.#containsSlash) ast.#emptyExt = false
         return i
       }
       acc += c
@@ -534,6 +712,7 @@ export class AST {
       !child ||
       typeof child !== 'object' ||
       child.type !== null ||
+      child.#invalidSlash ||
       child.#parts.length !== 1 ||
       this.type === null
     ) {
@@ -596,6 +775,7 @@ export class AST {
       !child ||
       typeof child !== 'object' ||
       child.type !== null ||
+      child.#invalidSlash ||
       child.#parts.length !== 1 ||
       this.type === null ||
       this.#parts.length !== 1
@@ -629,8 +809,30 @@ export class AST {
 
   static fromGlob(pattern: string, options: MinimatchOptions = {}) {
     const ast = new AST(null, undefined, options)
-    AST.#parseAST(pattern, ast, 0, options, 0)
+    AST.#parse(pattern, ast, options)
+    ast.#containsSlash = pattern.includes('/')
     return ast
+  }
+
+  // Split only literal path separators. Complete extglobs retain their
+  // alternatives until the individual path portion is compiled.
+  static splitGlob(pattern: string, options: MinimatchOptions = {}) {
+    const ast = new AST(null, undefined, options)
+    AST.#parse(pattern, ast, options, true)
+    const parts = ['']
+    for (const part of ast.#parts) {
+      if (typeof part === 'object' && part.#source) {
+        parts[parts.length - 1] += pattern.slice(
+          part.#source.start,
+          part.#source.end,
+        )
+      } else {
+        const [first, ...rest] = String(part).split('/')
+        parts[parts.length - 1] += first
+        parts.push(...rest)
+      }
+    }
+    return parts
   }
 
   // returns the regular expression if there's magic, or the unescaped
@@ -738,9 +940,12 @@ export class AST {
   toRegExpSource(
     allowDot?: boolean,
   ): [re: string, body: string, hasMagic: boolean, uflag: boolean] {
+    // A slash-bearing alternative cannot match a path portion. Keep it
+    // explicitly impossible so repetition and negation retain their meaning.
+    if (this.#invalidSlash) return ['(?!)', '', true, false]
     const dot = allowDot ?? !!this.#options.dot
     if (this.#root === this) {
-      this.#flatten()
+      walk(this.#flatten())
       this.#fillNegs()
     }
     if (!isExtglobAST(this)) {
@@ -869,11 +1074,12 @@ export class AST {
     ]
   }
 
-  #flatten() {
+  *#flatten(): ASTWalk<void> {
+    if (this.#invalidSlash) return
     if (!isExtglobAST(this)) {
       for (const p of this.#parts) {
         if (typeof p === 'object') {
-          p.#flatten()
+          yield p.#flatten()
         }
       }
     } else {
@@ -885,7 +1091,7 @@ export class AST {
         for (let i = 0; i < this.#parts.length; i++) {
           const c = this.#parts[i]
           if (typeof c === 'object') {
-            c.#flatten()
+            yield c.#flatten()
             if (this.#canAdopt(c)) {
               done = false
               this.#adopt(c, i)
