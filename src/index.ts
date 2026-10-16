@@ -1058,10 +1058,19 @@ export class Minimatch {
         nonGsParts++
       }
     }
-    let i = bodySegments.length - 1
+    // A section can start no later than the point where it, and every
+    // section after it, still fit before the tail. nonGsPartsSums[i] is
+    // the number of non-globstar parts *before* section i, so the parts
+    // from section i onwards are nonGsParts - nonGsPartsSums[i].
+    // In partial mode the file may end before the later sections, so
+    // there is no such bound: any position in the file is a candidate.
+    let i = 0
     const fileLength = file.length - fileTailMatch
     for (const b of bodySegments) {
-      b[1] = fileLength - ((nonGsPartsSums[i--] as number) + b[0].length)
+      b[1] =
+        partial ?
+          fileLength - 1
+        : fileLength - (nonGsParts - (nonGsPartsSums[i++] as number))
     }
 
     return !!this.#matchGlobStarBodySections(
@@ -1140,6 +1149,8 @@ export class Minimatch {
           return sub
         }
       }
+      // nothing left to skip over
+      if (fileIndex >= file.length) break
       const f = file[fileIndex]
       if (
         f === '.' ||

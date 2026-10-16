@@ -74,3 +74,37 @@ t.test('tail handling 2', async t => {
     pattern,
   })
 })
+
+// https://github.com/isaacs/minimatch/issues/329
+t.test('body sections of different lengths', async t => {
+  const cases: [string, string, boolean][] = [
+    ['a/b/c/d/e', '**/a/b/c/**/d/**', true],
+    ['a/b/c/x/d/e', '**/a/b/c/**/d/**', true],
+    ['x/a/b/c/d/e', '**/a/b/c/**/d/**', true],
+    ['a/b/c/d', '**/a/b/c/**/d/**', false],
+    ['a/b/c/d/e', '**/a/**/b/c/d/**', true],
+    ['a/b/c/d/e/f', '**/a/**/c/d/**/e/**', true],
+    ['a/b/c/d/e/f', '**/a/b/**/d/**/f', true],
+  ]
+  for (const [file, pattern, expect] of cases) {
+    t.equal(minimatch(file, pattern), expect, `${file} ${pattern}`)
+  }
+
+  // partial: the file may end before the later sections, so a section
+  // can start anywhere in it, and the walk still checks every part it
+  // skips over (dot files are not matched by ** without dot:true)
+  const partialCases: [string, string, boolean][] = [
+    ['a/b/c', '**/a/b/c/**/d/**', true],
+    ['a/b/c/x', '**/a/b/c/**/d/**', true],
+    ['a/b', '**/a/b/c/**/d/**', true],
+    ['a/.d', '**/a/b', false],
+    ['a/b/a/a/a/.d', '**/b/**/a/**/**', false],
+  ]
+  for (const [file, pattern, expect] of partialCases) {
+    t.equal(
+      minimatch(file, pattern, { partial: true }),
+      expect,
+      `partial ${file} ${pattern}`,
+    )
+  }
+})
