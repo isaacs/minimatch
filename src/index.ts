@@ -356,6 +356,13 @@ let lastChecked: string | undefined
 
 export type ParseReturnFiltered = string | Matcher | typeof GLOBSTAR
 
+/**
+ * The rows that Minimatch#match can match without splitting the path:
+ * `**` and one more portion (`tail`), a portion with `**` on each side
+ * of it (`mid`), or a portion and then `**` (`head`).
+ */
+export type RowShape = 'tail' | 'mid' | 'head'
+
 // true if a pattern portion that is not ** matches a path portion.
 // An empty path portion only matches an empty pattern portion. A path
 // portion never has a `/`, so the Matcher does not need to check it.
@@ -378,23 +385,60 @@ const endIndex = (
 
 const isDots = (p: string) => p === '.' || p === '..'
 
-// True if a portion of the path before `end` can not be walked by **:
-// one that starts with `.`, or with `dot`, one that is `.` or `..`.
-// `end` is 0, or just after a `/`, so each portion before it has a `/`
-// after it.
-const dotPortion = (f: string, end: number, dot: boolean) => {
-  for (let k = 0; k < end;) {
+// True if a portion of the path from `start` to `end` can not be
+// walked by **: one that starts with `.`, or with `dot`, one that is
+// `.` or `..`. `start` is the start of a portion, and `end` is the end
+// of the path, or just after a separator.
+const dotPortion = (
+  f: string,
+  start: number,
+  end: number,
+  dot: boolean,
+  sep: PathSeps,
+) => {
+  for (let k = start; k < end;) {
     if (f.charCodeAt(k) === 46) {
       if (!dot) return true
       const n = f.charCodeAt(k + 1) === 46 ? k + 2 : k + 1
-      if (f.charCodeAt(n) === 47) return true
+      if (n >= end || isSep(f.charCodeAt(n), sep)) return true
     }
-    // the start of the next portion, after any run of `/`
-    k = f.indexOf('/', k) + 1
-    while (k < end && f.charCodeAt(k) === 47) k++
+    // the start of the next portion, after any run of separators
+    const s = nextSep(f, k, sep)
+    if (s === -1) return false
+    k = s + 1
+    while (k < end && isSep(f.charCodeAt(k), sep)) k++
   }
   return false
 }
+
+/**
+ * The separators that a path has: only `/`, only `\` (a Windows path
+ * with no `/`), or both. Scanning for the ones it has is faster.
+ */
+export type PathSeps = '/' | '\\' | 'both'
+
+const isSep = (c: number, sep: PathSeps) =>
+  sep === '/' ? c === 47
+  : sep === '\\' ? c === 92
+  : c === 47 || c === 92
+
+// the index of the first separator at or after `from`, or -1
+const nextSep = (f: string, from: number, sep: PathSeps) => {
+  if (sep !== 'both') return f.indexOf(sep, from)
+  const s = f.indexOf('/', from)
+  const b = f.indexOf('\\', from)
+  return (
+    s === -1 ? b
+    : b === -1 ? s
+    : Math.min(s, b)
+  )
+}
+
+// the index of the last separator at or before `from`, or -1
+const lastSep = (f: string, from: number, sep: PathSeps) =>
+  sep !== 'both' ?
+    f.lastIndexOf(sep, from)
+  : Math.max(f.lastIndexOf('/', from), f.lastIndexOf('\\', from))
 
 /**
  * A pattern row split on its first and last `**`, from a start
@@ -438,9 +482,10 @@ export class Minimatch {
   #level2: boolean
   // the string portions of each row in the set
   #literals: string[][] = []
-  // the rows that are `**` and one more portion, which #canMatch can
-  // match without splitting the path
-  #globTail: boolean[] = []
+  // the rows that #canMatch can match without splitting the path
+  #shapes: (RowShape | undefined)[] = []
+  // the rows whose last portion can be checked against the path's
+  #endRows: boolean[] = []
   // brace expansion can make the same portion in many rows, so they
   // share one Matcher, and the states that it caches
   #matchers = new Map<string, Matcher>()
@@ -478,30 +523,77 @@ export class Minimatch {
     this.globSet = []
     this.globParts = []
     this.set = []
-    const slashes =
-      !this.isWindows && this.slashSplit === Minimatch.prototype.slashSplit
+    const slashes = this.slashSplit === Minimatch.prototype.slashSplit
     this.#endCheck = slashes && !this.preserveMultipleSlashes
     this.#level2 = (options.optimizationLevel ?? 1) >= 2
 
     // make the set of Matchers etc.
     this.make()
 
-    // with the end check, the last portion is already checked
-    this.#literals = this.set.map(row => [
-      ...new Set(
-        (this.#endCheck ? row.slice(0, -1) : row).filter(
-          (p): p is string => typeof p === 'string' && !!p,
-        ),
-      ),
-    ])
-    this.#literalCheck = slashes && this.#literals.some(l => l.length)
-    this.#globTail = this.set.map(
-      row =>
-        this.#endCheck &&
-        row.length === 2 &&
-        row[0] === GLOBSTAR &&
-        row[1] !== GLOBSTAR,
+    // On Windows, the portions of a row up to its drive letter are
+    // skipped or compared without case, if the path has one too. So
+    // the checks only use the portions after it.
+    const drives = this.set.map(row => this.#driveIndex(row))
+    this.#endRows = this.set.map(
+      (row, r) => this.#endCheck && row.length - 1 > drives[r]!,
     )
+    // with the end check, the last portion is already checked
+    this.#literals = this.set.map((row, r) => {
+      const end = this.#endRows[r] ? row.length - 1 : row.length
+      const lits = row
+        .slice(drives[r]! + 1, end)
+        .filter((p): p is string => typeof p === 'string' && !!p)
+      return [...new Set(lits)]
+    })
+    this.#literalCheck = slashes && this.#literals.some(l => l.length)
+    this.#shapes = this.set.map((row, r) => {
+      const [p0, p1, p2] = row
+      if (this.#endRows[r] && row.length === 2) {
+        if (p0 === GLOBSTAR && p1 !== GLOBSTAR) return 'tail'
+      }
+      // the portion must not be a drive letter, or '', which can be a
+      // different portion on Windows (where //x paths get an extra '')
+      if (!this.#endCheck || drives[r] !== -1) return undefined
+      if (
+        row.length === 3 &&
+        p0 === GLOBSTAR &&
+        p2 === GLOBSTAR &&
+        p1 !== GLOBSTAR &&
+        p1 !== '' &&
+        // the portion between is only matched below this limit
+        this.maxGlobstarRecursion > 0
+      ) {
+        return 'mid'
+      }
+      if (
+        row.length === 2 &&
+        p1 === GLOBSTAR &&
+        p0 !== GLOBSTAR &&
+        p0 !== ''
+      ) {
+        return 'head'
+      }
+      return undefined
+    })
+  }
+
+  // On Windows, the index of the drive letter portion of a row, as
+  // matchOne finds it: 0 for `c:/...`, 3 for `//?/c:/...`. Otherwise
+  // -1.
+  #driveIndex(row: ParseReturn[]) {
+    if (!this.isWindows) return -1
+    const drive = (p: ParseReturn | undefined) =>
+      typeof p === 'string' && /^[a-z]:$/i.test(p)
+    if (drive(row[0])) return 0
+    if (
+      row[0] === '' &&
+      row[1] === '' &&
+      row[2] === '?' &&
+      drive(row[3])
+    ) {
+      return 3
+    }
+    return -1
   }
 
   hasMagic(): boolean {
@@ -733,17 +825,20 @@ export class Minimatch {
   // know. None of this applies with partial, where the path can end
   // before the row does.
   //
+  // On Windows, `\` is a separator in the path too, and the portions of
+  // a row up to its drive letter are not checked (see #driveIndex).
+  //
   // Each string portion of a row must be a portion of the path, so the
   // path must contain it. Level 2 can only take portions out of the
-  // path, so this is still true then. This does not apply to Windows
-  // paths (where drive letters do not need to have the same case), or
-  // a subclass that splits paths in its own way.
+  // path, so this is still true then. This does not apply to a
+  // subclass that splits paths in its own way.
   //
   // The last portion of a row must match the last portion of the path,
   // or the one before a trailing `/` (as a/* and a/**/* match a/b/).
-  // This does not apply to rows that end in **, Windows paths,
-  // preserveMultipleSlashes (which can leave more than one '' at the
-  // end), or a subclass that splits paths in its own way. At level 2,
+  // This does not apply to rows that end in **, rows that end in a
+  // drive letter, preserveMultipleSlashes (which can leave more than
+  // one '' at the end), or a subclass that splits paths in its own
+  // way. At level 2,
   // it does not apply if that portion is `.` or `..`, which can be
   // resolved away. Level 2 only takes other portions out of the
   // middle of the path.
@@ -753,6 +848,10 @@ export class Minimatch {
   // level 2, this is only known if none of them are `.` or `..`, so
   // that the path does not change when it is resolved.
   #canMatch(f: string): 'no' | 'yes' | 'maybe' {
+    const sep: PathSeps =
+      !this.isWindows || !f.includes('\\') ? '/'
+      : f.includes('/') ? 'both'
+      : '\\'
     // the portions that f.split(/\/+/) would end with, and where they
     // start in f, found when a row needs them. `ends` is 0 until they
     // are found, then 1, or -1 if they can not be used.
@@ -767,15 +866,15 @@ export class Minimatch {
     ROWS: for (let r = 0; r < this.set.length; r++) {
       const row = this.set[r]!
       const p = row[row.length - 1]
-      let end = ends !== -1 && p !== undefined && p !== GLOBSTAR
+      let end = ends !== -1 && this.#endRows[r]! && p !== GLOBSTAR
       if (end && ends === 0) {
-        const i = f.lastIndexOf('/')
+        const i = lastSep(f, f.length, sep)
         lastStart = i + 1
         last = f.slice(lastStart)
         if (last === '' && i >= 0) {
           let j = i
-          while (j > 0 && f.charCodeAt(j - 1) === 47) j--
-          prevStart = j === 0 ? 0 : f.lastIndexOf('/', j - 1) + 1
+          while (j > 0 && isSep(f.charCodeAt(j - 1), sep)) j--
+          prevStart = j === 0 ? 0 : lastSep(f, j - 1, sep) + 1
           prev = f.slice(prevStart, j)
         }
         const resolves =
@@ -799,9 +898,53 @@ export class Minimatch {
         tailStart = endIndex(p, last, lastStart, prev, prevStart)
         if (tailStart === -1) continue
       }
-      if (!end || !this.#globTail[r]) return 'maybe'
-      if (this.#level2 && dotPortion(f, tailStart, true)) return 'maybe'
-      if (!dotPortion(f, tailStart, dot)) return 'yes'
+      const shape = this.#shapes[r]
+      if (shape === 'tail' && end) {
+        if (this.#level2 && dotPortion(f, 0, tailStart, true, sep)) {
+          return 'maybe'
+        }
+        if (!dotPortion(f, 0, tailStart, dot, sep)) return 'yes'
+        continue
+      }
+      if (shape === 'mid' || shape === 'head') {
+        const m = this.#walk(f, row, shape === 'head', dot, sep)
+        if (m !== 'no') return m
+        continue
+      }
+      return 'maybe'
+    }
+    return 'no'
+  }
+
+  // Match a row of `**/x/**` or `x/**` against the path, the same as
+  // #matchGlobstar and #matchGlobStarBodySections do once it is split.
+  // x must match a portion (the first one, for `x/**`), the ** before
+  // it must be able to walk the portions before that one, and there
+  // must be a portion after it, which the ** after it can walk. At
+  // level 2, this is only known if no portion is `.` or `..`.
+  #walk(
+    f: string,
+    row: ParseReturnFiltered[],
+    head: boolean,
+    dot: boolean,
+    sep: PathSeps,
+  ): 'yes' | 'no' | 'maybe' {
+    if (this.#level2 && dotPortion(f, 0, f.length, true, sep))
+      return 'maybe'
+    const x = row[head ? 0 : 1] as string | Matcher
+    // the last portion has none after it, so it can not be x
+    let s = 0
+    for (let e = nextSep(f, s, sep); e !== -1; e = nextSep(f, s, sep)) {
+      // the start of the next portion
+      let next = e + 1
+      while (next < f.length && isSep(f.charCodeAt(next), sep)) next++
+      const hit =
+        typeof x === 'string' ?
+          e - s === x.length && f.startsWith(x, s)
+        : e > s && x.testUnchecked(f.slice(s, e))
+      if (hit && !dotPortion(f, next, f.length, dot, sep)) return 'yes'
+      if (head || dotPortion(f, s, next, dot, sep)) return 'no'
+      s = next
     }
     return 'no'
   }
