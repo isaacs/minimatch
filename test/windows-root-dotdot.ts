@@ -17,6 +17,11 @@ t.test('patterns keep their root', t => {
     ['//srv/share/a/../../x', ['', '', 'srv', 'share', '..', 'x']],
     ['//srv/..', ['', '', 'srv', '..']],
     ['//?/C:/a/../../x', ['', '', '?', 'C:', '..', 'x']],
+    [
+      '//?/UNC/srv/share/a/../../x',
+      ['', '', '?', 'UNC', 'srv', 'share', '..', 'x'],
+    ],
+    ['//srv/*/a/../../x', ['', '', 'srv', '*', '..', 'x']],
   ]
   for (const optimizationLevel of [1, 2]) {
     for (const [p, parts] of cases) {

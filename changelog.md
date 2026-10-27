@@ -33,6 +33,9 @@
 - On Windows, compare the host and share of UNC paths like
   `//host/share/...` case-insensitively, the same as drive
   letters.
+- On Windows, long UNC paths like `//?/UNC/host/share/...` match
+  `//host/share/...` and vice versa, the same as `//?/c:/...` and
+  `c:/...`.
 
 ## 10.2
 

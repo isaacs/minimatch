@@ -397,16 +397,33 @@ const isDots = (p: string) => p === '.' || p === '..'
 const isDrive = (p: ParseReturn | undefined) =>
   typeof p === 'string' && /^[a-z]:$/i.test(p)
 
-// a row or split path that starts with a Windows UNC root, like
-// `//host/share`, with a string host and share. `//?/...` is not one.
-const isUNC = (p: ParseReturn[]) =>
-  p[0] === '' &&
-  p[1] === '' &&
-  typeof p[2] === 'string' &&
-  p[2] !== '' &&
-  p[2] !== '?' &&
-  typeof p[3] === 'string' &&
-  p[3] !== ''
+// true for the `UNC` portion of a long UNC root, //?/UNC/host/share
+const isLongUNC = (p: ParseReturn | undefined) =>
+  typeof p === 'string' && /^unc$/i.test(p)
+
+// The index of the host in a row or split path that starts with a
+// Windows UNC root: 2 for `//host/share`, and 4 for
+// `//?/UNC/host/share`. Otherwise -1. `//?/c:` is not one.
+const uncHost = (p: ParseReturn[]) => {
+  if (p[0] !== '' || p[1] !== '') return -1
+  const h =
+    p[2] !== '?' ? 2
+    : isLongUNC(p[3]) ? 4
+    : -1
+  const host = p[h]
+  const share = p[h + 1]
+  return (
+      h !== -1 &&
+        host !== undefined &&
+        host !== '' &&
+        host !== GLOBSTAR &&
+        share !== undefined &&
+        share !== '' &&
+        share !== GLOBSTAR
+    ) ?
+      h
+    : -1
+}
 
 // true if ** can walk the path portion: not `.` or `..`, and not a
 // dotfile unless `dot` is set
@@ -626,13 +643,16 @@ export class Minimatch {
 
   // On Windows, the index of the last root portion of a row, as
   // #matchRow finds it: 0 for `c:/...`, 3 for `//?/c:/...` and
-  // `//host/share/...`. Otherwise -1.
+  // `//host/share/...`, and 5 for `//?/UNC/host/share/...`. Otherwise
+  // -1.
   #rootIndex(row: ParseReturn[]) {
     if (!this.isWindows) return -1
     if (isDrive(row[0])) return 0
     const uncDrive =
       row[0] === '' && row[1] === '' && row[2] === '?' && isDrive(row[3])
-    return uncDrive || isUNC(row) ? 3 : -1
+    if (uncDrive) return 3
+    const h = uncHost(row)
+    return h === -1 ? -1 : h + 1
   }
 
   hasMagic(): boolean {
@@ -683,17 +703,19 @@ export class Minimatch {
     // glob --> Matchers
     let set = this.globParts.map((s, _, __) => {
       if (this.isWindows && this.windowsNoMagicRoot) {
-        // check if it's a drive or unc path.
+        // check if it's a drive or unc path. The root of a long UNC
+        // path, //?/UNC/host/share, is 6 portions.
+        const n = s[2] === '?' && isLongUNC(s[3]) ? 6 : 4
         const isUNC =
           s[0] === '' &&
           s[1] === '' &&
           (s[2] === '?' || !globMagic.test(s[2])) &&
-          !globMagic.test(s[3])
+          s.slice(3, n).every(p => !globMagic.test(p))
         const isDrive = /^[a-z]:/i.test(s[0])
         if (isUNC) {
           return [
-            ...s.slice(0, 4).map(p => this.#norm(p)),
-            ...s.slice(4).map(ss => this.parse(ss)),
+            ...s.slice(0, n).map(p => this.#norm(p)),
+            ...s.slice(n).map(ss => this.parse(ss)),
           ]
         } else if (isDrive) {
           return [
@@ -718,9 +740,9 @@ export class Minimatch {
           p[0] === '' &&
           p[1] === '' &&
           this.globParts[i][2] === '?' &&
-          typeof p[3] === 'string' &&
-          /^[a-z]:$/i.test(p[3])
+          (isDrive(p[3]) || isLongUNC(this.globParts[i][3]))
         ) {
+          if (isLongUNC(this.globParts[i][3])) p[3] = 'UNC'
           p[2] = '?'
         }
       }
@@ -1319,20 +1341,25 @@ export class Minimatch {
     let fileStartIndex = 0
     let patternStartIndex = 0
 
-    // UNC paths like //?/X:/... can match X:/... and vice versa
+    // UNC paths like //?/X:/... can match X:/... and vice versa, and
+    // //?/UNC/host/share/... can match //host/share/... and vice versa.
     // Drive letters in absolute drive or unc paths, and the host and
-    // share of UNC paths like //host/share/..., are always compared
-    // case-insensitively.
-    // Level 2 can resolve the share away (//h/s/../x), so the UNC root
-    // is found in the resolved parts.
-    if (this.isWindows && isUNC(resolved) && isUNC(pattern)) {
-      const [, , fh, fs] = resolved
-      const [, , ph, ps] = pattern as string[]
-      if (
-        fh!.toLowerCase() === ph!.toLowerCase() &&
-        fs!.toLowerCase() === ps!.toLowerCase()
+    // share of UNC paths, are always compared case-insensitively.
+    const fh = this.isWindows ? uncHost(resolved) : -1
+    const ph = fh === -1 ? -1 : uncHost(pattern)
+    if (ph !== -1) {
+      const host = pattern[ph]
+      const share = pattern[ph + 1]
+      if (typeof host !== 'string' || typeof share !== 'string') {
+        // a host or share with magic is matched as usual
+        fileStartIndex = fh
+        patternStartIndex = ph
+      } else if (
+        resolved[fh]!.toLowerCase() === host.toLowerCase() &&
+        resolved[fh + 1]!.toLowerCase() === share.toLowerCase()
       ) {
-        patternStartIndex = fileStartIndex = 4
+        fileStartIndex = fh + 2
+        patternStartIndex = ph + 2
       }
     } else if (this.isWindows) {
       const fileDrive =
