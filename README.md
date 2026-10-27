@@ -423,7 +423,8 @@ is equivalent in all cases).
   - Convert patterns containing `<pre>/**/../<p>/<rest>` into the
     equivalent `<pre>/{..,**}/<p>/<rest>`, where `<p>` is a
     a pattern portion other than `.`, `..`, `**`, or empty
-    `''`.
+    `''`. This stops when there are `braceExpandMax`
+    patterns.
   - Dedupe patterns where a `**` portion is present in one and
     omitted in another, and it is not the final path portion, and
     they are otherwise equivalent. So `{a/**/b,a/b}` becomes
@@ -432,6 +433,8 @@ is equivalent in all cases).
     non-dot pattern other than `**`, `.`, `..`, or `''` is in the
     same position in the other. So `a/{*,x}/b` becomes `a/*/b`,
     because `*` can match against `x`.
+  - Dedupe only sets of 1000 patterns or fewer, because each
+    pattern is compared to each other one.
 
   While these optimizations improve the performance of
   file-walking use cases such as [glob](http://npm.im/glob) (ie,

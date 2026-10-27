@@ -36,6 +36,10 @@
 - On Windows, long UNC paths like `//?/UNC/host/share/...` match
   `//host/share/...` and vice versa, the same as `//?/c:/...` and
   `c:/...`.
+- At optimization level 2, stop splitting `**/..` portions once
+  there are `braceExpandMax` patterns, and do not dedupe sets of
+  more than 1000 patterns. Before, a short pattern could take
+  minutes to compile.
 
 ## 10.2
 
