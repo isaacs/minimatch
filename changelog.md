@@ -17,6 +17,15 @@
 - Remove the `debug` option and the `debug()` method.
 - Remove the `matchOne()`, `slashSplit()`, and
   `levelTwoFileOptimize()` methods. They are internal now.
+- Fix patterns with more than one `**` and sections of different
+  lengths between them, such as `**/a/b/c/**/d/**`, which failed
+  to match some paths since 10.2.3.
+- Fix `partial` matching of patterns with `**`, which since
+  10.2.3 matched some paths under a dot portion that `**` can not
+  walk, and did not match some paths that end in the pattern's
+  last portion.
+- `partial` matching of patterns with many `**` no longer takes
+  exponential time.
 - On Windows, compare the host and share of UNC paths like
   `//host/share/...` case-insensitively, the same as drive
   letters.

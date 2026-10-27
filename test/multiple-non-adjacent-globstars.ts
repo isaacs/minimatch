@@ -74,3 +74,46 @@ t.test('tail handling 2', async t => {
     pattern,
   })
 })
+
+// https://github.com/isaacs/minimatch/issues/329
+t.test('body sections that differ in length', async t => {
+  const pattern = '**/a/b/c/**/d/**'
+  for (const level of [0, 1, 2]) {
+    const o = { optimizationLevel: level }
+    t.equal(minimatch('a/b/c/d/e', pattern, o), true)
+    t.equal(minimatch('x/a/b/c/d/e', pattern, o), true)
+    t.equal(minimatch('a/b/c/x/d/e', pattern, o), true)
+    t.equal(minimatch('a/b/c/e', pattern, o), false)
+    t.equal(minimatch('a/b/c/d', pattern, o), false)
+    t.equal(minimatch('a/b/c/d/e', '**/d/**/a/b/c/**', o), false)
+    t.equal(minimatch('d/x/a/b/c/e', '**/d/**/a/b/c/**', o), true)
+  }
+})
+
+t.test('the tail is not walked by the last **', async t => {
+  t.equal(minimatch('.x/.x', '**/.x/**/.x'), true)
+  t.equal(minimatch('a/.x/b/.x', '**/.x/**/.x'), true)
+  t.equal(minimatch('a/.x/.y/.x', '**/.x/**/.x'), false)
+})
+
+t.test('partial does not try a place in the path twice', async t => {
+  const pattern =
+    Array.from({ length: 50 }, () => '**/a').join('/') + '/b/**'
+  const path = Array(100).fill('a').join('/') + '/b/c/d/.e/a/b'
+  const alphabet = 'abcdefghijklmnopqrstuvwxyz'.repeat(5)
+  const p2 = '**/' + alphabet.split('').join('/**/') + '/**'
+  const f2 = alphabet
+    .split('')
+    .flatMap(c => alphabet.split('').filter(x => x !== c))
+    .join('/')
+  for (const [f, p, dot, expect] of [
+    [path, pattern, false, false],
+    [path, pattern, true, true],
+    [`${f2}/.x/y`, p2, false, false],
+  ] as const) {
+    const start = performance.now()
+    t.equal(minimatch(f, p, { partial: true, dot }), expect)
+    const dur = performance.now() - start
+    t.ok(dur < 1000, 'should take less than 1s', { found: dur })
+  }
+})

@@ -1482,6 +1482,7 @@ export class Minimatch {
       partial,
       0,
       !!fileTailMatch,
+      new Set(),
     )
   }
 
@@ -1525,10 +1526,10 @@ export class Minimatch {
         nonGsParts++
       }
     }
-    let i = segments.length - 1
-    for (const b of segments) {
-      b[1] = (nonGsPartsSums[i--] as number) + b[0].length
-    }
+    // the portions in this section and the ones after it
+    segments.forEach((b, i) => {
+      b[1] = nonGsParts - (nonGsPartsSums[i] as number)
+    })
 
     const parts = { head, body, tail, segments }
     byStart[key] = parts
@@ -1548,6 +1549,11 @@ export class Minimatch {
     partial: boolean,
     globStarDepth: number,
     sawTail: boolean,
+    // the places that a walk has already tried, as
+    // bodyIndex * (file.length + 1) + fileIndex. A walk from a place
+    // does the same no matter how it got there, and it only comes back
+    // if it found no match, so a walk that gets to one stops.
+    tried: Set<number>,
   ): boolean | null {
     // take the first body segment, and walk from fileIndex to its "after"
     // value at the end
@@ -1560,8 +1566,18 @@ export class Minimatch {
     // can't possibly be a valid matching condition.
     const bs = bodySegments[bodyIndex]
     if (!bs) {
-      // just make sure that there's no bad dots
-      for (let i = fileIndex; i < file.length; i++) {
+      // with partial, the body is the rest of the pattern, so it
+      // matches if no portions are left, or only the '' of a trailing
+      // / (as a/* matches a/b/). A ** at the end walks them as its own
+      // empty section.
+      if (partial) {
+        return (
+          fileIndex >= fileLength ||
+          (fileIndex === fileLength - 1 && file[fileIndex] === '')
+        )
+      }
+      // just make sure that there's no bad dots before the tail
+      for (let i = fileIndex; i < fileLength; i++) {
         sawTail = true
         const f = file[i]
         if (
@@ -1578,8 +1594,12 @@ export class Minimatch {
     // have a non-globstar body section to test, up to the last index
     // where it can start
     const [body, need] = bs
-    const after = fileLength - need
+    // with partial, the path can end before the body does
+    const after = partial ? fileLength : fileLength - need
     while (fileIndex <= after) {
+      const key = bodyIndex * (file.length + 1) + fileIndex
+      if (tried.has(key)) return false
+      tried.add(key)
       const m = this.#matchOne(
         file,
         body,
@@ -1601,12 +1621,15 @@ export class Minimatch {
           partial,
           globStarDepth + 1,
           sawTail,
+          tried,
         )
         if (sub !== false) {
           return sub
         }
       }
-      const f = file[fileIndex]
+      // the ** does not walk past the last place the body can start
+      if (fileIndex === after) break
+      const f = file[fileIndex]!
       if (
         f === '.' ||
         f === '..' ||
