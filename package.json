@@ -45,7 +45,7 @@
     "node": "18 || 20 || >=22"
   },
   "devDependencies": {
-    "@types/node": "^26.1.2",
+    "@types/node": "^26.6.5",
     "mkdirp": "^3.0.1",
     "oxlint": "^1.76.0",
     "oxlint-tsgolint": "^7.0.2001",
