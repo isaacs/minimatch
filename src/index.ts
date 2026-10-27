@@ -357,9 +357,10 @@ let lastChecked: string | undefined
 export type ParseReturnFiltered = string | Matcher | typeof GLOBSTAR
 
 // true if a pattern portion that is not ** matches a path portion.
-// An empty path portion only matches an empty pattern portion.
+// An empty path portion only matches an empty pattern portion. A path
+// portion never has a `/`, so the Matcher does not need to check it.
 const portionMatch = (p: string | Matcher, f: string) =>
-  typeof p === 'string' ? f === p : f !== '' && p.test(f)
+  typeof p === 'string' ? f === p : f !== '' && p.testUnchecked(f)
 
 // true if the last portion of a row matches the last portion of a
 // path, or the one before a trailing `/`
