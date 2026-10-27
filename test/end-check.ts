@@ -70,6 +70,34 @@ const cases: [
   // partial turns it off
   ['src/a', 'src/**', true, { partial: true }],
   ['s', 'src/**', false, { partial: true }],
+
+  // rows of **/x are matched without splitting the path, if the **
+  // can walk the portions before x
+  ['a/b/c.js', '**/*.js', true],
+  ['c.js', '**/*.js', true],
+  ['/a/c.js', '**/*.js', true],
+  ['a/.b/c.js', '**/*.js', false],
+  ['a/.b/c.js', '**/*.js', true, { dot: true }],
+  ['.a/c.js', '**/*.js', false],
+  ['a/./c.js', '**/*.js', false, { dot: true }],
+  ['a/../c.js', '**/*.js', false, { dot: true }],
+  ['../c.js', '**/*.js', false, { dot: true }],
+  ['a/..b/c.js', '**/*.js', true, { dot: true }],
+  ['a/.../c.js', '**/*.js', true, { dot: true }],
+  ['a//b//c.js', '**/*.js', true],
+  ['a/c.js/', '**/*.js', true],
+  ['a/.b/c.js/', '**/*.js', false],
+  ['.c.js', '**/*.js', false],
+  ['.c.js', '**/*.js', true, { dot: true }],
+  ['a/.c.js', '**/.*', true],
+  ['a/b/c', '**/c', true],
+  ['a/.b/c', '**/c', false],
+  ['a/b/c/', '**/c', true],
+  ['a/b/c.js', '!**/*.js', false],
+  ['a/.b/c.js', '!**/*.js', true],
+  ['a/b/c.js', '**/*.js', true, { flipNegate: true }],
+  ['a/b/c.js', '{**/*.js,x}', true],
+  ['a/.b/c.js', '{**/*.js,*/.b/*}', true],
 ]
 
 for (const [f, p, match, o] of cases) {

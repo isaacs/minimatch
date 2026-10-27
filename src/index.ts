@@ -362,13 +362,37 @@ export type ParseReturnFiltered = string | Matcher | typeof GLOBSTAR
 const portionMatch = (p: string | Matcher, f: string) =>
   typeof p === 'string' ? f === p : f !== '' && p.testUnchecked(f)
 
-// true if the last portion of a row matches the last portion of a
-// path, or the one before a trailing `/`
-const endMatch = (
+// Where the last portion of a row matches in a path: the start of the
+// last portion of the path, or of the one before a trailing `/`. -1 if
+// it matches neither.
+const endIndex = (
   p: string | Matcher,
   last: string,
+  lastStart: number,
   prev: string | undefined,
-) => portionMatch(p, last) || (prev !== undefined && portionMatch(p, prev))
+  prevStart: number,
+) =>
+  portionMatch(p, last) ? lastStart
+  : prev !== undefined && portionMatch(p, prev) ? prevStart
+  : -1
+
+// True if a portion of the path before `end` can not be walked by **:
+// one that starts with `.`, or with `dot`, one that is `.` or `..`.
+// `end` is 0, or just after a `/`, so each portion before it has a `/`
+// after it.
+const dotPortion = (f: string, end: number, dot: boolean) => {
+  for (let k = 0; k < end;) {
+    if (f.charCodeAt(k) === 46) {
+      if (!dot) return true
+      const n = f.charCodeAt(k + 1) === 46 ? k + 2 : k + 1
+      if (f.charCodeAt(n) === 47) return true
+    }
+    // the start of the next portion, after any run of `/`
+    k = f.indexOf('/', k) + 1
+    while (k < end && f.charCodeAt(k) === 47) k++
+  }
+  return false
+}
 
 /**
  * A pattern row split on its first and last `**`, from a start
@@ -410,6 +434,9 @@ export class Minimatch {
   #literalCheck: boolean
   // the string portions of each row in the set
   #literals: string[][] = []
+  // the rows that are `**` and one more portion, which #canMatch can
+  // match without splitting the path
+  #globTail: boolean[] = []
   // brace expansion can make the same portion in many rows, so they
   // share one Matcher, and the states that it caches
   #matchers = new Map<string, Matcher>()
@@ -466,6 +493,13 @@ export class Minimatch {
       ),
     ])
     this.#literalCheck = slashes && this.#literals.some(l => l.length)
+    this.#globTail = this.set.map(
+      row =>
+        this.#endCheck &&
+        row.length === 2 &&
+        row[0] === GLOBSTAR &&
+        row[1] !== GLOBSTAR,
+    )
   }
 
   hasMagic(): boolean {
@@ -691,9 +725,11 @@ export class Minimatch {
     })
   }
 
-  // False if no row can match the path, so it does not need to be
-  // split. These are only checks that a match needs. None of them
-  // apply with partial, where the path can end before the row does.
+  // Check the path against each row before it is split. 'no' if no
+  // row can match, so it does not need to be split. 'yes' if a row of
+  // `**` and one more portion matches. 'maybe' if it must be split to
+  // know. None of this applies with partial, where the path can end
+  // before the row does.
   //
   // Each string portion of a row must be a portion of the path, so the
   // path must contain it. Level 2 can only take portions out of the
@@ -707,37 +743,51 @@ export class Minimatch {
   // can resolve the last portion away), Windows paths,
   // preserveMultipleSlashes (which can leave more than one '' at the
   // end), or a subclass that splits paths in its own way.
-  #canMatch(f: string) {
+  //
+  // A row of `**/x` then matches if the ** can walk the portions
+  // before the one that x matches, the same as #matchGlobstar.
+  #canMatch(f: string): 'no' | 'yes' | 'maybe' {
+    // the portions that f.split(/\/+/) would end with, and where they
+    // start in f, found when a row needs them
     let last: string | undefined
+    let lastStart = 0
     let prev: string | undefined
-    if (this.#endCheck) {
-      // the same portions that f.split(/\/+/) would end with
-      const i = f.lastIndexOf('/')
-      last = f.slice(i + 1)
-      if (last === '' && i >= 0) {
-        let j = i
-        while (j > 0 && f.charCodeAt(j - 1) === 47) j--
-        prev = j === 0 ? '' : f.slice(f.lastIndexOf('/', j - 1) + 1, j)
-      }
-    }
+    let prevStart = 0
     // A string compare is cheaper than includes(), and a Matcher test
     // costs more, so the cheaper check goes first.
     ROWS: for (let r = 0; r < this.set.length; r++) {
       const row = this.set[r]!
       const p = row[row.length - 1]
-      const end = last !== undefined && p !== undefined && p !== GLOBSTAR
-      if (end && typeof p === 'string' && !endMatch(p, last!, prev))
-        continue
+      const end = this.#endCheck && p !== undefined && p !== GLOBSTAR
+      if (end && last === undefined) {
+        const i = f.lastIndexOf('/')
+        lastStart = i + 1
+        last = f.slice(lastStart)
+        if (last === '' && i >= 0) {
+          let j = i
+          while (j > 0 && f.charCodeAt(j - 1) === 47) j--
+          prevStart = j === 0 ? 0 : f.lastIndexOf('/', j - 1) + 1
+          prev = f.slice(prevStart, j)
+        }
+      }
+      let tailStart = -1
+      if (end && typeof p === 'string') {
+        tailStart = endIndex(p, last!, lastStart, prev, prevStart)
+        if (tailStart === -1) continue
+      }
       if (this.#literalCheck) {
         for (const l of this.#literals[r]!) {
           if (!f.includes(l)) continue ROWS
         }
       }
-      if (end && typeof p !== 'string' && !endMatch(p, last!, prev))
-        continue
-      return true
+      if (end && typeof p !== 'string') {
+        tailStart = endIndex(p!, last!, lastStart, prev, prevStart)
+        if (tailStart === -1) continue
+      }
+      if (!this.#globTail[r]) return 'maybe'
+      if (!dotPortion(f, tailStart, !!this.options.dot)) return 'yes'
     }
-    return false
+    return 'no'
   }
 
   // the parts from the last split, if it was the same path with the
@@ -1484,9 +1534,9 @@ export class Minimatch {
         lastChecked !== f
       ) {
         lastChecked = f
-        if (!this.#canMatch(f)) {
-          return options.flipNegate ? false : this.negate
-        }
+        const can = this.#canMatch(f)
+        if (can === 'no') return options.flipNegate ? false : this.negate
+        if (can === 'yes') return options.flipNegate ? true : !this.negate
       }
       ff = this.#split(f)
     }
