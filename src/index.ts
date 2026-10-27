@@ -376,6 +376,8 @@ const endIndex = (
   : prev !== undefined && portionMatch(p, prev) ? prevStart
   : -1
 
+const isDots = (p: string) => p === '.' || p === '..'
+
 // True if a portion of the path before `end` can not be walked by **:
 // one that starts with `.`, or with `dot`, one that is `.` or `..`.
 // `end` is 0, or just after a `/`, so each portion before it has a `/`
@@ -432,6 +434,8 @@ export class Minimatch {
   // portions, of each row before it is split. See #canMatch.
   #endCheck: boolean
   #literalCheck: boolean
+  // level 2 resolves `.` and `..` portions in the path
+  #level2: boolean
   // the string portions of each row in the set
   #literals: string[][] = []
   // the rows that are `**` and one more portion, which #canMatch can
@@ -476,10 +480,8 @@ export class Minimatch {
     this.set = []
     const slashes =
       !this.isWindows && this.slashSplit === Minimatch.prototype.slashSplit
-    this.#endCheck =
-      slashes &&
-      !this.preserveMultipleSlashes &&
-      (options.optimizationLevel ?? 1) < 2
+    this.#endCheck = slashes && !this.preserveMultipleSlashes
+    this.#level2 = (options.optimizationLevel ?? 1) >= 2
 
     // make the set of Matchers etc.
     this.make()
@@ -739,27 +741,34 @@ export class Minimatch {
   //
   // The last portion of a row must match the last portion of the path,
   // or the one before a trailing `/` (as a/* and a/**/* match a/b/).
-  // This does not apply to rows that end in **, or with level 2 (which
-  // can resolve the last portion away), Windows paths,
+  // This does not apply to rows that end in **, Windows paths,
   // preserveMultipleSlashes (which can leave more than one '' at the
-  // end), or a subclass that splits paths in its own way.
+  // end), or a subclass that splits paths in its own way. At level 2,
+  // it does not apply if that portion is `.` or `..`, which can be
+  // resolved away. Level 2 only takes other portions out of the
+  // middle of the path.
   //
   // A row of `**/x` then matches if the ** can walk the portions
-  // before the one that x matches, the same as #matchGlobstar.
+  // before the one that x matches, the same as #matchGlobstar. At
+  // level 2, this is only known if none of them are `.` or `..`, so
+  // that the path does not change when it is resolved.
   #canMatch(f: string): 'no' | 'yes' | 'maybe' {
     // the portions that f.split(/\/+/) would end with, and where they
-    // start in f, found when a row needs them
-    let last: string | undefined
+    // start in f, found when a row needs them. `ends` is 0 until they
+    // are found, then 1, or -1 if they can not be used.
+    let ends = this.#endCheck ? 0 : -1
+    let last = ''
     let lastStart = 0
     let prev: string | undefined
     let prevStart = 0
+    const dot = !!this.options.dot
     // A string compare is cheaper than includes(), and a Matcher test
     // costs more, so the cheaper check goes first.
     ROWS: for (let r = 0; r < this.set.length; r++) {
       const row = this.set[r]!
       const p = row[row.length - 1]
-      const end = this.#endCheck && p !== undefined && p !== GLOBSTAR
-      if (end && last === undefined) {
+      let end = ends !== -1 && p !== undefined && p !== GLOBSTAR
+      if (end && ends === 0) {
         const i = f.lastIndexOf('/')
         lastStart = i + 1
         last = f.slice(lastStart)
@@ -769,10 +778,16 @@ export class Minimatch {
           prevStart = j === 0 ? 0 : f.lastIndexOf('/', j - 1) + 1
           prev = f.slice(prevStart, j)
         }
+        const resolves =
+          this.#level2 &&
+          (isDots(last) ||
+            (last === '' && prev !== undefined && isDots(prev)))
+        ends = resolves ? -1 : 1
+        end = !resolves
       }
       let tailStart = -1
       if (end && typeof p === 'string') {
-        tailStart = endIndex(p, last!, lastStart, prev, prevStart)
+        tailStart = endIndex(p, last, lastStart, prev, prevStart)
         if (tailStart === -1) continue
       }
       if (this.#literalCheck) {
@@ -780,12 +795,13 @@ export class Minimatch {
           if (!f.includes(l)) continue ROWS
         }
       }
-      if (end && typeof p !== 'string') {
-        tailStart = endIndex(p!, last!, lastStart, prev, prevStart)
+      if (end && typeof p === 'object') {
+        tailStart = endIndex(p, last, lastStart, prev, prevStart)
         if (tailStart === -1) continue
       }
-      if (!this.#globTail[r]) return 'maybe'
-      if (!dotPortion(f, tailStart, !!this.options.dot)) return 'yes'
+      if (!end || !this.#globTail[r]) return 'maybe'
+      if (this.#level2 && dotPortion(f, tailStart, true)) return 'maybe'
+      if (!dotPortion(f, tailStart, dot)) return 'yes'
     }
     return 'no'
   }

@@ -98,6 +98,27 @@ const cases: [
   ['a/b/c.js', '**/*.js', true, { flipNegate: true }],
   ['a/b/c.js', '{**/*.js,x}', true],
   ['a/.b/c.js', '{**/*.js,*/.b/*}', true],
+
+  // at level 2, `.` and `..` at the end of the path are resolved, and
+  // so are the ones that ** walks
+  ['a/b/..', 'a', true, { optimizationLevel: 2 }],
+  ['a/b/../', 'a/', true, { optimizationLevel: 2 }],
+  ['a/b/.', 'a/b/.', true, { optimizationLevel: 2 }],
+  ['a/b/c/..', 'a/*', true, { optimizationLevel: 2 }],
+  ['a/b/c/../', 'a/*', true, { optimizationLevel: 2 }],
+  ['x/y/..', 'x/y', false, { optimizationLevel: 2 }],
+  ['a/b.js', '**/*.js', true, { optimizationLevel: 2 }],
+  ['a/./b.js', '**/*.js', true, { optimizationLevel: 2 }],
+  ['a/x/../b.js', '**/*.js', true, { optimizationLevel: 2 }],
+  ['../b.js', '**/*.js', false, { optimizationLevel: 2 }],
+  ['a/.x/b.js', '**/*.js', false, { optimizationLevel: 2 }],
+  ['a/.x/b.js', '**/*.js', true, { optimizationLevel: 2, dot: true }],
+  ['a/./b.js', '**/*.js', true, { optimizationLevel: 2, dot: true }],
+  ['a/b.md', '**/*.js', false, { optimizationLevel: 2 }],
+  ['a/b.js/', '**/*.js', true, { optimizationLevel: 2 }],
+  ['a/b.js/..', '**/*.js', false, { optimizationLevel: 2 }],
+  ['src/x/../a.js', 'src/*.js', true, { optimizationLevel: 2 }],
+  ['src/a.js', 'src/*.md', false, { optimizationLevel: 2 }],
 ]
 
 for (const [f, p, match, o] of cases) {
