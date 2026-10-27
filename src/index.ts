@@ -349,7 +349,17 @@ let lastSplit:
     }
   | undefined
 
+// The last path that Minimatch#match checked before splitting it. If
+// the same path is checked again, it is being tested against many
+// patterns, so it is split and the parts are kept for the others.
+let lastChecked: string | undefined
+
 export type ParseReturnFiltered = string | Matcher | typeof GLOBSTAR
+
+// true if a pattern portion that is not ** matches a path portion.
+// An empty path portion only matches an empty pattern portion.
+const portionMatch = (p: string | Matcher, f: string) =>
+  typeof p === 'string' ? f === p : f !== '' && p.test(f)
 
 /**
  * A pattern row split on its first and last `**`, from a start
@@ -385,11 +395,14 @@ export class Minimatch {
   platform: Platform
   windowsNoMagicRoot: boolean
   maxGlobstarRecursion: number
+  // the path can be checked against the last portion of each row
+  // before it is split. See #canEnd.
+  #endCheck: boolean
   // brace expansion can make the same portion in many rows, so they
   // share one Matcher, and the states that it caches
   #matchers = new Map<string, Matcher>()
   // the GlobstarParts of each pattern row, by start index and partial
-  #globstarParts = new WeakMap<ParseReturn[], Map<number, GlobstarParts>>()
+  #globstarParts = new WeakMap<ParseReturn[], GlobstarParts[]>()
 
   constructor(pattern: string, options: MinimatchOptions = {}) {
     assertValidPattern(pattern)
@@ -422,6 +435,11 @@ export class Minimatch {
     this.globSet = []
     this.globParts = []
     this.set = []
+    this.#endCheck =
+      !this.isWindows &&
+      !this.preserveMultipleSlashes &&
+      (options.optimizationLevel ?? 1) < 2 &&
+      this.slashSplit === Minimatch.prototype.slashSplit
 
     // make the set of Matchers etc.
     this.make()
@@ -650,19 +668,50 @@ export class Minimatch {
     })
   }
 
-  // split a path for match(), or reuse the parts from the last call
-  // with the same path and split settings
+  // A row can only match a path if the last portion of the row
+  // matches the last portion of the path, or the one before a
+  // trailing `/` (as a/* and a/**/* match a/b/). So if that is not
+  // true of any row, the path does not need to be split. This does
+  // not apply to rows that end in **, or with partial, level 2 (which
+  // can resolve the last portion away), Windows paths,
+  // preserveMultipleSlashes (which can leave more than one '' at the
+  // end), or a subclass that splits paths in its own way.
+  #canEnd(f: string) {
+    // the same portions that f.split(/\/+/) would end with
+    const i = f.lastIndexOf('/')
+    const last = f.slice(i + 1)
+    let prev: string | undefined
+    if (last === '' && i >= 0) {
+      let j = i
+      while (j > 0 && f.charCodeAt(j - 1) === 47) j--
+      prev = j === 0 ? '' : f.slice(f.lastIndexOf('/', j - 1) + 1, j)
+    }
+    for (const row of this.set) {
+      const p = row[row.length - 1]
+      if (p === undefined || p === GLOBSTAR) return true
+      if (portionMatch(p, last)) return true
+      if (prev !== undefined && portionMatch(p, prev)) return true
+    }
+    return false
+  }
+
+  // the parts from the last split, if it was the same path with the
+  // same split settings
+  #cachedSplit(f: string) {
+    const last = lastSplit
+    return (
+        last?.f === f &&
+          last.isWindows === this.isWindows &&
+          last.preserveMultipleSlashes === this.preserveMultipleSlashes &&
+          last.slashSplit === this.slashSplit
+      ) ?
+        last.parts
+      : undefined
+  }
+
+  // split a path for match(), and keep the parts for the next call
   #split(f: string) {
     const { isWindows, preserveMultipleSlashes, slashSplit } = this
-    const last = lastSplit
-    if (
-      last?.f === f &&
-      last.isWindows === isWindows &&
-      last.preserveMultipleSlashes === preserveMultipleSlashes &&
-      last.slashSplit === slashSplit
-    ) {
-      return last.parts
-    }
     // windows: need to use /, not \
     const parts = this.slashSplit(isWindows ? f.split('\\').join('/') : f)
     lastSplit = {
@@ -1015,8 +1064,8 @@ export class Minimatch {
 
     // check the head, from the current file/pattern index.
     if (head.length) {
-      const fileHead = file.slice(fileIndex, fileIndex + head.length)
-      if (!this.#matchOne(fileHead, head, partial, 0, 0)) {
+      const headEnd = fileIndex + head.length
+      if (!this.#matchOne(file, head, partial, fileIndex, 0, headEnd)) {
         return false
       }
       fileIndex += head.length
@@ -1104,11 +1153,11 @@ export class Minimatch {
   ): GlobstarParts {
     let byStart = this.#globstarParts.get(pattern)
     if (!byStart) {
-      byStart = new Map()
+      byStart = []
       this.#globstarParts.set(pattern, byStart)
     }
     const key = patternIndex * 2 + (partial ? 1 : 0)
-    const found = byStart.get(key)
+    const found = byStart[key]
     if (found) return found
 
     const firstgs = pattern.indexOf(GLOBSTAR, patternIndex)
@@ -1139,7 +1188,7 @@ export class Minimatch {
     }
 
     const parts = { head, body, tail, segments }
-    byStart.set(key, parts)
+    byStart[key] = parts
     return parts
   }
 
@@ -1189,11 +1238,12 @@ export class Minimatch {
     const after = fileLength - need
     while (fileIndex <= after) {
       const m = this.#matchOne(
-        file.slice(0, fileIndex + body.length),
+        file,
         body,
         partial,
         fileIndex,
         0,
+        fileIndex + body.length,
       )
       // if limit exceeded, no match. intentional false negative,
       // acceptable break in correctness for security.
@@ -1234,6 +1284,8 @@ export class Minimatch {
     partial: boolean,
     fileIndex: number,
     patternIndex: number,
+    // only match the file portions before this index
+    fileEnd: number = file.length,
   ) {
     let fi: number
     let pi: number
@@ -1242,7 +1294,7 @@ export class Minimatch {
     for (
       fi = fileIndex,
         pi = patternIndex,
-        fl = file.length,
+        fl = Math.min(fileEnd, file.length),
         pl = pattern.length;
       fi < fl && pi < pl;
       fi++, pi++
@@ -1263,15 +1315,13 @@ export class Minimatch {
       // something other than **
       // non-magic patterns just have to match exactly
       // patterns with magic have been turned into Matchers.
-      let hit: boolean
-      if (typeof p === 'string') {
-        hit = f === p
-        this.debug('string match', p, f, hit)
-      } else {
-        // an empty path portion only matches an empty pattern portion
-        hit = f !== '' && p.test(f)
-        this.debug('pattern match', p, f, hit)
-      }
+      const hit = portionMatch(p, f)
+      this.debug(
+        typeof p === 'string' ? 'string match' : 'pattern match',
+        p,
+        f,
+        hit,
+      )
 
       if (!hit) return false
     }
@@ -1379,8 +1429,18 @@ export class Minimatch {
 
     const options = this.options
 
-    // treat the test path as a set of pathparts.
-    const ff = this.#split(f)
+    // treat the test path as a set of pathparts. If it was not just
+    // split or checked, check that it can match before splitting it.
+    let ff = this.#cachedSplit(f)
+    if (!ff) {
+      if (!partial && this.#endCheck && lastChecked !== f) {
+        lastChecked = f
+        if (!this.#canEnd(f)) {
+          return options.flipNegate ? false : this.negate
+        }
+      }
+      ff = this.#split(f)
+    }
     this.debug(this.pattern, 'split', ff)
 
     // just ONE of the pattern sets in this.set needs to match
