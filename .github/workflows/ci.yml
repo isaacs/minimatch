@@ -33,6 +33,16 @@ jobs:
           shell: bash
         - os: windows-latest
           shell: powershell
+        # only test windows on the latest node
+        exclude:
+        - node-version: 22.x
+          platform: { os: windows-latest, shell: bash }
+        - node-version: 22.x
+          platform: { os: windows-latest, shell: powershell }
+        - node-version: 24.x
+          platform: { os: windows-latest, shell: bash }
+        - node-version: 24.x
+          platform: { os: windows-latest, shell: powershell }
       fail-fast: false
 
     runs-on: ${{ matrix.platform.os }}
