@@ -47,7 +47,7 @@
   "devDependencies": {
     "@types/node": "^26.6.5",
     "mkdirp": "^3.0.1",
-    "oxlint": "^1.76.0",
+    "oxlint": "^1.90.0",
     "oxlint-tsgolint": "^7.0.2001",
     "prettier": "^3.9.6",
     "tap": "^21.7.5",
