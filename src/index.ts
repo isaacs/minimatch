@@ -328,6 +328,9 @@ export class Minimatch {
   platform: Platform
   windowsNoMagicRoot: boolean
   maxGlobstarRecursion: number
+  // brace expansion can make the same portion in many rows, so they
+  // share one Matcher, and the states that it caches
+  #matchers = new Map<string, Matcher>()
 
   constructor(pattern: string, options: MinimatchOptions = {}) {
     assertValidPattern(pattern)
@@ -1187,7 +1190,12 @@ export class Minimatch {
       return lit
     }
 
-    return new Matcher(pattern, { nocase, noext, dot })
+    let m = this.#matchers.get(pattern)
+    if (!m) {
+      m = new Matcher(pattern, { nocase, noext, dot })
+      this.#matchers.set(pattern, m)
+    }
+    return m
   }
 
   slashSplit(p: string) {
