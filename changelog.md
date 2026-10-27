@@ -26,6 +26,10 @@
   last portion.
 - `partial` matching of patterns with many `**` no longer takes
   exponential time.
+- On Windows, a `..` no longer removes the drive letter, or the
+  host and share of a UNC path, at the start of a pattern or (at
+  optimization level 2) a path. So `C:/a/../../x` no longer
+  matches `x` or `/x`.
 - On Windows, compare the host and share of UNC paths like
   `//host/share/...` case-insensitively, the same as drive
   letters.

@@ -48,9 +48,10 @@ const cases: Case[] = [
   // magic in the host or share is matched as usual
   ['//HOST/share/z', '//h*/share/*', false],
   ['//HOST/share/z', '//h*/share/*', true, { nocase: true }],
-  // at level 2, the root is compared after .. is resolved
+  // .. can not remove the share, so these are not the same root
   ['//h/s/../H', '//h/S', false, { optimizationLevel: 2 }],
-  ['//h/x/../S', '//H/s', true, { optimizationLevel: 2 }],
+  ['//h/x/../S', '//H/s', false, { optimizationLevel: 2 }],
+  ['//h/s/x/../y', '//H/S/y', true, { optimizationLevel: 2 }],
 ]
 
 t.test('UNC drive letter paths match normal paths', async t => {

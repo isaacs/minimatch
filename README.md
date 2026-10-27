@@ -403,11 +403,15 @@ is equivalent in all cases).
   example, the pattern `./a/b/../*` is converted to `./a/*`, and
   so it will match the path string `./a/c`, but not the path
   string `./a/b/../c`. Dots and empty path portions in the
-  pattern are preserved.
+  pattern are preserved. On Windows, a `..` never removes the
+  drive letter or the UNC host and share at the start of a
+  pattern, the same as it never removes the `/` at the start of
+  a posix pattern. So `C:/a/../../x` is converted to `C:/../x`.
 - `2` (or higher) - Much more aggressive optimizations, suitable
   for use with file-walking cases:
   - Remove cases where a double-dot `..` follows a pattern
-    portion that is not `**`, `.`, or empty `''`. Remove empty
+    portion that is not `**`, `.`, or empty `''`, or a Windows
+    root as above. Remove empty
     and `.` portions of the pattern, where safe to do so (ie,
     anywhere other than the last position, the first position, or
     the second position in a pattern starting with `/`, as this

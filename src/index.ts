@@ -829,13 +829,21 @@ export class Minimatch {
   // get rid of adjascent ** and resolve .. portions
   levelOneOptimize(globParts: string[][]) {
     return globParts.map(parts => {
+      // .. can not remove the root of a Windows path
+      const root = this.#rootIndex(parts) + 1
       parts = parts.reduce((set: string[], part) => {
         const prev = set[set.length - 1]
         if (part === '**' && prev === '**') {
           return set
         }
         if (part === '..') {
-          if (prev && prev !== '..' && prev !== '.' && prev !== '**') {
+          if (
+            set.length > root &&
+            prev &&
+            prev !== '..' &&
+            prev !== '.' &&
+            prev !== '**'
+          ) {
             set.pop()
             return set
           }
@@ -1086,19 +1094,15 @@ export class Minimatch {
       }
 
       // <pre>/<p>/../<rest> -> <pre>/<rest>
-      let dd: number = 0
+      // .. can not remove the root of a Windows path
+      const root = this.#rootIndex(parts) + 1
+      let dd: number = root
       while (-1 !== (dd = parts.indexOf('..', dd + 1))) {
         const p = parts[dd - 1]
-        if (
-          p &&
-          p !== '.' &&
-          p !== '..' &&
-          p !== '**' &&
-          !(this.isWindows && /^[a-z]:$/i.test(p))
-        ) {
+        if (p && p !== '.' && p !== '..' && p !== '**') {
           didSomething = true
           parts.splice(dd - 1, 2)
-          dd -= 2
+          dd = Math.max(dd - 2, root)
         }
       }
     } while (didSomething)
@@ -1188,7 +1192,9 @@ export class Minimatch {
         }
 
         // <pre>/<p>/../<rest> -> <pre>/<rest>
-        let dd: number = 0
+        // .. can not remove the root of a Windows path
+        const root = this.#rootIndex(parts) + 1
+        let dd: number = root
         while (-1 !== (dd = parts.indexOf('..', dd + 1))) {
           const p = parts[dd - 1]
           if (p && p !== '.' && p !== '..' && p !== '**') {
@@ -1197,7 +1203,7 @@ export class Minimatch {
             const splin = needDot ? ['.'] : []
             parts.splice(dd - 1, 2, ...splin)
             if (parts.length === 0) parts.push('')
-            dd -= 2
+            dd = Math.max(dd - 2, root)
           }
         }
       }
