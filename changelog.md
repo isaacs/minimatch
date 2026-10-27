@@ -17,6 +17,9 @@
 - Remove the `debug` option and the `debug()` method.
 - Remove the `matchOne()`, `slashSplit()`, and
   `levelTwoFileOptimize()` methods. They are internal now.
+- On Windows, compare the host and share of UNC paths like
+  `//host/share/...` case-insensitively, the same as drive
+  letters.
 
 ## 10.2
 

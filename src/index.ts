@@ -393,6 +393,21 @@ const endIndex = (
 
 const isDots = (p: string) => p === '.' || p === '..'
 
+// a Windows drive letter portion, like `c:`
+const isDrive = (p: ParseReturn | undefined) =>
+  typeof p === 'string' && /^[a-z]:$/i.test(p)
+
+// a row or split path that starts with a Windows UNC root, like
+// `//host/share`, with a string host and share. `//?/...` is not one.
+const isUNC = (p: ParseReturn[]) =>
+  p[0] === '' &&
+  p[1] === '' &&
+  typeof p[2] === 'string' &&
+  p[2] !== '' &&
+  p[2] !== '?' &&
+  typeof p[3] === 'string' &&
+  p[3] !== ''
+
 // true if ** can walk the path portion: not `.` or `..`, and not a
 // dotfile unless `dot` is set
 const walkable = (p: string, dot: boolean) =>
@@ -546,10 +561,10 @@ export class Minimatch {
     // make the set of Matchers etc.
     this.make()
 
-    // On Windows, the portions of a row up to its drive letter are
-    // skipped or compared without case, if the path has one too. So
-    // the checks only use the portions after it.
-    const drives = this.set.map(row => this.#driveIndex(row))
+    // On Windows, the portions of a row up to its drive letter or UNC
+    // share are skipped or compared without case, if the path has one
+    // too. So the checks only use the portions after it.
+    const drives = this.set.map(row => this.#rootIndex(row))
     this.#endRows = this.set.map(
       (row, r) => this.#endCheck && row.length - 1 > drives[r]!,
     )
@@ -578,7 +593,7 @@ export class Minimatch {
       ) {
         return 'base'
       }
-      // the portion must not be a drive letter, or '', which can be a
+      // the portion must not be a root, or '', which can be a
       // different portion on Windows (where //x paths get an extra '')
       if (!this.#endCheck || drives[r] !== -1) return undefined
       if (
@@ -609,23 +624,15 @@ export class Minimatch {
     return this.#form ? p.normalize(this.#form) : p
   }
 
-  // On Windows, the index of the drive letter portion of a row, as
-  // #matchRow finds it: 0 for `c:/...`, 3 for `//?/c:/...`. Otherwise
-  // -1.
-  #driveIndex(row: ParseReturn[]) {
+  // On Windows, the index of the last root portion of a row, as
+  // #matchRow finds it: 0 for `c:/...`, 3 for `//?/c:/...` and
+  // `//host/share/...`. Otherwise -1.
+  #rootIndex(row: ParseReturn[]) {
     if (!this.isWindows) return -1
-    const drive = (p: ParseReturn | undefined) =>
-      typeof p === 'string' && /^[a-z]:$/i.test(p)
-    if (drive(row[0])) return 0
-    if (
-      row[0] === '' &&
-      row[1] === '' &&
-      row[2] === '?' &&
-      drive(row[3])
-    ) {
-      return 3
-    }
-    return -1
+    if (isDrive(row[0])) return 0
+    const uncDrive =
+      row[0] === '' && row[1] === '' && row[2] === '?' && isDrive(row[3])
+    return uncDrive || isUNC(row) ? 3 : -1
   }
 
   hasMagic(): boolean {
@@ -847,7 +854,8 @@ export class Minimatch {
   // before the row does.
   //
   // On Windows, `\` is a separator in the path too, and the portions of
-  // a row up to its drive letter are not checked (see #driveIndex).
+  // a row up to its drive letter or UNC share are not checked (see
+  // #rootIndex).
   //
   // Each string portion of a row must be a portion of the path, so the
   // path must contain it. Level 2 can only take portions out of the
@@ -856,7 +864,7 @@ export class Minimatch {
   // The last portion of a row must match the last portion of the path,
   // or the one before a trailing `/` (as a/* and a/**/* match a/b/).
   // This does not apply to rows that end in **, rows that end in a
-  // drive letter, or preserveMultipleSlashes (which can leave more
+  // root, or preserveMultipleSlashes (which can leave more
   // than one '' at the end). At level 2, it does not apply if that
   // portion is `.` or `..`, which can be
   // resolved away. Level 2 only takes other portions out of the
@@ -1306,9 +1314,21 @@ export class Minimatch {
     let patternStartIndex = 0
 
     // UNC paths like //?/X:/... can match X:/... and vice versa
-    // Drive letters in absolute drive or unc paths are always compared
+    // Drive letters in absolute drive or unc paths, and the host and
+    // share of UNC paths like //host/share/..., are always compared
     // case-insensitively.
-    if (this.isWindows) {
+    // Level 2 can resolve the share away (//h/s/../x), so the UNC root
+    // is found in the resolved parts.
+    if (this.isWindows && isUNC(resolved) && isUNC(pattern)) {
+      const [, , fh, fs] = resolved
+      const [, , ph, ps] = pattern as string[]
+      if (
+        fh!.toLowerCase() === ph!.toLowerCase() &&
+        fs!.toLowerCase() === ps!.toLowerCase()
+      ) {
+        patternStartIndex = fileStartIndex = 4
+      }
+    } else if (this.isWindows) {
       const fileDrive =
         typeof file[0] === 'string' && /^[a-z]:$/i.test(file[0])
       const fileUNC =

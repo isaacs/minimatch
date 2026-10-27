@@ -114,6 +114,10 @@ On Windows, UNC paths like `//?/c:/...` or
   present when the drive letters are a case-insensitive match to
   one another. The remaining portions of the path/pattern are
   compared case sensitively, unless `nocase:true` is set.
+- The host and share of a pattern starting with
+  `//<host>/<share>/...` are compared case-insensitively with
+  those of the file path, if neither has magic. For example,
+  `//host/share/*` matches `//HOST/SHARE/x`.
 
 Note that specifying a UNC path using `\` characters as path
 separators is always allowed in the file path argument, but only
