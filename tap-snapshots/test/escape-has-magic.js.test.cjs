@@ -1514,17 +1514,7 @@ Array [
           "nocase": undefined,
           "noext": false,
         },
-        "pattern": "*(b|c)",
-      },
-    ],
-    Array [
-      Matcher {
-        "options": Object {
-          "dot": undefined,
-          "nocase": undefined,
-          "noext": false,
-        },
-        "pattern": "*(b|d)",
+        "pattern": "@(*(b|c)|*(b|d))",
       },
     ],
   ],
@@ -2082,17 +2072,7 @@ Array [
           "nocase": undefined,
           "noext": false,
         },
-        "pattern": "*(a|b)",
-      },
-    ],
-    Array [
-      Matcher {
-        "options": Object {
-          "dot": undefined,
-          "nocase": undefined,
-          "noext": false,
-        },
-        "pattern": "*(a|c)",
+        "pattern": "@(*(a|b)|*(a|c))",
       },
     ],
   ],
@@ -2110,17 +2090,7 @@ Array [
           "nocase": undefined,
           "noext": false,
         },
-        "pattern": "*(a|b)",
-      },
-    ],
-    Array [
-      Matcher {
-        "options": Object {
-          "dot": undefined,
-          "nocase": undefined,
-          "noext": false,
-        },
-        "pattern": "*(a|c)",
+        "pattern": "@(*(a|b)|*(a|c))",
       },
     ],
   ],
@@ -2138,17 +2108,7 @@ Array [
           "nocase": undefined,
           "noext": false,
         },
-        "pattern": "*(a|b|c)",
-      },
-    ],
-    Array [
-      Matcher {
-        "options": Object {
-          "dot": undefined,
-          "nocase": undefined,
-          "noext": false,
-        },
-        "pattern": "*(a|c)",
+        "pattern": "@(*(a|b|c)|*(a|c))",
       },
     ],
   ],

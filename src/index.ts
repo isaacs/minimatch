@@ -305,6 +305,36 @@ const literal = (pattern: string, noext: boolean): string | undefined => {
   return lit
 }
 
+// True if the portion pattern has the same meaning as an alternative
+// inside `@(...)`. It must not have a `|` or `)` that is not in a
+// closed extglob (those are literal at the top level), an extglob
+// that is not closed (the `)` of the `@(...)` would close it), or a
+// trailing `\` (it would escape the next `|`). A pattern that is
+// only an empty extglob, such as `?()`, is literal on its own, but
+// not in `@(...)`. Posix classes such as `[:alpha:]` can hide a `]`
+// from classEnd, so patterns with them are not merged.
+const extSafe = (pattern: string) => {
+  if (/^[?*+@]\(\)$/.test(pattern) || pattern.includes('[:')) return false
+  let depth = 0
+  for (let i = 0; i < pattern.length; i++) {
+    const c = pattern.charAt(i)
+    if (c === '\\') {
+      if (++i === pattern.length) return false
+    } else if (c === '[') {
+      const close = classEnd(pattern, i)
+      if (close !== -1) i = close
+    } else if ('+@!?*'.includes(c) && pattern.charAt(i + 1) === '(') {
+      depth++
+      i++
+    } else if (c === ')') {
+      if (!depth--) return false
+    } else if (c === '|' && !depth) {
+      return false
+    }
+  }
+  return !depth
+}
+
 export type ParseReturnFiltered = string | Matcher | typeof GLOBSTAR
 export type ParseReturn = ParseReturnFiltered | false
 
@@ -468,7 +498,55 @@ export class Minimatch {
       }
     }
 
+    // with noext, `@(...)` would be literal
+    if (!options.noext) this.mergeRows()
+
     this.debug(this.pattern, this.set)
+  }
+
+  // Merge rows that only differ in one portion, where each of them
+  // is a Matcher, into one row that matches any of them with
+  // `@(a|b|...)`. Then a path is only walked once for all of them,
+  // for example with `**/*.{js,ts}`.
+  mergeRows() {
+    let merged = true
+    while (merged) {
+      merged = false
+      const len = Math.max(0, ...this.set.map(r => r.length))
+      for (let k = 0; k < len; k++) {
+        // the rows that are the same other than at portion k
+        const groups = new Map<string, number[]>()
+        this.set.forEach((row, i) => {
+          if (
+            !(row[k] instanceof Matcher) ||
+            !extSafe(this.globParts[i]![k]!)
+          ) {
+            return
+          }
+          const parts = [...this.globParts[i]!]
+          parts[k] = ''
+          const key = `${row.length}/${parts.join('/')}`
+          const g = groups.get(key)
+          if (g) g.push(i)
+          else groups.set(key, [i])
+        })
+        const drop = new Set<number>()
+        for (const g of groups.values()) {
+          if (g.length < 2) continue
+          const [first, ...rest] = g as [number, ...number[]]
+          const alts = g.map(i => this.globParts[i]![k]!)
+          const glob = `@(${alts.join('|')})`
+          this.globParts[first]![k] = glob
+          this.set[first]![k] = this.parse(glob) as Matcher
+          for (const i of rest) drop.add(i)
+        }
+        if (drop.size) {
+          merged = true
+          this.set = this.set.filter((_, i) => !drop.has(i))
+          this.globParts = this.globParts.filter((_, i) => !drop.has(i))
+        }
+      }
+    }
   }
 
   // various transforms to equivalent pattern sets that are
