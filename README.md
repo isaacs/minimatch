@@ -510,6 +510,13 @@ differences:
   whole pattern as a literal string. In this library, only the
   `?(` is literal, and the rest of the pattern is still matched
   as a glob. So `a?(b*` matches `a?(bcc` here, but not in Bash.
+- A pattern is split into portions on every `/`, including a `/`
+  inside an extglob. So `@(a|b/c)/*` becomes the portions
+  `@(a|b`, `c)`, and `*`, and its extglob is not closed. Bash
+  keeps the extglob whole, and drops each alternative with a `/`
+  in it, as no portion can contain a `/`. So in Bash, `@(a|b/c)/*`
+  is the same as `@(a)/*`. Leave out the alternatives with a `/`
+  to get the same result here.
 - With `nocase`, case is folded one code point at a time with
   Unicode simple case folding, the same as a JavaScript RegExp
   with the `iu` flags. Bash uses the case functions of the C
