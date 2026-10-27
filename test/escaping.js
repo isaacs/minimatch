@@ -50,3 +50,10 @@ tap.test('class escaping tests', function (t) {
   }
   t.end()
 })
+
+tap.test('escapes in *.ext are not compared literally', t => {
+  t.equal(minimatch('a.js', '*.j\\s'), true)
+  t.equal(minimatch('a.j\\s', '*.j\\s'), false)
+  t.equal(minimatch('a.JS', '*.j\\s', { nocase: true }), true)
+  t.end()
+})

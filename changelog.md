@@ -1,5 +1,18 @@
 # change log
 
+## 11.0
+
+- Match each path portion with `Matcher` from
+  `@isaacs/nonrecursive-glob-match`, in place of a `RegExp`.
+  Items in `Minimatch.set` are now strings, `Matcher` objects, or
+  `GLOBSTAR`.
+- Remove `makeRe()`, `Minimatch#regexp`, and the `MMRegExp` type.
+- Remove the `AST` class.
+- Remove the `maxExtglobRecursion` option.
+- An empty path portion, such as the last one in `a/b/`, only
+  matches an empty pattern portion. So `a/b/` no longer matches
+  `a/b/?(x)` or `a/b/*(x)`, the same as `a/b/*`.
+
 ## 10.2
 
 - Add `braceExpandMax` option

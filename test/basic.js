@@ -31,19 +31,11 @@ t.test('basic tests', function (t) {
       expect = c[1].sort(alpha),
       options = c[2] || {},
       f = c[3] || patterns.files,
-      tapOpts = c[4] || {},
-      ast = mm.AST.fromGlob(pattern, options)
+      tapOpts = c[4] || {}
 
     // options.debug = true
-    t.matchSnapshot(ast.hasMagic, pattern + ' hasMagic pre-generate')
-    ast.toRegExpSource()
-    t.matchSnapshot(ast.toJSON(), pattern + ' parsed')
-    t.matchSnapshot(ast.hasMagic, pattern + ' hasMagic known')
     var m = new mm.Minimatch(pattern, options)
-    var r = m.makeRe()
-    var r2 = mm.makeRe(pattern, options)
-    t.equal(String(r), String(r2), 'same results from both makeRe fns')
-    tapOpts.re = r
+    t.matchSnapshot(m.hasMagic(), pattern + ' hasMagic')
     tapOpts.files = JSON.stringify(f)
     tapOpts.glob = pattern
     tapOpts.set = m.set
@@ -78,8 +70,6 @@ t.test('basic tests', function (t) {
         tapOpts,
       )
     }
-
-    t.matchSnapshot(tapOpts.re, 'makeRe ' + pattern, tapOpts)
   })
 
   t.comment('time=' + (Date.now() - start) + 'ms')
@@ -158,20 +148,10 @@ t.test('mm debug', t => {
   t.end()
 })
 
-t.test('makeRe repeated', t => {
-  const mmRE = mm.makeRe('a/*/*')
-  const m = new mm.Minimatch('a/*/*')
-  const mRE = m.makeRe()
-  const mRE2 = m.makeRe()
-  t.equal(mRE, mRE2)
-  t.same(mmRE, mRE)
-  t.end()
-})
-
 t.test('in noglobstar mode, ** is equivalent to *', t => {
-  const re2s = mm.makeRe('**', { noglobstar: true })
-  const re1s = mm.makeRe('*', { noglobstar: true })
-  t.same(re2s, re1s)
+  const set2s = new mm.Minimatch('**', { noglobstar: true }).set
+  const set1s = new mm.Minimatch('*', { noglobstar: true }).set
+  t.same(set2s, set1s)
   t.end()
 })
 
@@ -195,7 +175,7 @@ t.test('GLOBSTAR marker exposed', t => {
   t.end()
 })
 
-t.test('globstar re matches zero or more path portions', t => {
+t.test('globstar matches zero or more path portions', t => {
   const cases = {
     'path/**': {
       'path/x.html': true,
@@ -262,9 +242,8 @@ t.test('globstar re matches zero or more path portions', t => {
   }
   for (const [pattern, set] of Object.entries(cases)) {
     t.test(pattern, t => {
-      const re = mm.makeRe(pattern)
       for (const [path, res] of Object.entries(set)) {
-        t.equal(re.test(path), res, path, { re, pattern })
+        t.equal(mm(path, pattern), res, path, { pattern })
       }
       t.end()
     })
@@ -285,13 +264,13 @@ t.test('option to only nocase regexps, not strings', t => {
       nocase: true,
       nocaseMagicOnly: true,
     }).set,
-    [['test', /^(?!\.)[^/]*?\.js$/i]],
+    [['test', { pattern: '*.js' }]],
   )
   t.match(
     new mm.Minimatch('test/*.js', {
       nocase: true,
     }).set,
-    [[/^test$/i, /^(?!\.)[^/]*?\.js$/i]],
+    [[{ pattern: 'test' }, { pattern: '*.js' }]],
   )
   t.end()
 })
@@ -300,7 +279,7 @@ t.test('preprocess out multiple ** portions, opt 0', t => {
   const { set } = new mm.Minimatch('test/**/**/**/**/**/**/*.js', {
     optimizationLevel: 0,
   })
-  t.match(set, [['test', GLOBSTAR, /^(?!\.)[^/]*?\.js$/]])
+  t.match(set, [['test', GLOBSTAR, { pattern: '*.js' }]])
   t.end()
 })
 
@@ -308,7 +287,7 @@ t.test('preprocess out multiple ** portions, opt 1', t => {
   const { set } = new mm.Minimatch('test/**/**/**/**/**/**/*.js', {
     optimizationLevel: 1,
   })
-  t.match(set, [['test', GLOBSTAR, /^(?!\.)[^/]*?\.js$/]])
+  t.match(set, [['test', GLOBSTAR, { pattern: '*.js' }]])
   t.end()
 })
 
@@ -316,7 +295,7 @@ t.test('preprocess out multiple ** portions, opt 2', t => {
   const m = new mm.Minimatch('test/**/**/**/**/**/**/*.js', {
     optimizationLevel: 2,
   })
-  t.match(m.set, [['test', GLOBSTAR, /^(?!\.)[^/]*?\.js$/]])
+  t.match(m.set, [['test', GLOBSTAR, { pattern: '*.js' }]])
 
   // optimize the file, too
   t.equal(m.match('test//.//a/x.js'), true)

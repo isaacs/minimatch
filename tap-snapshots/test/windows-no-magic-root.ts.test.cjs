@@ -21,8 +21,22 @@ Array [
   Array [
     "",
     "",
-    /^(?!\\.)[^/]$/i,
-    /^d:$/i,
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "?",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "d:",
+    },
   ],
 ]
 `
@@ -44,8 +58,22 @@ Array [
   Array [
     "",
     "",
-    /^(?!\\.)[^/]$/i,
-    /^d:$/i,
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "?",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "d:",
+    },
     "",
   ],
 ]
@@ -58,9 +86,30 @@ Array [
     "",
     "?",
     "d:",
-    /^x$/i,
-    /^y$/i,
-    /^z$/i,
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "x",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "y",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "z",
+    },
   ],
 ]
 `
@@ -70,11 +119,46 @@ Array [
   Array [
     "",
     "",
-    /^(?!\\.)[^/]$/i,
-    /^d:$/i,
-    /^x$/i,
-    /^y$/i,
-    /^z$/i,
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "?",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "d:",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "x",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "y",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "z",
+    },
   ],
 ]
 `
@@ -95,8 +179,22 @@ Array [
   Array [
     "",
     "",
-    /^host$/i,
-    /^share$/i,
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "host",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "share",
+    },
   ],
 ]
 `
@@ -118,8 +216,22 @@ Array [
   Array [
     "",
     "",
-    /^host$/i,
-    /^share$/i,
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "host",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "share",
+    },
     "",
   ],
 ]
@@ -132,9 +244,30 @@ Array [
     "",
     "host",
     "share",
-    /^x$/i,
-    /^y$/i,
-    /^z$/i,
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "x",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "y",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "z",
+    },
   ],
 ]
 `
@@ -144,11 +277,46 @@ Array [
   Array [
     "",
     "",
-    /^host$/i,
-    /^share$/i,
-    /^x$/i,
-    /^y$/i,
-    /^z$/i,
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "host",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "share",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "x",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "y",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "z",
+    },
   ],
 ]
 `
@@ -164,7 +332,14 @@ Array [
 exports[`test/windows-no-magic-root.ts > TAP > no magic the root > d: > set explicitly false 1`] = `
 Array [
   Array [
-    /^d:$/i,
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "d:",
+    },
   ],
 ]
 `
@@ -181,7 +356,14 @@ Array [
 exports[`test/windows-no-magic-root.ts > TAP > no magic the root > d:/ > set explicitly false 1`] = `
 Array [
   Array [
-    /^d:$/i,
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "d:",
+    },
     "",
   ],
 ]
@@ -191,9 +373,30 @@ exports[`test/windows-no-magic-root.ts > TAP > no magic the root > d:/x/y/z > de
 Array [
   Array [
     "d:",
-    /^x$/i,
-    /^y$/i,
-    /^z$/i,
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "x",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "y",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "z",
+    },
   ],
 ]
 `
@@ -201,10 +404,38 @@ Array [
 exports[`test/windows-no-magic-root.ts > TAP > no magic the root > d:/x/y/z > set explicitly false 1`] = `
 Array [
   Array [
-    /^d:$/i,
-    /^x$/i,
-    /^y$/i,
-    /^z$/i,
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "d:",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "x",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "y",
+    },
+    Matcher {
+      "options": Object {
+        "dot": undefined,
+        "nocase": true,
+        "noext": false,
+      },
+      "pattern": "z",
+    },
   ],
 ]
 `

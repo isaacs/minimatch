@@ -1,12 +1,13 @@
 import t from 'tap'
 import type { MinimatchOptions } from '../dist/esm/index.js'
 import { minimatch, Minimatch } from '../dist/esm/index.js'
+import { Matcher } from '@isaacs/nonrecursive-glob-match'
 
 t.test('UNC patterns do not lose their //', async t => {
   const share = new Minimatch('//host/share/*', { platform: 'win32' })
-  t.match(share.set, [['', '', 'host', 'share', RegExp]])
+  t.match(share.set, [['', '', 'host', 'share', Matcher]])
   const uncPath = new Minimatch('//?/d:/*', { platform: 'win32' })
-  t.match(uncPath.set, [['', '', '?', 'd:', RegExp]])
+  t.match(uncPath.set, [['', '', '?', 'd:', Matcher]])
 })
 
 type Case = [f: string, p: string, e: boolean, opt?: MinimatchOptions]

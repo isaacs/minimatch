@@ -9,7 +9,14 @@ exports[`test/escape-has-magic.js > TAP > !!a* 1`] = `
 Array [
   Array [
     Array [
-      /^a[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "a*",
+      },
     ],
   ],
   true,
@@ -20,7 +27,14 @@ exports[`test/escape-has-magic.js > TAP > !(.a|js)@(.*) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:(?!(?:\\.a(?:\\.[^/]*?)(?:$|\\/)|js(?:\\.[^/]*?)(?:$|\\/)))(?!\\.)[^/]*?)(?:(?!(?:^|\\/)\\.\\.?(?:$|\\/))\\.[^/]*?)$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "!(.a|js)@(.*)",
+      },
     ],
   ],
   true,
@@ -31,7 +45,14 @@ exports[`test/escape-has-magic.js > TAP > !()y 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]+?y$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "!()y",
+      },
     ],
   ],
   true,
@@ -42,7 +63,14 @@ exports[`test/escape-has-magic.js > TAP > !()y 2`] = `
 Array [
   Array [
     Array [
-      /^[^/]+?y$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "!()y",
+      },
     ],
   ],
   true,
@@ -53,7 +81,14 @@ exports[`test/escape-has-magic.js > TAP > !\\!a* 1`] = `
 Array [
   Array [
     Array [
-      /^\\!a[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "\\\\!a*",
+      },
     ],
   ],
   true,
@@ -64,7 +99,14 @@ exports[`test/escape-has-magic.js > TAP > !a* 1`] = `
 Array [
   Array [
     Array [
-      /^a[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "a*",
+      },
     ],
   ],
   true,
@@ -75,7 +117,14 @@ exports[`test/escape-has-magic.js > TAP > !a* 2`] = `
 Array [
   Array [
     Array [
-      /^!a[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "!a*",
+      },
     ],
   ],
   true,
@@ -86,7 +135,14 @@ exports[`test/escape-has-magic.js > TAP > ? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "?",
+      },
     ],
   ],
   true,
@@ -97,7 +153,14 @@ exports[`test/escape-has-magic.js > TAP > ?? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/][^/]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "??",
+      },
     ],
   ],
   true,
@@ -108,7 +171,14 @@ exports[`test/escape-has-magic.js > TAP > ?? 2`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/][^/]$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "??",
+      },
     ],
   ],
   true,
@@ -119,7 +189,14 @@ exports[`test/escape-has-magic.js > TAP > ?? 3`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/][^/]$/i,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": true,
+          "noext": false,
+        },
+        "pattern": "??",
+      },
     ],
   ],
   true,
@@ -130,7 +207,14 @@ exports[`test/escape-has-magic.js > TAP > ?? 4`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/][^/]$/i,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": true,
+          "noext": false,
+        },
+        "pattern": "??",
+      },
     ],
   ],
   true,
@@ -141,7 +225,14 @@ exports[`test/escape-has-magic.js > TAP > ??? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/][^/][^/]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "???",
+      },
     ],
   ],
   true,
@@ -152,7 +243,14 @@ exports[`test/escape-has-magic.js > TAP > ??? 2`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/][^/][^/]$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "???",
+      },
     ],
   ],
   true,
@@ -163,7 +261,14 @@ exports[`test/escape-has-magic.js > TAP > ??**********?****? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/][^/][^/]*?[^/][^/]*?[^/]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "??**********?****?",
+      },
     ],
   ],
   true,
@@ -174,7 +279,14 @@ exports[`test/escape-has-magic.js > TAP > ??**********?****c 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/][^/][^/]*?[^/][^/]*?c$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "??**********?****c",
+      },
     ],
   ],
   true,
@@ -185,7 +297,14 @@ exports[`test/escape-has-magic.js > TAP > ?.js 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]\\.js$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "?.js",
+      },
     ],
   ],
   true,
@@ -196,7 +315,14 @@ exports[`test/escape-has-magic.js > TAP > ?.js 2`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]\\.js$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "?.js",
+      },
     ],
   ],
   true,
@@ -207,7 +333,14 @@ exports[`test/escape-has-magic.js > TAP > ?.js 3`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]\\.js$/i,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": true,
+          "noext": false,
+        },
+        "pattern": "?.js",
+      },
     ],
   ],
   true,
@@ -218,7 +351,14 @@ exports[`test/escape-has-magic.js > TAP > ?.js 4`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]\\.js$/i,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": true,
+          "noext": false,
+        },
+        "pattern": "?.js",
+      },
     ],
   ],
   true,
@@ -229,7 +369,14 @@ exports[`test/escape-has-magic.js > TAP > ?(x-!(y)|z) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:x\\-(?:(?!(?:y(?:$|\\/)))[^/]*?)|z)?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "?(x-!(y)|z)",
+      },
     ],
   ],
   true,
@@ -240,7 +387,14 @@ exports[`test/escape-has-magic.js > TAP > ?(x-!(y)|z)b 1`] = `
 Array [
   Array [
     Array [
-      /^(?:x\\-(?:(?!(?:yb(?:$|\\/)))[^/]*?)|z)?b$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "?(x-!(y)|z)b",
+      },
     ],
   ],
   true,
@@ -251,7 +405,14 @@ exports[`test/escape-has-magic.js > TAP > ?***?**** 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/][^/]*?[^/][^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "?***?****",
+      },
     ],
   ],
   true,
@@ -262,7 +423,14 @@ exports[`test/escape-has-magic.js > TAP > ?***?****? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/][^/]*?[^/][^/]*?[^/]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "?***?****?",
+      },
     ],
   ],
   true,
@@ -273,7 +441,14 @@ exports[`test/escape-has-magic.js > TAP > ?***?****c 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/][^/]*?[^/][^/]*?c$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "?***?****c",
+      },
     ],
   ],
   true,
@@ -284,7 +459,14 @@ exports[`test/escape-has-magic.js > TAP > ?*****?? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/][^/]*?[^/][^/]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "?*****??",
+      },
     ],
   ],
   true,
@@ -295,7 +477,14 @@ exports[`test/escape-has-magic.js > TAP > ?*****?c 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/][^/]*?[^/]c$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "?*****?c",
+      },
     ],
   ],
   true,
@@ -306,7 +495,14 @@ exports[`test/escape-has-magic.js > TAP > ?************c****?**** 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/][^/]*?c[^/]*?[^/][^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "?************c****?****",
+      },
     ],
   ],
   true,
@@ -317,7 +513,14 @@ exports[`test/escape-has-magic.js > TAP > ?js 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]js$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "?js",
+      },
     ],
   ],
   true,
@@ -328,7 +531,14 @@ exports[`test/escape-has-magic.js > TAP > ?js 2`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]js$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "?js",
+      },
     ],
   ],
   true,
@@ -339,7 +549,14 @@ exports[`test/escape-has-magic.js > TAP > ?js 3`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]js$/i,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": true,
+          "noext": false,
+        },
+        "pattern": "?js",
+      },
     ],
   ],
   true,
@@ -350,7 +567,14 @@ exports[`test/escape-has-magic.js > TAP > .* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))\\.[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": ".*",
+      },
     ],
   ],
   true,
@@ -361,7 +585,14 @@ exports[`test/escape-has-magic.js > TAP > .* 2`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))\\.[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": ".*",
+      },
     ],
   ],
   true,
@@ -374,7 +605,14 @@ Array [
     Array [
       ".x",
       Symbol(globstar **),
-      /^(?!\\.)[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
     ],
   ],
   true,
@@ -387,7 +625,14 @@ Array [
     Array [
       ".x",
       Symbol(globstar **),
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
     ],
   ],
   true,
@@ -400,7 +645,14 @@ Array [
     Array [
       ".x",
       Symbol(globstar **),
-      /^(?!\\.)[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
     ],
   ],
   true,
@@ -413,7 +665,14 @@ Array [
     Array [
       ".x",
       Symbol(globstar **),
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
     ],
   ],
   true,
@@ -426,7 +685,14 @@ Array [
     Array [
       ".x",
       Symbol(globstar **),
-      /^(?!\\.)[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
       Symbol(globstar **),
     ],
   ],
@@ -440,7 +706,14 @@ Array [
     Array [
       ".x",
       Symbol(globstar **),
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
       Symbol(globstar **),
     ],
   ],
@@ -453,7 +726,14 @@ Array [
   Array [
     Array [
       ".x",
-      /^(?!\\.)[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
       Symbol(globstar **),
     ],
   ],
@@ -466,7 +746,14 @@ Array [
   Array [
     Array [
       ".x",
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
       Symbol(globstar **),
     ],
   ],
@@ -479,7 +766,14 @@ Array [
   Array [
     Array [
       ".x",
-      /^(?!\\.)[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
       Symbol(globstar **),
     ],
   ],
@@ -492,7 +786,14 @@ Array [
   Array [
     Array [
       ".x",
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
       Symbol(globstar **),
     ],
   ],
@@ -515,7 +816,14 @@ exports[`test/escape-has-magic.js > TAP > [-abc] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[\\-abc]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[-abc]",
+      },
     ],
   ],
   true,
@@ -526,7 +834,14 @@ exports[`test/escape-has-magic.js > TAP > [!a* 1`] = `
 Array [
   Array [
     Array [
-      /^\\[!a[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[!a*",
+      },
     ],
   ],
   true,
@@ -537,7 +852,14 @@ exports[`test/escape-has-magic.js > TAP > [[:alnum:]][[:alnum:]][[:alnum:]][[:al
 Array [
   Array [
     Array [
-      /^(?!\\.)[\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}][\\p{L}\\p{Nl}\\p{Nd}]$/u,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]][[:alnum:]]",
+      },
     ],
   ],
   true,
@@ -548,7 +870,14 @@ exports[`test/escape-has-magic.js > TAP > [[:alpha:]][[:alpha:]][[:alpha:]][[:al
 Array [
   Array [
     Array [
-      /^(?!\\.)[\\p{L}\\p{Nl}][\\p{L}\\p{Nl}][\\p{L}\\p{Nl}][\\p{L}\\p{Nl}][\\p{L}\\p{Nl}]$/u,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[[:alpha:]][[:alpha:]][[:alpha:]][[:alpha:]][[:alpha:]]",
+      },
     ],
   ],
   true,
@@ -559,7 +888,14 @@ exports[`test/escape-has-magic.js > TAP > [[:ascii:]][[:ascii:]][[:ascii:]][[:as
 Array [
   Array [
     Array [
-      /^(?!\\.)[\\x00-\\x7f][\\x00-\\x7f][\\x00-\\x7f][\\x00-\\x7f][\\x00-\\x7f]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[[:ascii:]][[:ascii:]][[:ascii:]][[:ascii:]][[:ascii:]]",
+      },
     ],
   ],
   true,
@@ -570,7 +906,14 @@ exports[`test/escape-has-magic.js > TAP > [[:graph:][:digit:]]f* 1`] = `
 Array [
   Array [
     Array [
-      /^([\\p{Nd}]|[^\\p{Z}\\p{C}])f[^/]*?$/u,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[[:graph:][:digit:]]f*",
+      },
     ],
   ],
   true,
@@ -581,7 +924,14 @@ exports[`test/escape-has-magic.js > TAP > [[:graph:]]f* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^\\p{Z}\\p{C}]f[^/]*?$/u,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[[:graph:]]f*",
+      },
     ],
   ],
   true,
@@ -592,7 +942,14 @@ exports[`test/escape-has-magic.js > TAP > [[:xdigit:]][[:xdigit:]]??? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[A-Fa-f0-9][A-Fa-f0-9][^/][^/][^/]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[[:xdigit:]][[:xdigit:]]???",
+      },
     ],
   ],
   true,
@@ -603,7 +960,14 @@ exports[`test/escape-has-magic.js > TAP > [[:xdigit:]][[:xdigit:]][[:xdigit:]][[
 Array [
   Array [
     Array [
-      /^(?!\\.)[A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9][A-Fa-f0-9]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[[:xdigit:]][[:xdigit:]][[:xdigit:]][[:xdigit:]][[:xdigit:]]",
+      },
     ],
   ],
   true,
@@ -636,7 +1000,14 @@ exports[`test/escape-has-magic.js > TAP > []-] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[\\]\\-]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[]-]",
+      },
     ],
   ],
   true,
@@ -658,7 +1029,14 @@ exports[`test/escape-has-magic.js > TAP > []+*] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[\\]+*]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[]+*]",
+      },
     ],
   ],
   true,
@@ -669,7 +1047,14 @@ exports[`test/escape-has-magic.js > TAP > [* 1`] = `
 Array [
   Array [
     Array [
-      /^\\[[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[*",
+      },
     ],
   ],
   true,
@@ -680,7 +1065,14 @@ exports[`test/escape-has-magic.js > TAP > [\\-\\]] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[\\-\\]]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[\\\\-\\\\]]",
+      },
     ],
   ],
   true,
@@ -702,7 +1094,14 @@ exports[`test/escape-has-magic.js > TAP > [\\b-a] 1`] = `
 Array [
   Array [
     Array [
-      /^$.$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[\\\\b-a]",
+      },
     ],
   ],
   true,
@@ -713,7 +1112,14 @@ exports[`test/escape-has-magic.js > TAP > [\\z-a] 1`] = `
 Array [
   Array [
     Array [
-      /^$.$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[\\\\z-a]",
+      },
     ],
   ],
   true,
@@ -724,7 +1130,14 @@ exports[`test/escape-has-magic.js > TAP > [#a* 1`] = `
 Array [
   Array [
     Array [
-      /^\\[\\#a[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[#a*",
+      },
     ],
   ],
   true,
@@ -735,7 +1148,14 @@ exports[`test/escape-has-magic.js > TAP > [^a-c]* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^a-c][^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[^a-c]*",
+      },
     ],
   ],
   true,
@@ -746,7 +1166,14 @@ exports[`test/escape-has-magic.js > TAP > [a-[:alpha:]*] 1`] = `
 Array [
   Array [
     Array [
-      /^$.$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[a-[:alpha:]*]",
+      },
     ],
   ],
   true,
@@ -757,7 +1184,14 @@ exports[`test/escape-has-magic.js > TAP > [a-0][a-Ā] 1`] = `
 Array [
   Array [
     Array [
-      /^$.$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[a-0][a-Ā]",
+      },
     ],
   ],
   true,
@@ -768,7 +1202,14 @@ exports[`test/escape-has-magic.js > TAP > [a-b-c] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[a-b\\-c]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[a-b-c]",
+      },
     ],
   ],
   true,
@@ -779,7 +1220,14 @@ exports[`test/escape-has-magic.js > TAP > [a-c]b* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[a-c]b[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[a-c]b*",
+      },
     ],
   ],
   true,
@@ -790,7 +1238,14 @@ exports[`test/escape-has-magic.js > TAP > [a-y]*[^c] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[a-y][^/]*?[^c]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[a-y]*[^c]",
+      },
     ],
   ],
   true,
@@ -801,7 +1256,14 @@ exports[`test/escape-has-magic.js > TAP > [a-z] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[a-z]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[a-z]",
+      },
     ],
   ],
   true,
@@ -823,7 +1285,14 @@ exports[`test/escape-has-magic.js > TAP > [abc-] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[abc\\-]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[abc-]",
+      },
     ],
   ],
   true,
@@ -834,7 +1303,14 @@ exports[`test/escape-has-magic.js > TAP > [f-fz-a]* 1`] = `
 Array [
   Array [
     Array [
-      /^f[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[f-fz-a]*",
+      },
     ],
   ],
   true,
@@ -845,7 +1321,14 @@ exports[`test/escape-has-magic.js > TAP > [f-gz-a]* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[f-g][^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[f-gz-a]*",
+      },
     ],
   ],
   true,
@@ -856,7 +1339,14 @@ exports[`test/escape-has-magic.js > TAP > [fz-a]* 1`] = `
 Array [
   Array [
     Array [
-      /^f[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[fz-a]*",
+      },
     ],
   ],
   true,
@@ -867,7 +1357,14 @@ exports[`test/escape-has-magic.js > TAP > [ia]?[ck] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[ia][^/][ck]$/i,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": true,
+          "noext": false,
+        },
+        "pattern": "[ia]?[ck]",
+      },
     ],
   ],
   true,
@@ -878,7 +1375,14 @@ exports[`test/escape-has-magic.js > TAP > [z-a] 1`] = `
 Array [
   Array [
     Array [
-      /^$.$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[z-a]",
+      },
     ],
   ],
   true,
@@ -889,7 +1393,14 @@ exports[`test/escape-has-magic.js > TAP > [z-a]* 1`] = `
 Array [
   Array [
     Array [
-      /^$.$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[z-a]*",
+      },
     ],
   ],
   true,
@@ -900,7 +1411,14 @@ exports[`test/escape-has-magic.js > TAP > [z-af]* 1`] = `
 Array [
   Array [
     Array [
-      /^f[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[z-af]*",
+      },
     ],
   ],
   true,
@@ -911,7 +1429,14 @@ exports[`test/escape-has-magic.js > TAP > [z\\-a] 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[z\\-a]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[z\\\\-a]",
+      },
     ],
   ],
   true,
@@ -923,10 +1448,24 @@ Array [
   Array [
     Array [
       "",
-      /^(?!\\.)[^/]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "?",
+      },
     ],
     Array [
-      /^(?!\\.)[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
     ],
   ],
   true,
@@ -938,10 +1477,24 @@ Array [
   Array [
     Array [
       "",
-      /^(?!\\.)[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
     ],
     Array [
-      /^(?!\\.)[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
     ],
   ],
   true,
@@ -955,10 +1508,24 @@ Array [
       "a",
     ],
     Array [
-      /^(?:b|c)*$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*(b|c)",
+      },
     ],
     Array [
-      /^(?:b|d)*$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*(b|d)",
+      },
     ],
   ],
   true,
@@ -972,7 +1539,14 @@ Array [
       "a",
     ],
     Array [
-      /^(?!\\.)[^/]*?\\(b\\|c$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*(b|c",
+      },
     ],
     Array [
       "d)",
@@ -986,11 +1560,25 @@ exports[`test/escape-has-magic.js > TAP > {c*,./c*} 1`] = `
 Array [
   Array [
     Array [
-      /^c[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "c*",
+      },
     ],
     Array [
       ".",
-      /^c[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "c*",
+      },
     ],
   ],
   true,
@@ -1001,7 +1589,14 @@ exports[`test/escape-has-magic.js > TAP > @(.*) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:(?!(?:^|\\/)\\.\\.?(?:$|\\/))\\.[^/]*?)$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "@(.*)",
+      },
     ],
   ],
   true,
@@ -1012,7 +1607,14 @@ exports[`test/escape-has-magic.js > TAP > @(.*) 2`] = `
 Array [
   Array [
     Array [
-      /^(?:(?!(?:^|\\/)\\.\\.?(?:$|\\/))\\.[^/]*?)$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "@(.*)",
+      },
     ],
   ],
   true,
@@ -1023,7 +1625,14 @@ exports[`test/escape-has-magic.js > TAP > @(.*|*) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:(?!(?:^|\\/)\\.\\.?(?:$|\\/))\\.[^/]*?|(?!\\.)[^/]+?)$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "@(.*|*)",
+      },
     ],
   ],
   true,
@@ -1034,7 +1643,14 @@ exports[`test/escape-has-magic.js > TAP > @(.*|js) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:(?!(?:^|\\/)\\.\\.?(?:$|\\/))\\.[^/]*?|js)$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "@(.*|js)",
+      },
     ],
   ],
   true,
@@ -1045,7 +1661,14 @@ exports[`test/escape-has-magic.js > TAP > @(*|.*) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:(?!\\.)[^/]+?|(?!(?:^|\\/)\\.\\.?(?:$|\\/))\\.[^/]*?)$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "@(*|.*)",
+      },
     ],
   ],
   true,
@@ -1056,7 +1679,14 @@ exports[`test/escape-has-magic.js > TAP > @(*|a) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]+?|a)$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "@(*|a)",
+      },
     ],
   ],
   true,
@@ -1067,7 +1697,14 @@ exports[`test/escape-has-magic.js > TAP > @(a|a[(])b 1`] = `
 Array [
   Array [
     Array [
-      /^(?:a|a\\()b$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "@(a|a[(])b",
+      },
     ],
   ],
   true,
@@ -1078,7 +1715,14 @@ exports[`test/escape-has-magic.js > TAP > @(a|a[)])b 1`] = `
 Array [
   Array [
     Array [
-      /^(?:a|a\\))b$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "@(a|a[)])b",
+      },
     ],
   ],
   true,
@@ -1089,7 +1733,14 @@ exports[`test/escape-has-magic.js > TAP > @(foo)* 1`] = `
 Array [
   Array [
     Array [
-      /^(?:foo)[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "@(foo)*",
+      },
     ],
   ],
   true,
@@ -1100,7 +1751,14 @@ exports[`test/escape-has-magic.js > TAP > @(js|.*) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:js|(?!(?:^|\\/)\\.\\.?(?:$|\\/))\\.[^/]*?)$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "@(js|.*)",
+      },
     ],
   ],
   true,
@@ -1111,7 +1769,14 @@ exports[`test/escape-has-magic.js > TAP > * 1`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
     ],
   ],
   true,
@@ -1122,7 +1787,14 @@ exports[`test/escape-has-magic.js > TAP > * 2`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
     ],
   ],
   true,
@@ -1133,7 +1805,14 @@ exports[`test/escape-has-magic.js > TAP > * 3`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
     ],
   ],
   true,
@@ -1144,7 +1823,14 @@ exports[`test/escape-has-magic.js > TAP > *.!(js) 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]*?\\.(?:(?!(?:js(?:$|\\/)))[^/]*?)$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*.!(js)",
+      },
     ],
   ],
   true,
@@ -1155,7 +1841,14 @@ exports[`test/escape-has-magic.js > TAP > *.* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]*?\\.[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*.*",
+      },
     ],
   ],
   true,
@@ -1166,7 +1859,14 @@ exports[`test/escape-has-magic.js > TAP > *.* 2`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]*?\\.[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*.*",
+      },
     ],
   ],
   true,
@@ -1177,7 +1877,14 @@ exports[`test/escape-has-magic.js > TAP > *.\\* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]*?\\.\\*$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*.\\\\*",
+      },
     ],
   ],
   true,
@@ -1188,7 +1895,14 @@ exports[`test/escape-has-magic.js > TAP > *.js 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]*?\\.js$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*.js",
+      },
     ],
   ],
   true,
@@ -1199,7 +1913,14 @@ exports[`test/escape-has-magic.js > TAP > *.js 2`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]*?\\.js$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*.js",
+      },
     ],
   ],
   true,
@@ -1210,7 +1931,14 @@ exports[`test/escape-has-magic.js > TAP > *.js 3`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]*?\\.js$/i,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": true,
+          "noext": false,
+        },
+        "pattern": "*.js",
+      },
     ],
   ],
   true,
@@ -1221,7 +1949,14 @@ exports[`test/escape-has-magic.js > TAP > *.js 4`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]*?\\.js$/i,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": true,
+          "noext": false,
+        },
+        "pattern": "*.js",
+      },
     ],
   ],
   true,
@@ -1232,7 +1967,14 @@ exports[`test/escape-has-magic.js > TAP > *.y 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]*?\\.y$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*.y",
+      },
     ],
   ],
   true,
@@ -1243,7 +1985,14 @@ exports[`test/escape-has-magic.js > TAP > *.Y 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]*?\\.Y$/i,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": true,
+          "noext": false,
+        },
+        "pattern": "*.Y",
+      },
     ],
   ],
   true,
@@ -1254,7 +2003,14 @@ exports[`test/escape-has-magic.js > TAP > *.z 1`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]*?\\.z$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*.z",
+      },
     ],
   ],
   true,
@@ -1265,7 +2021,14 @@ exports[`test/escape-has-magic.js > TAP > *.Z 1`] = `
 Array [
   Array [
     Array [
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]*?\\.Z$/i,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": true,
+          "noext": false,
+        },
+        "pattern": "*.Z",
+      },
     ],
   ],
   true,
@@ -1276,7 +2039,14 @@ exports[`test/escape-has-magic.js > TAP > *(?) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:(?:(?!\\.)[^/])(?:(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/])*?)?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*(?)",
+      },
     ],
   ],
   true,
@@ -1287,7 +2057,14 @@ exports[`test/escape-has-magic.js > TAP > *(a/b) 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]*?\\(a$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*(a",
+      },
       "b)",
     ],
   ],
@@ -1299,10 +2076,24 @@ exports[`test/escape-has-magic.js > TAP > *(a|{b,c}) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:a|b)*$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*(a|b)",
+      },
     ],
     Array [
-      /^(?:a|c)*$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*(a|c)",
+      },
     ],
   ],
   true,
@@ -1313,10 +2104,24 @@ exports[`test/escape-has-magic.js > TAP > *(a|{b),c)} 1`] = `
 Array [
   Array [
     Array [
-      /^(?:a|b)*$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*(a|b)",
+      },
     ],
     Array [
-      /^(?:a|c)*$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*(a|c)",
+      },
     ],
   ],
   true,
@@ -1327,10 +2132,24 @@ exports[`test/escape-has-magic.js > TAP > *(a|{b|c,c}) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:a|b|c)*$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*(a|b|c)",
+      },
     ],
     Array [
-      /^(?:a|c)*$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*(a|c)",
+      },
     ],
   ],
   true,
@@ -1341,10 +2160,24 @@ exports[`test/escape-has-magic.js > TAP > *(a|{b|c,c}) 2`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]*?\\(a\\|b\\|c\\)$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": true,
+        },
+        "pattern": "*(a|b|c)",
+      },
     ],
     Array [
-      /^(?!\\.)[^/]*?\\(a\\|c\\)$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": true,
+        },
+        "pattern": "*(a|c)",
+      },
     ],
   ],
   true,
@@ -1388,7 +2221,14 @@ exports[`test/escape-has-magic.js > TAP > *****?? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]*?[^/][^/]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*****??",
+      },
     ],
   ],
   true,
@@ -1399,7 +2239,14 @@ exports[`test/escape-has-magic.js > TAP > *******? 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]*?[^/]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*******?",
+      },
     ],
   ],
   true,
@@ -1410,7 +2257,14 @@ exports[`test/escape-has-magic.js > TAP > *******c 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]*?c$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*******c",
+      },
     ],
   ],
   true,
@@ -1434,9 +2288,23 @@ exports[`test/escape-has-magic.js > TAP > **/.x/** 2`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
       ".x",
-      /^(?!\\.)[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
     ],
   ],
   true,
@@ -1458,9 +2326,30 @@ exports[`test/escape-has-magic.js > TAP > */man*/bash.* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]+?$/,
-      /^man[^/]*?$/,
-      /^bash\\.[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "man*",
+      },
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "bash.*",
+      },
     ],
   ],
   true,
@@ -1471,7 +2360,14 @@ exports[`test/escape-has-magic.js > TAP > *\\!* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]*?\\![^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*\\\\!*",
+      },
     ],
   ],
   true,
@@ -1482,7 +2378,14 @@ exports[`test/escape-has-magic.js > TAP > *\\\\!* 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]*?\\\\![^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*\\\\\\\\!*",
+      },
     ],
   ],
   true,
@@ -1493,7 +2396,14 @@ exports[`test/escape-has-magic.js > TAP > *c*?** 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]*?c[^/]*?[^/][^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*c*?**",
+      },
     ],
   ],
   true,
@@ -1504,7 +2414,14 @@ exports[`test/escape-has-magic.js > TAP > *js 1`] = `
 Array [
   Array [
     Array [
-      /^(?!\\.)[^/]*?js$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*js",
+      },
     ],
   ],
   true,
@@ -1518,7 +2435,14 @@ Array [
       "",
       "^root:",
       "{s",
-      /^\\^[^:][^/]*?:[^:][^/]*?:\\([^:][^/]*?\\)\\.[^/]*?\\$$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "^[^:]*:[^:]*:([^:]*).*$",
+      },
       "\\u0001",
       "",
     ],
@@ -1534,7 +2458,14 @@ Array [
       "",
       "^root:",
       "{s",
-      /^\\^[^:][^/]*?:[^:][^/]*?:\\([^:][^/]*?\\)\\.[^/]*?\\$$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "^[^:]*:[^:]*:([^:]*).*$",
+      },
       "1",
       "",
     ],
@@ -1559,7 +2490,14 @@ Array [
   Array [
     Array [
       "..",
-      /^(?!\\.)[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
       "",
     ],
   ],
@@ -1582,7 +2520,14 @@ exports[`test/escape-has-magic.js > TAP > \\** 1`] = `
 Array [
   Array [
     Array [
-      /^\\*[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "\\\\**",
+      },
     ],
   ],
   true,
@@ -1611,7 +2556,14 @@ exports[`test/escape-has-magic.js > TAP > #* 1`] = `
 Array [
   Array [
     Array [
-      /^\\#[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "#*",
+      },
     ],
   ],
   true,
@@ -1622,7 +2574,14 @@ exports[`test/escape-has-magic.js > TAP > +(?) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:(?:(?!\\.)[^/])(?:(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/])*?)$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "+(?)",
+      },
     ],
   ],
   true,
@@ -1633,7 +2592,14 @@ exports[`test/escape-has-magic.js > TAP > +(.|a|!(b)) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:(?:\\.|a|(?:(?!(?:b(?:$|\\/)))(?!\\.)[^/]*?))(?:\\.|a|(?:(?!(?:b(?:$|\\/)))[^/]*?))*?)$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "+(.|a|!(b))",
+      },
     ],
   ],
   true,
@@ -1655,7 +2621,14 @@ exports[`test/escape-has-magic.js > TAP > +()*(x|a) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:)+(?:x|a)*$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "+()*(x|a)",
+      },
     ],
   ],
   true,
@@ -1666,7 +2639,14 @@ exports[`test/escape-has-magic.js > TAP > +(a)!(b)+(c) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:a)+(?:(?!(?:b(?:c)+(?:$|\\/)))[^/]*?)(?:c)+$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "+(a)!(b)+(c)",
+      },
     ],
   ],
   true,
@@ -1677,7 +2657,14 @@ exports[`test/escape-has-magic.js > TAP > +(a|!(b)) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:(?:a|(?:(?!(?:b(?:$|\\/)))(?!\\.)[^/]*?))(?:a|(?:(?!(?:b(?:$|\\/)))[^/]*?))*?)$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "+(a|!(b))",
+      },
     ],
   ],
   true,
@@ -1688,7 +2675,14 @@ exports[`test/escape-has-magic.js > TAP > +(a|?) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:(?:a|(?!\\.)[^/])(?:a|(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/])*?)$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "+(a|?)",
+      },
     ],
   ],
   true,
@@ -1699,7 +2693,14 @@ exports[`test/escape-has-magic.js > TAP > +(a|.) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:a|\\.)+$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "+(a|.)",
+      },
     ],
   ],
   true,
@@ -1710,7 +2711,14 @@ exports[`test/escape-has-magic.js > TAP > +(a|*\\|c\\\\|d\\\\\\|e\\\\\\\\|f\\\\\
 Array [
   Array [
     Array [
-      /^\\+\\(a\\|[^/]*?|c\\\\\\|d\\\\|e\\\\\\\\\\|f\\\\\\\\|g$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "+(a|*\\\\|c\\\\\\\\|d\\\\\\\\\\\\|e\\\\\\\\\\\\\\\\|f\\\\\\\\\\\\\\\\\\\\|g",
+      },
     ],
   ],
   true,
@@ -1721,7 +2729,14 @@ exports[`test/escape-has-magic.js > TAP > +(x|a[^)]y) 1`] = `
 Array [
   Array [
     Array [
-      /^(?:x|a[^)]y)+$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "+(x|a[^)]y)",
+      },
     ],
   ],
   true,
@@ -1743,7 +2758,14 @@ exports[`test/escape-has-magic.js > TAP > Å 1`] = `
 Array [
   Array [
     Array [
-      /^Å$/i,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": true,
+          "noext": false,
+        },
+        "pattern": "Å",
+      },
     ],
   ],
   true,
@@ -1754,7 +2776,14 @@ exports[`test/escape-has-magic.js > TAP > å 2`] = `
 Array [
   Array [
     Array [
-      /^å$/i,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": true,
+          "noext": false,
+        },
+        "pattern": "å",
+      },
     ],
   ],
   true,
@@ -1776,7 +2805,14 @@ exports[`test/escape-has-magic.js > TAP > å 3`] = `
 Array [
   Array [
     Array [
-      /^å$/i,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": true,
+          "noext": false,
+        },
+        "pattern": "å",
+      },
     ],
   ],
   true,
@@ -1809,7 +2845,14 @@ exports[`test/escape-has-magic.js > TAP > Å 4`] = `
 Array [
   Array [
     Array [
-      /^Å$/i,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": true,
+          "noext": false,
+        },
+        "pattern": "Å",
+      },
     ],
   ],
   true,
@@ -1820,7 +2863,14 @@ exports[`test/escape-has-magic.js > TAP > a?b 1`] = `
 Array [
   Array [
     Array [
-      /^a[^/]b$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "a?b",
+      },
     ],
   ],
   true,
@@ -1831,7 +2881,14 @@ exports[`test/escape-has-magic.js > TAP > a?c 1`] = `
 Array [
   Array [
     Array [
-      /^a[^/]c$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "a?c",
+      },
     ],
   ],
   true,
@@ -1864,7 +2921,14 @@ exports[`test/escape-has-magic.js > TAP > a[X-]b 1`] = `
 Array [
   Array [
     Array [
-      /^a[X\\-]b$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "a[X-]b",
+      },
     ],
   ],
   true,
@@ -1875,7 +2939,14 @@ exports[`test/escape-has-magic.js > TAP > a* 1`] = `
 Array [
   Array [
     Array [
-      /^a[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "a*",
+      },
     ],
   ],
   true,
@@ -1886,7 +2957,14 @@ exports[`test/escape-has-magic.js > TAP > a*[^c] 1`] = `
 Array [
   Array [
     Array [
-      /^a[^/]*?[^c]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "a*[^c]",
+      },
     ],
   ],
   true,
@@ -1897,7 +2975,14 @@ exports[`test/escape-has-magic.js > TAP > a**?**cd**?**??***k 1`] = `
 Array [
   Array [
     Array [
-      /^a[^/]*?[^/][^/]*?cd[^/]*?[^/][^/]*?[^/][^/][^/]*?k$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "a**?**cd**?**??***k",
+      },
     ],
   ],
   true,
@@ -1908,7 +2993,14 @@ exports[`test/escape-has-magic.js > TAP > a**?**cd**?**??***k** 1`] = `
 Array [
   Array [
     Array [
-      /^a[^/]*?[^/][^/]*?cd[^/]*?[^/][^/]*?[^/][^/][^/]*?k[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "a**?**cd**?**??***k**",
+      },
     ],
   ],
   true,
@@ -1919,7 +3011,14 @@ exports[`test/escape-has-magic.js > TAP > a**?**cd**?**??k 1`] = `
 Array [
   Array [
     Array [
-      /^a[^/]*?[^/][^/]*?cd[^/]*?[^/][^/]*?[^/][^/]k$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "a**?**cd**?**??k",
+      },
     ],
   ],
   true,
@@ -1930,7 +3029,14 @@ exports[`test/escape-has-magic.js > TAP > a**?**cd**?**??k*** 1`] = `
 Array [
   Array [
     Array [
-      /^a[^/]*?[^/][^/]*?cd[^/]*?[^/][^/]*?[^/][^/]k[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "a**?**cd**?**??k***",
+      },
     ],
   ],
   true,
@@ -1941,7 +3047,14 @@ exports[`test/escape-has-magic.js > TAP > a*****?c 1`] = `
 Array [
   Array [
     Array [
-      /^a[^/]*?[^/]c$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "a*****?c",
+      },
     ],
   ],
   true,
@@ -1952,7 +3065,14 @@ exports[`test/escape-has-magic.js > TAP > a********???******* 1`] = `
 Array [
   Array [
     Array [
-      /^a[^/]*?[^/][^/][^/][^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "a********???*******",
+      },
     ],
   ],
   true,
@@ -1963,7 +3083,14 @@ exports[`test/escape-has-magic.js > TAP > a*****c*?** 1`] = `
 Array [
   Array [
     Array [
-      /^a[^/]*?c[^/]*?[^/][^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "a*****c*?**",
+      },
     ],
   ],
   true,
@@ -1974,7 +3101,14 @@ exports[`test/escape-has-magic.js > TAP > a****c**?**??***** 1`] = `
 Array [
   Array [
     Array [
-      /^a[^/]*?c[^/]*?[^/][^/]*?[^/][^/][^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "a****c**?**??*****",
+      },
     ],
   ],
   true,
@@ -1985,7 +3119,14 @@ exports[`test/escape-has-magic.js > TAP > a***c 1`] = `
 Array [
   Array [
     Array [
-      /^a[^/]*?c$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "a***c",
+      },
     ],
   ],
   true,
@@ -1996,7 +3137,14 @@ exports[`test/escape-has-magic.js > TAP > a*cd**?**??k 1`] = `
 Array [
   Array [
     Array [
-      /^a[^/]*?cd[^/]*?[^/][^/]*?[^/][^/]k$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "a*cd**?**??k",
+      },
     ],
   ],
   true,
@@ -2008,7 +3156,14 @@ Array [
   Array [
     Array [
       "a",
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))\\.[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": ".*",
+      },
       "b",
     ],
   ],
@@ -2021,7 +3176,14 @@ Array [
   Array [
     Array [
       "a",
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))\\.[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": false,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": ".*",
+      },
       "b",
     ],
   ],
@@ -2034,7 +3196,14 @@ Array [
   Array [
     Array [
       "a",
-      /^(?!\\.)[2010T00:23:08.647Z]$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "[2015-03-10T00:23:08.647Z]",
+      },
       "z",
     ],
   ],
@@ -2060,7 +3229,14 @@ Array [
   Array [
     Array [
       "a",
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": true,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
       "b",
     ],
   ],
@@ -2073,7 +3249,14 @@ Array [
   Array [
     Array [
       "a",
-      /^(?!\\.)[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": false,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
       "b",
     ],
   ],
@@ -2085,8 +3268,22 @@ exports[`test/escape-has-magic.js > TAP > a\\*?/* 1`] = `
 Array [
   Array [
     Array [
-      /^a\\*[^/]$/,
-      /^(?!\\.)[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "a\\\\*?",
+      },
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
     ],
   ],
   true,
@@ -2098,7 +3295,14 @@ Array [
   Array [
     Array [
       "a*b",
-      /^(?!\\.)[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
     ],
   ],
   true,
@@ -2120,7 +3324,14 @@ exports[`test/escape-has-magic.js > TAP > ab* 1`] = `
 Array [
   Array [
     Array [
-      /^ab[^/]*?$/i,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": true,
+          "noext": false,
+        },
+        "pattern": "ab*",
+      },
     ],
   ],
   true,
@@ -2131,7 +3342,14 @@ exports[`test/escape-has-magic.js > TAP > b*/ 1`] = `
 Array [
   Array [
     Array [
-      /^b[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "b*",
+      },
       "",
     ],
   ],
@@ -2143,7 +3361,14 @@ exports[`test/escape-has-magic.js > TAP > c* 1`] = `
 Array [
   Array [
     Array [
-      /^c[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "c*",
+      },
     ],
   ],
   true,
@@ -2175,7 +3400,14 @@ Array [
   Array [
     Array [
       "s",
-      /^(?!(?:^|\\/)\\.\\.?(?:$|\\/))\\.\\.[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "\\\\..*",
+      },
       "",
     ],
   ],
@@ -2187,7 +3419,14 @@ exports[`test/escape-has-magic.js > TAP > X* 1`] = `
 Array [
   Array [
     Array [
-      /^X[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "X*",
+      },
     ],
   ],
   true,
@@ -2198,7 +3437,14 @@ exports[`test/escape-has-magic.js > TAP > X* 2`] = `
 Array [
   Array [
     Array [
-      /^X[^/]*?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "X*",
+      },
     ],
   ],
   true,
@@ -2237,7 +3483,14 @@ Array [
   Array [
     Array [
       "x",
-      /^(?!\\.)[^/]+?$/,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": undefined,
+          "noext": false,
+        },
+        "pattern": "*",
+      },
       "a",
       "b",
       "c",
@@ -2251,7 +3504,14 @@ exports[`test/escape-has-magic.js > TAP > XYZ 1`] = `
 Array [
   Array [
     Array [
-      /^XYZ$/i,
+      Matcher {
+        "options": Object {
+          "dot": undefined,
+          "nocase": true,
+          "noext": false,
+        },
+        "pattern": "XYZ",
+      },
     ],
   ],
   true,

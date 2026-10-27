@@ -25,8 +25,6 @@ t.test('basic tests', function (t) {
     // options.debug = true
     var Class = mm.defaults(options).Minimatch
     var m = new Class(pattern, {})
-    var r = m.makeRe()
-    tapOpts.re = String(r) || JSON.stringify(r)
     tapOpts.files = JSON.stringify(f)
     tapOpts.pattern = pattern
     tapOpts.set = m.set
@@ -82,8 +80,6 @@ t.test('call defaults mm function', t => {
   t.same(['x', '#nc', 'y'].filter(f), ['#nc'])
   t.same(defmm.match(['x', '#nc', 'y'], '#nc'), ['#nc'])
   t.same(defmm.braceExpand('# {a,b}'), ['# a', '# b'])
-  //oxlint-disable-next-linex no-useless-escape
-  t.same(defmm.makeRe('# {a,b}'), /^(?:\#\ a|\#\ b)$/)
   t.end()
 })
 
@@ -101,19 +97,6 @@ t.test('defaults applied to minimatch.escape()', t => {
   t.equal(unescapew(escapew('*')), '*')
   t.equal(escapep('*'), '\\*')
   t.equal(unescapep(escapep('*')), '*')
-  t.end()
-})
-
-t.test('defaults applied to AST class', t => {
-  const { AST } = mm
-  const { AST: ASTx } = mm.defaults({
-    nocaseMagicOnly: true,
-    nocase: true,
-  })
-  t.equal(new AST().options.nocaseMagicOnly, undefined)
-  t.equal(new ASTx().options.nocaseMagicOnly, true)
-  const fg = ASTx.fromGlob('*')
-  t.equal(fg.options.nocaseMagicOnly, true)
   t.end()
 })
 

@@ -8,4 +8,6 @@ t.same(new Minimatch(nomagic, { nocase: true }).set, [
   ['..', '1', '2', '3'],
 ])
 
-t.same(new Minimatch(yesmagic, { nocase: true }).set, [['..', /^x$/i]])
+t.match(new Minimatch(yesmagic, { nocase: true }).set, [
+  ['..', { pattern: 'x', options: { nocase: true } }],
+])

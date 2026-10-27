@@ -83,8 +83,8 @@ var cases = {
   },
 
   'foojs.js': {
-    '*(*.json|!(*.js))': false, // XXX bash 4.3 disagrees!
-    '+(*.json|!(*.js))': false, // XXX bash 4.3 disagrees!
+    '*(*.json|!(*.js))': true,
+    '+(*.json|!(*.js))': true,
     '@(*.json|!(*.js))': false,
     '?(*.json|!(*.js))': false,
   },

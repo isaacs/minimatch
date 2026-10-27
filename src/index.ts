@@ -1,7 +1,6 @@
 import { expand } from 'brace-expansion'
+import { Matcher } from '@isaacs/nonrecursive-glob-match'
 import { assertValidPattern } from './assert-valid-pattern.js'
-import type { ExtglobType } from './ast.js'
-import { AST } from './ast.js'
 import { escape } from './escape.js'
 import { unescape } from './unescape.js'
 
@@ -96,28 +95,6 @@ export interface MinimatchOptions {
    * and can handle absurdly excessive patterns.
    */
   maxGlobstarRecursion?: number
-
-  /**
-   * Max depth to traverse for nested extglobs like `*(a|b|c)`
-   *
-   * Default is 2, which is quite low, but any higher value
-   * swiftly results in punishing performance impacts. Note
-   * that this is *not*  relevant when the globstar types can
-   * be safely coalesced into a single set.
-   *
-   * For example, `*(a|@(b|c)|d)` would be flattened into
-   * `*(a|b|c|d)`. Thus, many common extglobs will retain good
-   * performance and  never hit this limit, even if they are
-   * excessively deep and complicated.
-   *
-   * If the limit is hit, then the extglob characters are simply
-   * not parsed, and the pattern effectively switches into
-   * `noextglob: true` mode for the contents of that nested
-   * sub-pattern. This will typically _not_ result in a match,
-   * but is considered a valid trade-off for security and
-   * performance.
-   */
-  maxExtglobRecursion?: number
 }
 
 export const minimatch = (
@@ -133,61 +110,6 @@ export const minimatch = (
   }
 
   return new Minimatch(pattern, options).match(p)
-}
-
-// Optimized checking for the most common glob patterns.
-const starDotExtRE = /^\*+([^+@!?*[(]*)$/
-const starDotExtTest = (ext: string) => (f: string) =>
-  !f.startsWith('.') && f.endsWith(ext)
-const starDotExtTestDot = (ext: string) => (f: string) => f.endsWith(ext)
-const starDotExtTestNocase = (ext: string) => {
-  ext = ext.toLowerCase()
-  return (f: string) => !f.startsWith('.') && f.toLowerCase().endsWith(ext)
-}
-const starDotExtTestNocaseDot = (ext: string) => {
-  ext = ext.toLowerCase()
-  return (f: string) => f.toLowerCase().endsWith(ext)
-}
-const starDotStarRE = /^\*+\.\*+$/
-const starDotStarTest = (f: string) =>
-  !f.startsWith('.') && f.includes('.')
-const starDotStarTestDot = (f: string) =>
-  f !== '.' && f !== '..' && f.includes('.')
-const dotStarRE = /^\.\*+$/
-const dotStarTest = (f: string) =>
-  f !== '.' && f !== '..' && f.startsWith('.')
-const starRE = /^\*+$/
-const starTest = (f: string) => f.length !== 0 && !f.startsWith('.')
-const starTestDot = (f: string) =>
-  f.length !== 0 && f !== '.' && f !== '..'
-const qmarksRE = /^\?+([^+@!?*[(]*)?$/
-const qmarksTestNocase = ([$0, ext = '']: RegExpMatchArray) => {
-  const noext = qmarksTestNoExt([$0])
-  if (!ext) return noext
-  ext = ext.toLowerCase()
-  return (f: string) => noext(f) && f.toLowerCase().endsWith(ext)
-}
-const qmarksTestNocaseDot = ([$0, ext = '']: RegExpMatchArray) => {
-  const noext = qmarksTestNoExtDot([$0])
-  if (!ext) return noext
-  ext = ext.toLowerCase()
-  return (f: string) => noext(f) && f.toLowerCase().endsWith(ext)
-}
-const qmarksTestDot = ([$0, ext = '']: RegExpMatchArray) => {
-  const noext = qmarksTestNoExtDot([$0])
-  return !ext ? noext : (f: string) => noext(f) && f.endsWith(ext)
-}
-const qmarksTest = ([$0, ext = '']: RegExpMatchArray) => {
-  const noext = qmarksTestNoExt([$0])
-  return !ext ? noext : (f: string) => noext(f) && f.endsWith(ext)
-}
-const qmarksTestNoExt = ([$0]: RegExpMatchArray) => {
-  const len = $0.length
-  return (f: string) => f.length === len && !f.startsWith('.')
-}
-const qmarksTestNoExtDot = ([$0]: RegExpMatchArray) => {
-  const len = $0.length
-  return (f: string) => f.length === len && f !== '.' && f !== '..'
 }
 
 /* c8 ignore start */
@@ -213,22 +135,6 @@ minimatch.sep = sep
 
 export const GLOBSTAR = Symbol('globstar **')
 minimatch.GLOBSTAR = GLOBSTAR
-
-// any single thing other than /
-// don't need to escape / when using new RegExp()
-const qmark = '[^/]'
-
-// * => any number of characters
-const star = qmark + '*?'
-
-// ** when dots are allowed.  Anything goes, except .. and .
-// not (^ or / followed by one or two dots followed by $ or /),
-// followed by anything, any number of times.
-const twoStarDot = '(?:(?!(?:\\/|^)(?:\\.{1,2})($|\\/)).)*?'
-
-// not a ^ or / followed by a dot,
-// followed by anything, any number of times.
-const twoStarNoDot = '(?:(?!(?:\\/|^)\\.).)*?'
 
 export const filter =
   (pattern: string, options: MinimatchOptions = {}) =>
@@ -259,22 +165,6 @@ export const defaults = (def: MinimatchOptions): typeof minimatch => {
       }
     },
 
-    AST: class AST extends orig.AST {
-      /* c8 ignore start */
-      constructor(
-        type: ExtglobType | null,
-        parent?: AST,
-        options: MinimatchOptions = {},
-      ) {
-        super(type, parent, ext(def, options))
-      }
-      /* c8 ignore stop */
-
-      static fromGlob(pattern: string, options: MinimatchOptions = {}) {
-        return orig.AST.fromGlob(pattern, ext(def, options))
-      }
-    },
-
     unescape: (
       s: string,
       options: Pick<
@@ -296,9 +186,6 @@ export const defaults = (def: MinimatchOptions): typeof minimatch => {
 
     defaults: (options: MinimatchOptions) =>
       orig.defaults(ext(def, options)),
-
-    makeRe: (pattern: string, options: MinimatchOptions = {}) =>
-      orig.makeRe(pattern, ext(def, options)),
 
     braceExpand: (pattern: string, options: MinimatchOptions = {}) =>
       orig.braceExpand(pattern, ext(def, options)),
@@ -342,22 +229,6 @@ export const braceExpand = (
 }
 minimatch.braceExpand = braceExpand
 
-// parse a component of the expanded set.
-// At this point, no pattern may contain "/" in it
-// so we're going to return a 2d array, where each entry is the full
-// pattern, split on '/', and then turned into a regular expression.
-// A regexp is made at the end which joins each array with an
-// escaped /, and another full one which joins each regexp with |.
-//
-// Following the lead of Bash 4.1, note that "**" only has special meaning
-// when it is the *only* thing in a path portion.  Otherwise, any series
-// of * is equivalent to a single *.  Globstar behavior is enabled by
-// default, and can be disabled by setting options.noglobstar.
-
-export const makeRe = (pattern: string, options: MinimatchOptions = {}) =>
-  new Minimatch(pattern, options).makeRe()
-minimatch.makeRe = makeRe
-
 export const match = (
   list: string[],
   pattern: string,
@@ -372,17 +243,69 @@ export const match = (
 }
 minimatch.match = match
 
-// replace stuff like \* with *
 const globMagic = /[?*]|[+@!]\(.*?\)|\[|\]/
-const regExpEscape = (s: string) =>
-  s.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
 
-export type MMRegExp = RegExp & {
-  _src?: string
-  _glob?: string
+// Index of the `]` that closes the class that starts at `start`,
+// or -1 if it is not closed. Posix classes such as `[:alpha:]` are
+// not skipped, so this can find a `]` before the real end. That
+// only makes a class look less like a literal.
+const classEnd = (pattern: string, start: number) => {
+  let i = start + 1
+  if (pattern.charAt(i) === '!' || pattern.charAt(i) === '^') i++
+  let sawStart = false
+  for (; i < pattern.length; i++) {
+    const c = pattern.charAt(i)
+    if (c === ']' && sawStart) return i
+    sawStart = true
+    if (c === '\\') i++
+  }
+  return -1
 }
 
-export type ParseReturnFiltered = string | MMRegExp | typeof GLOBSTAR
+// If a path portion pattern has no magic, return the string it
+// matches. Otherwise, return undefined. This can report magic for
+// a pattern that is in fact literal (eg, `[]`), but never the
+// reverse, so a string result is always safe to compare directly.
+const literal = (pattern: string, noext: boolean): string | undefined => {
+  if (!noext && (pattern === '+()' || pattern === '@()')) return pattern
+  let lit = ''
+  for (let i = 0; i < pattern.length; i++) {
+    const c = pattern.charAt(i)
+    if (c === '\\') {
+      // a trailing \ is a literal \
+      lit += pattern.charAt(++i) || c
+    } else if (c === '*' || c === '?') {
+      return undefined
+    } else if (c === '[') {
+      const close = classEnd(pattern, i)
+      if (close === -1) {
+        // not closed, so the [ is a literal
+        lit += c
+        continue
+      }
+      // a class of one char, such as `[*]` or `[\b]`, is a literal
+      let body = pattern.slice(i + 1, close)
+      if (body.startsWith('\\')) body = body.slice(1)
+      if ([...body].length !== 1 || '!^'.includes(pattern.charAt(i + 1))) {
+        return undefined
+      }
+      lit += body
+      i = close
+    } else if (
+      !noext &&
+      '+@!'.includes(c) &&
+      pattern.charAt(i + 1) === '(' &&
+      pattern.includes(')', i + 2)
+    ) {
+      return undefined
+    } else {
+      lit += c
+    }
+  }
+  return lit
+}
+
+export type ParseReturnFiltered = string | Matcher | typeof GLOBSTAR
 export type ParseReturn = ParseReturnFiltered | false
 
 export class Minimatch {
@@ -406,7 +329,6 @@ export class Minimatch {
   windowsNoMagicRoot: boolean
   maxGlobstarRecursion: number
 
-  regexp: false | null | MMRegExp
   constructor(pattern: string, options: MinimatchOptions = {}) {
     assertValidPattern(pattern)
 
@@ -424,7 +346,6 @@ export class Minimatch {
       this.pattern = this.pattern.replace(/\\/g, '/')
     }
     this.preserveMultipleSlashes = !!options.preserveMultipleSlashes
-    this.regexp = null
     this.negate = false
     this.nonegate = !!options.nonegate
     this.comment = false
@@ -440,7 +361,7 @@ export class Minimatch {
     this.globParts = []
     this.set = []
 
-    // make the set of regexps etc.
+    // make the set of Matchers etc.
     this.make()
   }
 
@@ -488,7 +409,7 @@ export class Minimatch {
 
     // step 3: now we have a set, so turn each one into a series of
     // path-portion matching patterns.
-    // These will be regexps, except in the case of "**", which is
+    // These will be Matchers, except in the case of "**", which is
     // set to the GLOBSTAR object for globstar behavior,
     // and will not contain any / characters
     //
@@ -499,7 +420,7 @@ export class Minimatch {
     this.globParts = this.preprocess(rawGlobParts)
     this.debug(this.pattern, this.globParts)
 
-    // glob --> regexps
+    // glob --> Matchers
     let set = this.globParts.map((s, _, __) => {
       if (this.isWindows && this.windowsNoMagicRoot) {
         // check if it's a drive or unc path.
@@ -1181,7 +1102,6 @@ export class Minimatch {
       this.debug(pattern, p, f)
 
       // should be impossible.
-      // some invalid regexp stuff in the set.
       /* c8 ignore start */
       if (p === false || p === GLOBSTAR) {
         return false
@@ -1190,13 +1110,14 @@ export class Minimatch {
 
       // something other than **
       // non-magic patterns just have to match exactly
-      // patterns with magic have been turned into regexps.
+      // patterns with magic have been turned into Matchers.
       let hit: boolean
       if (typeof p === 'string') {
         hit = f === p
         this.debug('string match', p, f, hit)
       } else {
-        hit = p.test(f)
+        // an empty path portion only matches an empty pattern portion
+        hit = f !== '' && p.test(f)
         this.debug('pattern match', p, f, hit)
       }
 
@@ -1209,9 +1130,8 @@ export class Minimatch {
     // If the file ends in /, then it can only match a
     // a pattern that ends in /, unless the pattern just
     // doesn't have any more for it. But, a/b/ should *not*
-    // match "a/b/*", even though "" matches against the
-    // [^/]*? pattern, except in partial mode, where it might
-    // simply not be reached yet.
+    // match "a/b/*", even though * can match "", except in
+    // partial mode, where it might simply not be reached yet.
     // However, a/b/ should still satisfy a/*
 
     // now either we fell off the end of the pattern, or we're done.
@@ -1252,143 +1172,22 @@ export class Minimatch {
     if (pattern === '**') return GLOBSTAR
     if (pattern === '') return ''
 
-    // far and away, the most common glob pattern parts are
-    // *, *.*, and *.<ext>  Add a fast check method for those.
-    let m: RegExpMatchArray | null
-    let fastTest: null | ((f: string) => boolean) = null
-    if ((m = pattern.match(starRE))) {
-      fastTest = options.dot ? starTestDot : starTest
-    } else if ((m = pattern.match(starDotExtRE))) {
-      fastTest = (
-        options.nocase ?
-          options.dot ?
-            starDotExtTestNocaseDot
-          : starDotExtTestNocase
-        : options.dot ? starDotExtTestDot
-        : starDotExtTest)(m[1])
-    } else if ((m = pattern.match(qmarksRE))) {
-      fastTest = (
-        options.nocase ?
-          options.dot ?
-            qmarksTestNocaseDot
-          : qmarksTestNocase
-        : options.dot ? qmarksTestDot
-        : qmarksTest)(m)
-    } else if ((m = pattern.match(starDotStarRE))) {
-      fastTest = options.dot ? starDotStarTestDot : starDotStarTest
-    } else if ((m = pattern.match(dotStarRE))) {
-      fastTest = dotStarTest
+    const { nocase, nocaseMagicOnly, noext = false, dot } = options
+    const lit = literal(pattern, noext)
+    // in nocase mode, a literal with cased chars still needs a
+    // Matcher, unless nocaseMagicOnly is set.
+    if (
+      lit !== undefined &&
+      !(
+        nocase &&
+        !nocaseMagicOnly &&
+        pattern.toUpperCase() !== pattern.toLowerCase()
+      )
+    ) {
+      return lit
     }
 
-    const re = AST.fromGlob(pattern, this.options).toMMPattern()
-    if (fastTest && typeof re === 'object') {
-      // Avoids overriding in frozen environments
-      Reflect.defineProperty(re, 'test', { value: fastTest })
-    }
-    return re
-  }
-
-  makeRe() {
-    if (this.regexp || this.regexp === false) return this.regexp
-
-    // at this point, this.set is a 2d array of partial
-    // pattern strings, or "**".
-    //
-    // It's better to use .match().  This function shouldn't
-    // be used, really, but it's pretty convenient sometimes,
-    // when you just want to work with a regex.
-    const set = this.set
-
-    if (!set.length) {
-      this.regexp = false
-      return this.regexp
-    }
-    const options = this.options
-
-    const twoStar =
-      options.noglobstar ? star
-      : options.dot ? twoStarDot
-      : twoStarNoDot
-    const flags = new Set(options.nocase ? ['i'] : [])
-
-    // regexpify non-globstar patterns
-    // if ** is only item, then we just do one twoStar
-    // if ** is first, and there are more, prepend (\/|twoStar\/)? to next
-    // if ** is last, append (\/twoStar|) to previous
-    // if ** is in the middle, append (\/|\/twoStar\/) to previous
-    // then filter out GLOBSTAR symbols
-    let re = set
-      .map(pattern => {
-        const pp: (string | typeof GLOBSTAR)[] = pattern.map(p => {
-          if (p instanceof RegExp) {
-            for (const f of p.flags.split('')) flags.add(f)
-          }
-          return (
-            typeof p === 'string' ? regExpEscape(p)
-            : p === GLOBSTAR ? GLOBSTAR
-            : p._src
-          )
-        }) as (string | typeof GLOBSTAR)[]
-        pp.forEach((p, i) => {
-          const next = pp[i + 1]
-          const prev = pp[i - 1]
-          if (p !== GLOBSTAR || prev === GLOBSTAR) {
-            return
-          }
-          if (prev === undefined) {
-            if (next !== undefined && next !== GLOBSTAR) {
-              pp[i + 1] = '(?:\\/|' + twoStar + '\\/)?' + next
-            } else {
-              pp[i] = twoStar
-            }
-          } else if (next === undefined) {
-            pp[i - 1] = prev + '(?:\\/|\\/' + twoStar + ')?'
-          } else if (next !== GLOBSTAR) {
-            pp[i - 1] = prev + '(?:\\/|\\/' + twoStar + '\\/)' + next
-            pp[i + 1] = GLOBSTAR
-          }
-        })
-        const filtered = pp.filter(p => p !== GLOBSTAR)
-
-        // For partial matches, we need to make the pattern match
-        // any prefix of the full path. We do this by generating
-        // alternative patterns that match progressively longer prefixes.
-        if (this.partial && filtered.length >= 1) {
-          const prefixes: string[] = []
-          for (let i = 1; i <= filtered.length; i++) {
-            prefixes.push(filtered.slice(0, i).join('/'))
-          }
-          return '(?:' + prefixes.join('|') + ')'
-        }
-
-        return filtered.join('/')
-      })
-      .join('|')
-
-    // need to wrap in parens if we had more than one thing with |,
-    // otherwise only the first will be anchored to ^ and the last to $
-    const [open, close] = set.length > 1 ? ['(?:', ')'] : ['', '']
-    // must match entire pattern
-    // ending in a * or ** will make it less strict.
-    re = '^' + open + re + close + '$'
-
-    // In partial mode, '/' should always match as it's a valid prefix for any pattern
-    if (this.partial) {
-      re = '^(?:\\/|' + open + re.slice(1, -1) + close + ')$'
-    }
-
-    // can match anything, as long as it's not this.
-    if (this.negate) re = '^(?!' + re + ').+$'
-
-    try {
-      this.regexp = new RegExp(re, [...flags].join(''))
-      /* c8 ignore start */
-    } catch {
-      // should be impossible
-      this.regexp = false
-    }
-    /* c8 ignore stop */
-    return this.regexp
+    return new Matcher(pattern, { nocase, noext, dot })
   }
 
   slashSplit(p: string) {
@@ -1475,11 +1274,9 @@ export class Minimatch {
   }
 }
 /* c8 ignore start */
-export { AST } from './ast.js'
 export { escape } from './escape.js'
 export { unescape } from './unescape.js'
 /* c8 ignore stop */
-minimatch.AST = AST
 minimatch.Minimatch = Minimatch
 minimatch.escape = escape
 minimatch.unescape = unescape

@@ -4,8 +4,9 @@ A minimal matching utility.
 
 This is the matching library used internally by npm.
 
-It works by converting glob expressions into JavaScript `RegExp`
-objects.
+It works by splitting glob expressions on `/`, and testing each
+path portion with a `Matcher` from
+[@isaacs/nonrecursive-glob-match](http://npm.im/@isaacs/nonrecursive-glob-match).
 
 ## Important Security Consideration!
 
@@ -131,7 +132,7 @@ var mm = new Minimatch(pattern, options)
 
 - `pattern` The original pattern the minimatch object represents.
 - `options` The options supplied to the constructor.
-- `set` A 2-dimensional array of regexp or string expressions.
+- `set` A 2-dimensional array of `Matcher` or string expressions.
   Each row in the
   array corresponds to a brace-expanded pattern. Each item in the row
   corresponds to a single path-part. For example, the pattern
@@ -142,20 +143,14 @@ var mm = new Minimatch(pattern, options)
 
   If a portion of the pattern doesn't have any "magic" in it
   (that is, it's something like `"foo"` rather than `fo*o?`), then it
-  will be left as a string rather than converted to a regular
-  expression.
+  will be left as a string rather than converted to a `Matcher`.
 
-- `regexp` Created by the `makeRe` method. A single regular expression
-  expressing the entire pattern. This is useful in cases where you wish
-  to use the pattern somewhat like `fnmatch(3)` with `FNM_PATH` enabled.
 - `negate` True if the pattern is negated.
 - `comment` True if the pattern is a comment.
 - `empty` True if the pattern is `""`.
 
 ### Methods
 
-- `makeRe()` Generate the `regexp` member if necessary, and return it.
-  Will return `false` if the pattern is invalid.
 - `match(fname)` Return true if the filename matches the pattern, or
   false otherwise.
 - `matchOne(fileArray, patternArray, partial)` Take a `/`-split
@@ -236,10 +231,6 @@ options.nonull is set, then return a list containing the pattern itself.
 ```javascript
 var javascripts = minimatch.match(fileList, '*.js', { matchBase: true })
 ```
-
-### minimatch.makeRe(pattern, options)
-
-Make a regular expression object from the pattern.
 
 ## Options
 
@@ -418,13 +409,6 @@ is equivalent in all cases).
   fail to match a literal string that would have been matched in
   optimization level 1 or 0.
 
-  Specifically, while the `Minimatch.match()` method will
-  optimize the file path string in the same ways, resulting in
-  the same matches, it will fail when tested with the regular
-  expression provided by `Minimatch.makeRe()`, unless the path
-  string is first processed with
-  `minimatch.levelTwoFileOptimize()` or similar.
-
 ### platform
 
 When set to `win32`, this will trigger all windows-specific
@@ -448,26 +432,6 @@ match the pattern provided.
 
 That is, this is an intentional false negative, deemed an
 acceptable break in correctness for security and performance.
-
-### maxExtglobRecursion
-
-Max depth to traverse for nested extglobs like `*(a|b|c)`
-
-Default is 2, which is quite low, but any higher value swiftly
-results in punishing performance impacts. Note that this is _not_
-relevant when the globstar types can be safely coalesced into a
-single set.
-
-For example, `*(a|@(b|c)|d)` would be flattened into
-`*(a|b|c|d)`. Thus, many common extglobs will retain good
-performance and never hit this limit, even if they are
-excessively deep and complicated.
-
-If the limit is hit, then the extglob characters are simply not
-parsed, and the pattern effectively switches into `noextglob:
-true` mode for the contents of that nested sub-pattern. This will
-typically _not_ result in a match, but is considered a valid
-trade-off for security and performance.
 
 ## Comparisons to other fnmatch/glob implementations
 

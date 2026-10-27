@@ -185,9 +185,10 @@ const patterns = [
   ['[#a*', ['[#ab'], {}, ['[#ab', '[ab']],
 
   // like: {a,b|c\\,d\\\|e} except it's unclosed, so it has to be escaped.
+  // Bash 5 does not match this file.
   [
     '+(a|*\\|c\\\\|d\\\\\\|e\\\\\\\\|f\\\\\\\\\\|g',
-    ['+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g'],
+    [],
     {},
     ['+(a|b\\|c\\\\|d\\\\|e\\\\\\\\|f\\\\\\\\|g', 'a', 'b\\c'],
     { skip: process.platform === 'win32' },
@@ -220,7 +221,8 @@ const patterns = [
       '(a|c)',
     ]),
   ['*(a|{b,c})', ['a', 'b', 'c', 'ab', 'ac']],
-  ['{a,*(b|c,d)}', ['a', '(b|c', '*(b|c', 'd)']],
+  // an unclosed *( is a literal *(, as in Bash 5
+  ['{a,*(b|c,d)}', ['a', '*(b|c', 'd)']],
   // a
   // *(b|c)
   // *(b|d)
@@ -361,9 +363,10 @@ const patterns = [
   ['@(.*)', ['.a', '.a.js', '.js'], { dot: true }],
   ['@(js|.*)', ['js', '.a', '.a.js', '.js']],
   ['@(.*|js)', ['js', '.a', '.a.js', '.js']],
-  // doesn't start at 0, no dice
-  // neg extglobs don't trigger this behavior.
-  ['!(.a|js)@(.*)', ['a.js'], { nonegate: true }],
+  // !(.a|js) can match the empty string, then @(.*) matches the
+  // dotfile. Bash does not match these dotfiles. See the
+  // @isaacs/nonrecursive-glob-match README.
+  ['!(.a|js)@(.*)', ['.a', '.a.js', '.js', 'a.js'], { nonegate: true }],
   () => (files = ['a(b', 'ab', 'a)b']),
   ['@(a|a[(])b', ['a(b', 'ab']],
   ['@(a|a[)])b', ['a)b', 'ab']],

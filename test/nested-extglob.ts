@@ -1,7 +1,5 @@
 import t from 'tap'
 import { minimatch } from '../src/index.js'
-import { AST } from '../src/ast.js'
-import { inspect } from 'node:util'
 
 function timed(fn: () => void) {
   const s = performance.now()
@@ -37,14 +35,8 @@ const cases: [string, number][] = [
 
 for (const [pat, n] of cases) {
   const tm = timed(() => minimatch('a'.repeat(n) + 'z', pat))
-  const a = AST.fromGlob(pat)
-  const b = AST.fromGlob(pat)
-  const re = b.toRegExpSource()
   t.ok(tm.ms < 100, `${pat} chars=${n} ms=${tm.ms}`, {
-    ast: inspect(a, { depth: Infinity }),
-    astFlat: inspect(b, { depth: Infinity }),
     ...tm,
-    re,
     wanted: 'ms should be < 100',
   })
 }
