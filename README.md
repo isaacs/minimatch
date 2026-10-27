@@ -263,17 +263,42 @@ Disable "extglob" style patterns like `+(a|b)`.
 
 ### nocase
 
-Perform a case-insensitive match.
+Perform a case-insensitive match. Case is folded one code point at
+a time, with Unicode simple case folding. See [Comparisons to other
+fnmatch/glob
+implementations](#comparisons-to-other-fnmatchglob-implementations).
 
 ### nocaseMagicOnly
 
-When used with `{nocase: true}`, create regular expressions that
+When used with `{nocase: true}`, create matchers that
 are case-insensitive, but leave string match portions untouched.
 Has no effect when used without `{nocase: true}`.
 
 Useful when some other form of case-insensitive matching is used,
 or if the original string representation is useful in some other
 way.
+
+### normalize
+
+Normalize unicode in the pattern, and in each portion of the tested
+path, with this form: `'NFC'`, `'NFD'`, `'NFKC'`, or `'NFKD'`. `true`
+means `'NFC'`.
+
+A char such as `é` can be one code point, or `e` followed by a
+combining accent. Some file systems, such as on macOS, can give file
+names in the second form. Without this option, the two forms do not
+match.
+
+- The path is split on `/` before it is normalized. So with NFKC, a
+  full width `／` normalizes to `/`, but it does not split the path.
+  It is a char in its portion.
+- The syntax of the pattern is parsed before it is normalized. So
+  with NFKC, a full width `＊` is a literal, which matches `*`, and
+  not a wildcard.
+- With `nocase`, the strings are normalized, and then case is folded.
+
+See [@isaacs/nonrecursive-glob-match](http://npm.im/@isaacs/nonrecursive-glob-match#unicode-normalization)
+for how classes and combining marks after wildcards are normalized.
 
 ### nonull
 
@@ -346,7 +371,7 @@ For legacy reasons, this is also set if
 
 When a pattern starts with a UNC path or drive letter, and in
 `nocase:true` mode, do not convert the root portions of the
-pattern into a case-insensitive regular expression, and instead
+pattern into a case-insensitive matchers, and instead
 leave them as strings.
 
 This is the default when the platform is `win32` and
@@ -462,8 +487,8 @@ If an escaped pattern has no matches, and the `nonull` flag is set,
 then minimatch.match returns the pattern as-provided, rather than
 interpreting the character escapes. For example,
 `minimatch.match([], "\\*a\\?")` will return `"\\*a\\?"` rather than
-`"*a?"`. This is akin to setting the `nullglob` option in bash, except
-that it does not resolve escaped pattern characters.
+`"*a?"`. This is like bash with the `nullglob` option off (the
+default), except that bash also removes the escapes.
 
 If brace expansion is not disabled, then it is performed before any
 other interpretation of the glob pattern. Thus, a pattern like
@@ -471,20 +496,29 @@ other interpretation of the glob pattern. Thus, a pattern like
 **first** into the set of `+(a|b)` and `+(a|c)`, and those patterns are
 checked for validity. Since those two are valid, matching proceeds.
 
-Negated extglob patterns are handled as closely as possible to
-Bash semantics, but there are some cases with negative extglobs
-which are exceedingly difficult to express in a JavaScript
-regular expression. In particular the negated pattern
-`<start>!(<pattern>*|)*` will in bash match anything that does
-not start with `<start><pattern>`. However,
-`<start>!(<pattern>*)*` _will_ match paths starting with
-`<start><pattern>`, because the empty string can match against
-the negated portion. In this library, `<start>!(<pattern>*|)*`
-will _not_ match any pattern starting with `<start>`, due to a
-difference in precisely which patterns are considered "greedy" in
-Regular Expressions vs bash path expansion. This may be fixable,
-but not without incurring some complexity and performance costs,
-and the trade-off seems to not be worth pursuing.
+Each portion of a pattern between `/` characters is matched with
+[@isaacs/nonrecursive-glob-match](http://npm.im/@isaacs/nonrecursive-glob-match),
+which uses Bash 5 as its reference, and does not use regular
+expressions. So negated extglobs such as `<start>!(<pattern>*|)*`
+match the same strings as in Bash. These are the known
+differences:
+
+- If `dot` is not set, a portion that starts with `.` only matches
+  if a literal `.` in the pattern matches that first character.
+  Extglobs before that `.` can match the empty string, so the
+  pattern can still match. For example, with `nonegate`,
+  `!(.a|js)@(.*)` matches `.a`, `.a.js`, and `.js`, because
+  `!(.a|js)` matches the empty string. Bash does not match these
+  dotfiles.
+- If an extglob such as `?(a` is not closed, Bash matches the
+  whole pattern as a literal string. In this library, only the
+  `?(` is literal, and the rest of the pattern is still matched
+  as a glob. So `a?(b*` matches `a?(bcc` here, but not in Bash.
+- With `nocase`, case is folded one code point at a time with
+  Unicode simple case folding, the same as a JavaScript RegExp
+  with the `iu` flags. Bash uses the case functions of the C
+  library for the current locale, so its results can change with
+  the locale.
 
 Note that `fnmatch(3)` in libc is an extremely naive string comparison
 matcher, which does not do anything special for slashes. This library is
