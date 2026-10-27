@@ -350,6 +350,19 @@ let lastSplit:
   | undefined
 
 export type ParseReturnFiltered = string | Matcher | typeof GLOBSTAR
+
+/**
+ * A pattern row split on its first and last `**`, from a start
+ * index. Each body segment has the number of path portions that it
+ * and the ones after it need, to find the last index where it can
+ * start in a path.
+ */
+export type GlobstarParts = {
+  head: ParseReturn[]
+  body: ParseReturn[]
+  tail: ParseReturn[]
+  segments: [segment: ParseReturn[], need: number][]
+}
 export type ParseReturn = ParseReturnFiltered | false
 
 export class Minimatch {
@@ -375,6 +388,8 @@ export class Minimatch {
   // brace expansion can make the same portion in many rows, so they
   // share one Matcher, and the states that it caches
   #matchers = new Map<string, Matcher>()
+  // the GlobstarParts of each pattern row, by start index and partial
+  #globstarParts = new WeakMap<ParseReturn[], Map<number, GlobstarParts>>()
 
   constructor(pattern: string, options: MinimatchOptions = {}) {
     assertValidPattern(pattern)
@@ -951,11 +966,10 @@ export class Minimatch {
           file[fdi],
           pattern[pdi] as string,
         ]
-        // start matching at the drive letter index of each
+        // the drives match, so start matching after them
         if (fd.toLowerCase() === pd.toLowerCase()) {
-          pattern[pdi] = fd
-          patternStartIndex = pdi
-          fileStartIndex = fdi
+          patternStartIndex = pdi + 1
+          fileStartIndex = fdi + 1
         }
       }
     }
@@ -993,25 +1007,11 @@ export class Minimatch {
     fileIndex: number,
     patternIndex: number,
   ) {
-    // split the pattern into head, tail, and middle of ** delimited parts
-    const firstgs = pattern.indexOf(GLOBSTAR, patternIndex)
-    const lastgs = pattern.lastIndexOf(GLOBSTAR)
-
-    // split the pattern up into globstar-delimited sections
-    // the tail has to be at the end, and the others just have
-    // to be found in order from the head.
-    const [head, body, tail] =
-      partial ?
-        [
-          pattern.slice(patternIndex, firstgs),
-          pattern.slice(firstgs + 1),
-          [],
-        ]
-      : [
-          pattern.slice(patternIndex, firstgs),
-          pattern.slice(firstgs + 1, lastgs),
-          pattern.slice(lastgs + 1),
-        ]
+    const { head, body, tail, segments } = this.#getGlobstarParts(
+      pattern,
+      partial,
+      patternIndex,
+    )
 
     // check the head, from the current file/pattern index.
     if (head.length) {
@@ -1081,32 +1081,10 @@ export class Minimatch {
     // now we know that there's one or more body sections, which can
     // be matched anywhere from the 0 index (because the head was pruned)
     // through to the length-fileTailMatch index.
-    // split the body up into sections, and note the minimum index it can
-    // be found at (start with the length of all previous segments)
-    // [section, before, after]
-    const bodySegments: [ParseReturn[], number][] = [[[], 0]]
-    let currentBody: [ParseReturn[], number] = bodySegments[0]
-    let nonGsParts = 0
-    const nonGsPartsSums: number[] = [0]
-    for (const b of body) {
-      if (b === GLOBSTAR) {
-        nonGsPartsSums.push(nonGsParts)
-        currentBody = [[], 0]
-        bodySegments.push(currentBody)
-      } else {
-        currentBody[0].push(b)
-        nonGsParts++
-      }
-    }
-    let i = bodySegments.length - 1
-    const fileLength = file.length - fileTailMatch
-    for (const b of bodySegments) {
-      b[1] = fileLength - ((nonGsPartsSums[i--] as number) + b[0].length)
-    }
-
     return !!this.#matchGlobStarBodySections(
       file,
-      bodySegments,
+      segments,
+      file.length - fileTailMatch,
       fileIndex,
       0,
       partial,
@@ -1115,12 +1093,64 @@ export class Minimatch {
     )
   }
 
+  // Split the pattern into head, tail, and middle of ** delimited
+  // parts. The tail has to be at the end, and the others just have to
+  // be found in order from the head. These only depend on the pattern
+  // row, so they are kept for the next path.
+  #getGlobstarParts(
+    pattern: ParseReturn[],
+    partial: boolean,
+    patternIndex: number,
+  ): GlobstarParts {
+    let byStart = this.#globstarParts.get(pattern)
+    if (!byStart) {
+      byStart = new Map()
+      this.#globstarParts.set(pattern, byStart)
+    }
+    const key = patternIndex * 2 + (partial ? 1 : 0)
+    const found = byStart.get(key)
+    if (found) return found
+
+    const firstgs = pattern.indexOf(GLOBSTAR, patternIndex)
+    const lastgs = pattern.lastIndexOf(GLOBSTAR)
+    const head = pattern.slice(patternIndex, firstgs)
+    const body = pattern.slice(firstgs + 1, partial ? undefined : lastgs)
+    const tail = partial ? [] : pattern.slice(lastgs + 1)
+
+    // split the body up into sections, and note the number of
+    // portions that must come after the start of each one
+    const segments: [ParseReturn[], number][] = [[[], 0]]
+    let current = segments[0]!
+    let nonGsParts = 0
+    const nonGsPartsSums: number[] = [0]
+    for (const b of body) {
+      if (b === GLOBSTAR) {
+        nonGsPartsSums.push(nonGsParts)
+        current = [[], 0]
+        segments.push(current)
+      } else {
+        current[0].push(b)
+        nonGsParts++
+      }
+    }
+    let i = segments.length - 1
+    for (const b of segments) {
+      b[1] = (nonGsPartsSums[i--] as number) + b[0].length
+    }
+
+    const parts = { head, body, tail, segments }
+    byStart.set(key, parts)
+    return parts
+  }
+
   // return false for "nope, not matching"
   // return null for "not matching, cannot keep trying"
   #matchGlobStarBodySections(
     file: string[],
-    // pattern section, last possible position for it
+    // pattern section, and the portions that it and the rest need
     bodySegments: [ParseReturn[], number][],
+    // the end of the file portions that the body can match
+    fileLength: number,
     fileIndex: number,
     bodyIndex: number,
     partial: boolean,
@@ -1153,8 +1183,10 @@ export class Minimatch {
       return sawTail
     }
 
-    // have a non-globstar body section to test
-    const [body, after] = bs
+    // have a non-globstar body section to test, up to the last index
+    // where it can start
+    const [body, need] = bs
+    const after = fileLength - need
     while (fileIndex <= after) {
       const m = this.#matchOne(
         file.slice(0, fileIndex + body.length),
@@ -1170,6 +1202,7 @@ export class Minimatch {
         const sub = this.#matchGlobStarBodySections(
           file,
           bodySegments,
+          fileLength,
           fileIndex + body.length,
           bodyIndex + 1,
           partial,

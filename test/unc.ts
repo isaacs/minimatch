@@ -77,3 +77,15 @@ t.test('UNC drive letter paths match normal paths', async t => {
     })
   }
 })
+
+t.test('matching a drive letter does not change the pattern', async t => {
+  for (const pattern of ['c:/x/**/y', '//?/c:/x/**/y']) {
+    const m = new Minimatch(pattern, { platform: 'win32' })
+    const before = JSON.stringify(m.set.map(r => r.map(String)))
+    t.equal(m.match('C:/x/a/y'), true)
+    t.equal(m.match('c:/x/a/y'), true)
+    t.equal(m.match('//?/C:/x/y'), true)
+    t.equal(m.match('d:/x/a/y'), false)
+    t.equal(JSON.stringify(m.set.map(r => r.map(String))), before)
+  }
+})
