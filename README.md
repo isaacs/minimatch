@@ -1,57 +1,58 @@
 # minimatch
 
-A minimal matching utility.
+A glob matching utility.
 
-This is the matching library used internally by npm.
+This is the matching library used internally by
+[node-glob](https://npm.im/node-glob).
 
 It works by splitting glob expressions on `/`, and testing each
 path portion with a `Matcher` from
 [@isaacs/nonrecursive-glob-match](http://npm.im/@isaacs/nonrecursive-glob-match).
 
+## Why Not Regular Expressions?
+
+Regular Expressions are very powerful, and for many applications,
+extremely fast.
+
+However, in JavaScript, they are subject to
+[ReDoS](https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS)
+in certain cases. Libraries that assemble Regular Expressions
+from arbitrary input are thus vulnerable to patterns that cause
+pathological behavior. For example, patterns like
+`a*a*a*a*a*a*a*a*a*a*a` when matched against a string like
+`'a'.repeat(50) + 'b'` would have to repeatedly backtrack through
+every failure.
+
+Most other glob matchers in JavaScript (including versions up
+through v10 of this library) convert the glob pattern to Regular
+Expressions, and then use that to test the string. This is fine
+for trusted input, but can fall over badly in cases that cause
+recursive backtracking.
+
 ## Important Security Consideration!
 
-> [!WARNING]  
-> This library uses JavaScript regular expressions. Please read
-> the following warning carefully, and be thoughtful about what
-> you provide to this library in production systems.
-
-_Any_ library in JavaScript that deals with matching string
-patterns using regular expressions will be subject to
-[ReDoS](https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS)
-if the pattern is generated using untrusted input.
-
-Efforts have been made to mitigate risk as much as is feasible in
-such a library, providing maximum recursion depths and so forth,
-but these measures can only ultimately protect against accidents,
-not malice. A dedicated attacker can _always_ find patterns that
-cannot be defended against by a bash-compatible glob pattern
-matching system that uses JavaScript regular expressions.
+Though this library is _not_ vulnerable to ReDOS, _any_ library
+that performs pattern matching based on arbitrary input will
+potentially have edge cases where it performs suboptimally.
 
 To be extremely clear:
 
 > [!WARNING]  
 > **If you create a system where you take user input, and use
-> that input as the source of a Regular Expression pattern, in
-> this or any extant glob matcher in JavaScript, you will be
-> pwned.**
+> that input as the source of a pattern matcher, in this or any
+> extant glob matcher in JavaScript, you may be pwned.**
 
-A future version of this library _may_ use a different matching
-algorithm which does not exhibit backtracking problems. If and
-when that happens, it will likely be a sweeping change, and those
-improvements will **not** be backported to legacy versions.
-
-In the near term, it is not reasonable to continue to play
-whack-a-mole with security advisories, and so any future ReDoS
-reports will be considered "working as intended", and resolved
-entirely by this warning.
+The pattern matching library that Minimatch uses in v11 and above
+will not be backported to earlier versions. It is a much too deep
+of a change to do so.
 
 ## Usage
 
-```js
+```ts
 // hybrid module, load with require() or import
 import { minimatch } from 'minimatch'
 // or:
-const { minimatch } = require('minimatch')
+// const { minimatch } = require('minimatch')
 
 minimatch('bar.foo', '*.foo') // true!
 minimatch('bar.foo', '*.bar') // false!
@@ -124,8 +125,8 @@ is set in the options.
 Create a minimatch object by instantiating the `minimatch.Minimatch` class.
 
 ```javascript
-var Minimatch = require('minimatch').Minimatch
-var mm = new Minimatch(pattern, options)
+import { Minimatch } from 'minimatch'
+const mm = new Minimatch(pattern, options)
 ```
 
 ### Properties
@@ -154,7 +155,7 @@ var mm = new Minimatch(pattern, options)
 - `match(fname)` Return true if the filename matches the pattern, or
   false otherwise.
 - `matchOne(fileArray, patternArray, partial)` Take a `/`-split
-  filename, and match it against a single row in the `regExpSet`. This
+  filename, and match it against a single row in the set. This
   method is mainly for internal use, but is exposed so that it can be
   used by a glob-walker that needs to avoid excessive filesystem calls.
 - `hasMagic()` Returns true if the parsed pattern contains any
@@ -180,7 +181,7 @@ All other methods are internal, and will be called as necessary.
 Main export. Tests a path against the pattern using the options.
 
 ```javascript
-var isJS = minimatch(file, '*.js', { matchBase: true })
+const isJS = minimatch(file, '*.js', { matchBase: true })
 ```
 
 ### minimatch.filter(pattern, options)
@@ -189,7 +190,7 @@ Returns a function that tests its
 supplied argument, suitable for use with `Array.filter`. Example:
 
 ```javascript
-var javascripts = fileList.filter(
+const javascripts = fileList.filter(
   minimatch.filter('*.js', { matchBase: true }),
 )
 ```
@@ -229,7 +230,7 @@ files, in the style of fnmatch or glob. If nothing is matched, and
 options.nonull is set, then return a list containing the pattern itself.
 
 ```javascript
-var javascripts = minimatch.match(fileList, '*.js', { matchBase: true })
+const javascripts = minimatch.match(fileList, '*.js', { matchBase: true })
 ```
 
 ## Options
