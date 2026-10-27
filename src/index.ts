@@ -361,6 +361,14 @@ export type ParseReturnFiltered = string | Matcher | typeof GLOBSTAR
 const portionMatch = (p: string | Matcher, f: string) =>
   typeof p === 'string' ? f === p : f !== '' && p.test(f)
 
+// true if the last portion of a row matches the last portion of a
+// path, or the one before a trailing `/`
+const endMatch = (
+  p: string | Matcher,
+  last: string,
+  prev: string | undefined,
+) => portionMatch(p, last) || (prev !== undefined && portionMatch(p, prev))
+
 /**
  * A pattern row split on its first and last `**`, from a start
  * index. Each body segment has the number of path portions that it
@@ -395,9 +403,12 @@ export class Minimatch {
   platform: Platform
   windowsNoMagicRoot: boolean
   maxGlobstarRecursion: number
-  // the path can be checked against the last portion of each row
-  // before it is split. See #canEnd.
+  // the path can be checked against the last portion, and the string
+  // portions, of each row before it is split. See #canMatch.
   #endCheck: boolean
+  #literalCheck: boolean
+  // the string portions of each row in the set
+  #literals: string[][] = []
   // brace expansion can make the same portion in many rows, so they
   // share one Matcher, and the states that it caches
   #matchers = new Map<string, Matcher>()
@@ -435,14 +446,25 @@ export class Minimatch {
     this.globSet = []
     this.globParts = []
     this.set = []
+    const slashes =
+      !this.isWindows && this.slashSplit === Minimatch.prototype.slashSplit
     this.#endCheck =
-      !this.isWindows &&
+      slashes &&
       !this.preserveMultipleSlashes &&
-      (options.optimizationLevel ?? 1) < 2 &&
-      this.slashSplit === Minimatch.prototype.slashSplit
+      (options.optimizationLevel ?? 1) < 2
 
     // make the set of Matchers etc.
     this.make()
+
+    // with the end check, the last portion is already checked
+    this.#literals = this.set.map(row => [
+      ...new Set(
+        (this.#endCheck ? row.slice(0, -1) : row).filter(
+          (p): p is string => typeof p === 'string' && !!p,
+        ),
+      ),
+    ])
+    this.#literalCheck = slashes && this.#literals.some(l => l.length)
   }
 
   hasMagic(): boolean {
@@ -668,29 +690,51 @@ export class Minimatch {
     })
   }
 
-  // A row can only match a path if the last portion of the row
-  // matches the last portion of the path, or the one before a
-  // trailing `/` (as a/* and a/**/* match a/b/). So if that is not
-  // true of any row, the path does not need to be split. This does
-  // not apply to rows that end in **, or with partial, level 2 (which
+  // False if no row can match the path, so it does not need to be
+  // split. These are only checks that a match needs. None of them
+  // apply with partial, where the path can end before the row does.
+  //
+  // Each string portion of a row must be a portion of the path, so the
+  // path must contain it. Level 2 can only take portions out of the
+  // path, so this is still true then. This does not apply to Windows
+  // paths (where drive letters do not need to have the same case), or
+  // a subclass that splits paths in its own way.
+  //
+  // The last portion of a row must match the last portion of the path,
+  // or the one before a trailing `/` (as a/* and a/**/* match a/b/).
+  // This does not apply to rows that end in **, or with level 2 (which
   // can resolve the last portion away), Windows paths,
   // preserveMultipleSlashes (which can leave more than one '' at the
   // end), or a subclass that splits paths in its own way.
-  #canEnd(f: string) {
-    // the same portions that f.split(/\/+/) would end with
-    const i = f.lastIndexOf('/')
-    const last = f.slice(i + 1)
+  #canMatch(f: string) {
+    let last: string | undefined
     let prev: string | undefined
-    if (last === '' && i >= 0) {
-      let j = i
-      while (j > 0 && f.charCodeAt(j - 1) === 47) j--
-      prev = j === 0 ? '' : f.slice(f.lastIndexOf('/', j - 1) + 1, j)
+    if (this.#endCheck) {
+      // the same portions that f.split(/\/+/) would end with
+      const i = f.lastIndexOf('/')
+      last = f.slice(i + 1)
+      if (last === '' && i >= 0) {
+        let j = i
+        while (j > 0 && f.charCodeAt(j - 1) === 47) j--
+        prev = j === 0 ? '' : f.slice(f.lastIndexOf('/', j - 1) + 1, j)
+      }
     }
-    for (const row of this.set) {
+    // A string compare is cheaper than includes(), and a Matcher test
+    // costs more, so the cheaper check goes first.
+    ROWS: for (let r = 0; r < this.set.length; r++) {
+      const row = this.set[r]!
       const p = row[row.length - 1]
-      if (p === undefined || p === GLOBSTAR) return true
-      if (portionMatch(p, last)) return true
-      if (prev !== undefined && portionMatch(p, prev)) return true
+      const end = last !== undefined && p !== undefined && p !== GLOBSTAR
+      if (end && typeof p === 'string' && !endMatch(p, last!, prev))
+        continue
+      if (this.#literalCheck) {
+        for (const l of this.#literals[r]!) {
+          if (!f.includes(l)) continue ROWS
+        }
+      }
+      if (end && typeof p !== 'string' && !endMatch(p, last!, prev))
+        continue
+      return true
     }
     return false
   }
@@ -1433,9 +1477,13 @@ export class Minimatch {
     // split or checked, check that it can match before splitting it.
     let ff = this.#cachedSplit(f)
     if (!ff) {
-      if (!partial && this.#endCheck && lastChecked !== f) {
+      if (
+        !partial &&
+        (this.#endCheck || this.#literalCheck) &&
+        lastChecked !== f
+      ) {
         lastChecked = f
-        if (!this.#canEnd(f)) {
+        if (!this.#canMatch(f)) {
           return options.flipNegate ? false : this.negate
         }
       }

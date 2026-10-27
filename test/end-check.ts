@@ -44,6 +44,32 @@ const cases: [
   ['a/c/', '**/b', false, { optimizationLevel: 2 }],
   ['C:\\a\\b.js', 'c:/a/*.js', true, { platform: 'win32' }],
   ['a//', 'a/*', false, { preserveMultipleSlashes: true }],
+
+  // each string portion of a row must be in the path
+  ['src/a.js', 'src/**', true],
+  ['xsrc/a.js', 'src/**', false],
+  ['a/srcx/b', '**/src/**', false],
+  ['a/src/b', '**/src/**', true],
+  ['a/.git/x', '**/.git/**', true, { dot: true }],
+  ['a/git/x', '**/.git/**', false, { dot: true }],
+  ['a/test/b/c.js', '**/test/**/*.js', true],
+  ['a/tests/b/c.js', '**/test/**/*.js', false],
+  ['b/x/c', '{a,b}/x/*', true],
+  ['c/x/c', '{a,b}/x/*', false],
+  ['lib/a.js', '!src/**', true],
+  ['src/a.js', '!src/**', false],
+  ['x/LICENSE', 'LICENSE', true, { matchBase: true }],
+  ['x/LICENSE.md', 'LICENSE', false, { matchBase: true }],
+  ['src/a', 'SRC/**', true, { nocase: true }],
+  ['SRC/a', 'src/**', false, { nocase: true, nocaseMagicOnly: true }],
+  // level 2 and preserveMultipleSlashes only use this check
+  ['x/../src/a', 'src/a', true, { optimizationLevel: 2 }],
+  ['x/src/../a', 'src/a', false, { optimizationLevel: 2 }],
+  ['src//a', 'src//a', true, { preserveMultipleSlashes: true }],
+  ['src/a', 'src//a', false, { preserveMultipleSlashes: true }],
+  // partial turns it off
+  ['src/a', 'src/**', true, { partial: true }],
+  ['s', 'src/**', false, { partial: true }],
 ]
 
 for (const [f, p, match, o] of cases) {
