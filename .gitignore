@@ -2,4 +2,6 @@
 /docs
 /coverage
 /node_modules
+/benchmark/node_modules
+/benchmark/filenames.json
 /.tap

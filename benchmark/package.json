@@ -1,0 +1,26 @@
+{
+  "name": "benchmark",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@npmcli/promise-spawn": "^2.0.0",
+    "anymatch": "^3.1.2",
+    "glob-to-regexp": "^0.4.1",
+    "markdown-tables": "^1.1.4",
+    "micromatch": "^4.0.4",
+    "minimatch-3": "npm:minimatch@3",
+    "minimatch-4": "npm:minimatch@4",
+    "minimatch-5": "npm:minimatch@5",
+    "minimatch-current": "file:../",
+    "nanomatch": "^1.2.13",
+    "picomatch": "^2.3.1",
+    "promise-call-limit": "^1.0.1"
+  }
+}

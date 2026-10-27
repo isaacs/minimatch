@@ -1,0 +1,48 @@
+# the set of patterns to test against every filename with every impl
+# do not do anything that relies on different handling of ./ leading /
+# or windows path separators.  Also, negation is turned off, so leading
+# ! can only be a negated extglob, nothing else.
+
+# basic magic
+*
+**
+**/.e
+
+# negated glob with a *
+!(a|b)*/*
+
+# nested extglob
+a/!(@(c|)|@(.b|!(b|)))*/**/@(.e|e)
+
+# braces
+{a,{,}
+
+# brace in an extglob
+a/@(b|{d,b/c})/d*
+
+# weird edge case: brace that breaks an extglob
+a/@(b|{d),b/c)}/d*
+
+# classes
+a/b/*([[:alpha:]])/**/.e
+a/b/*([d-z])/**/.e
+
+# invalid class
+a/[z-d]
+
+# cannot match anything here
+zzzzzz
+
+!(a|b)/**
+!(a|b|)/**
+**/!(b|c|)/**
+
+# are globstars just stars
+a/**.b
+a/**.b/
+
+*(b|d)/**
+*/{b,.g}/*
+*/{b,.g}/**
+
+**/b/**/c/**/d/**/e/**/f/**/g/**
