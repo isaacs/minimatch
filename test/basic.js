@@ -138,16 +138,6 @@ t.test('whitespace handling', t => {
   t.end()
 })
 
-t.test('mm debug', t => {
-  const { error } = console
-  t.teardown(() => (console.error = error))
-  const errs = []
-  console.error = (...msg) => errs.push(msg)
-  t.equal(mm('a/b/c', 'a/**/@(b|c)/**', { debug: true }), true)
-  t.not(errs.length, 0)
-  t.end()
-})
-
 t.test('in noglobstar mode, ** is equivalent to *', t => {
   const set2s = new mm.Minimatch('**', { noglobstar: true }).set
   const set1s = new mm.Minimatch('*', { noglobstar: true }).set

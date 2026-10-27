@@ -14,6 +14,9 @@
   `a/b/?(x)` or `a/b/*(x)`, the same as `a/b/*`.
 - Add the `normalize` option, to normalize unicode in the pattern
   and in each portion of the tested path.
+- Remove the `debug` option and the `debug()` method.
+- Remove the `matchOne()`, `slashSplit()`, and
+  `levelTwoFileOptimize()` methods. They are internal now.
 
 ## 10.2
 

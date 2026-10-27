@@ -56,7 +56,7 @@ import { minimatch } from 'minimatch'
 
 minimatch('bar.foo', '*.foo') // true!
 minimatch('bar.foo', '*.bar') // false!
-minimatch('bar.foo', '*.+(bar|foo)', { debug: true }) // true, and noisy!
+minimatch('bar.foo', '*.+(bar|foo)') // true!
 ```
 
 ## Features
@@ -154,10 +154,6 @@ const mm = new Minimatch(pattern, options)
 
 - `match(fname)` Return true if the filename matches the pattern, or
   false otherwise.
-- `matchOne(fileArray, patternArray, partial)` Take a `/`-split
-  filename, and match it against a single row in the set. This
-  method is mainly for internal use, but is exposed so that it can be
-  used by a glob-walker that needs to avoid excessive filesystem calls.
 - `hasMagic()` Returns true if the parsed pattern contains any
   magic characters. Returns false if all comparator parts are
   string literals. If the `magicalBraces` option is set on the
@@ -236,10 +232,6 @@ const javascripts = minimatch.match(fileList, '*.js', { matchBase: true })
 ## Options
 
 All options are `false` by default.
-
-### debug
-
-Dump a ton of stuff to stderr.
 
 ### nobrace
 

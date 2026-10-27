@@ -36,19 +36,3 @@ t.test('level 2 does not change the shared parts', t => {
   t.equal(lit.match('a/b/../c'), true)
   t.end()
 })
-
-t.test('a subclass with its own slashSplit', t => {
-  class Dots extends Minimatch {
-    slashSplit(p: string) {
-      return p.split('.')
-    }
-  }
-  // the same parts, from paths that the two split differently
-  const dots = new Dots('a.b')
-  const plain = new Minimatch('a/b')
-  t.equal(plain.match('a/b'), true)
-  t.equal(dots.match('a/b'), false)
-  t.equal(dots.match('a.b'), true)
-  t.equal(plain.match('a.b'), false)
-  t.end()
-})

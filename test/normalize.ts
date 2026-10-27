@@ -1,5 +1,5 @@
 import t from 'tap'
-import { minimatch, Minimatch } from '../src/index.js'
+import { minimatch } from '../src/index.js'
 
 // é as one code point, and as e and a combining accent
 const nfc = 'é'
@@ -48,11 +48,5 @@ t.test('roots kept as strings on windows', t => {
     windowsNoMagicRoot: true,
   } as const
   t.equal(minimatch(`//h${nfd}st/share/x`, `//h${nfc}st/share/*`, o), true)
-  t.end()
-})
-
-t.test('matchOne normalizes the parts it is given', t => {
-  const m = new Minimatch(`a/caf${nfc}`, { normalize: true })
-  t.equal(m.matchOne(['a', `caf${nfd}`], m.set[0]!), true)
   t.end()
 })
