@@ -335,6 +335,20 @@ const extSafe = (pattern: string) => {
   return !depth
 }
 
+// The last path that Minimatch#match split, and its parts. A path is
+// often tested against many patterns in a row (such as a list of
+// ignore patterns), so this saves splitting it again. The parts are
+// never changed, so they can be shared.
+let lastSplit:
+  | {
+      f: string
+      isWindows: boolean
+      preserveMultipleSlashes: boolean
+      slashSplit: Minimatch['slashSplit']
+      parts: string[]
+    }
+  | undefined
+
 export type ParseReturnFiltered = string | Matcher | typeof GLOBSTAR
 export type ParseReturn = ParseReturnFiltered | false
 
@@ -621,10 +635,34 @@ export class Minimatch {
     })
   }
 
-  levelTwoFileOptimize(parts: string | string[]) {
-    if (!Array.isArray(parts)) {
-      parts = this.slashSplit(parts)
+  // split a path for match(), or reuse the parts from the last call
+  // with the same path and split settings
+  #split(f: string) {
+    const { isWindows, preserveMultipleSlashes, slashSplit } = this
+    const last = lastSplit
+    if (
+      last?.f === f &&
+      last.isWindows === isWindows &&
+      last.preserveMultipleSlashes === preserveMultipleSlashes &&
+      last.slashSplit === slashSplit
+    ) {
+      return last.parts
     }
+    // windows: need to use /, not \
+    const parts = this.slashSplit(isWindows ? f.split('\\').join('/') : f)
+    lastSplit = {
+      f,
+      isWindows,
+      preserveMultipleSlashes,
+      slashSplit,
+      parts,
+    }
+    return parts
+  }
+
+  levelTwoFileOptimize(parts: string | string[]) {
+    // work on a copy, so that the caller's parts do not change
+    parts = Array.isArray(parts) ? [...parts] : this.slashSplit(parts)
     let didSomething: boolean = false
 
     do {
@@ -1308,13 +1346,8 @@ export class Minimatch {
 
     const options = this.options
 
-    // windows: need to use /, not \
-    if (this.isWindows) {
-      f = f.split('\\').join('/')
-    }
-
     // treat the test path as a set of pathparts.
-    const ff = this.slashSplit(f)
+    const ff = this.#split(f)
     this.debug(this.pattern, 'split', ff)
 
     // just ONE of the pattern sets in this.set needs to match
