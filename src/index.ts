@@ -359,9 +359,10 @@ export type ParseReturnFiltered = string | Matcher | typeof GLOBSTAR
 /**
  * The rows that Minimatch#match can match without splitting the path:
  * `**` and one more portion (`tail`), a portion with `**` on each side
- * of it (`mid`), or a portion and then `**` (`head`).
+ * of it (`mid`), a portion and then `**` (`head`), or one portion that
+ * matches the basename of the path, with matchBase (`base`).
  */
-export type RowShape = 'tail' | 'mid' | 'head'
+export type RowShape = 'tail' | 'mid' | 'head' | 'base'
 
 // true if a pattern portion that is not ** matches a path portion.
 // An empty path portion only matches an empty pattern portion. A path
@@ -550,6 +551,17 @@ export class Minimatch {
       const [p0, p1, p2] = row
       if (this.#endRows[r] && row.length === 2) {
         if (p0 === GLOBSTAR && p1 !== GLOBSTAR) return 'tail'
+      }
+      // the basename of a path that is split on / is its last portion,
+      // or the one before a trailing /, the same as the end check
+      if (
+        this.#endRows[r] &&
+        options.matchBase &&
+        row.length === 1 &&
+        p0 !== GLOBSTAR &&
+        p0 !== ''
+      ) {
+        return 'base'
       }
       // the portion must not be a drive letter, or '', which can be a
       // different portion on Windows (where //x paths get an extra '')
@@ -899,6 +911,7 @@ export class Minimatch {
         if (tailStart === -1) continue
       }
       const shape = this.#shapes[r]
+      if (shape === 'base' && end) return 'yes'
       if (shape === 'tail' && end) {
         if (this.#level2 && dotPortion(f, 0, tailStart, true, sep)) {
           return 'maybe'

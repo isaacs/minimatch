@@ -263,6 +263,33 @@ const cases: [
     { maxGlobstarRecursion: 0 },
   ],
   ['a/b/x.js', '{**/b/**,c}', true],
+
+  // with matchBase, a row of one portion is matched against the
+  // basename without splitting the path
+  ['a/b/c.js', '*.js', true, { matchBase: true }],
+  ['c.js', '*.js', true, { matchBase: true }],
+  ['a/b/c.js/', '*.js', true, { matchBase: true }],
+  ['a/b/c.js//', '*.js', true, { matchBase: true }],
+  ['a/b.js/c', '*.js', false, { matchBase: true }],
+  ['a/.c.js', '*.js', false, { matchBase: true }],
+  ['a/.c.js', '*.js', true, { matchBase: true, dot: true }],
+  ['/', '*', false, { matchBase: true }],
+  ['', '*', false, { matchBase: true }],
+  ['a/LICENSE', 'LICENSE', true, { matchBase: true }],
+  ['a/LICENSE/', 'LICENSE', true, { matchBase: true }],
+  ['a/x.ts', '*.{js,ts}', true, { matchBase: true }],
+  ['a/x.md', '*.{js,ts}', false, { matchBase: true }],
+  ['a/x.md', '!*.js', true, { matchBase: true }],
+  ['a/x.js', '!*.js', false, { matchBase: true }],
+  ['a/X.JS', '*.js', true, { matchBase: true, nocase: true }],
+  ['a\\b\\c.js', '*.js', true, { matchBase: true, platform: 'win32' }],
+  ['a\\b\\c.md', '*.js', false, { matchBase: true, platform: 'win32' }],
+  ['a/b/..', '*', false, { matchBase: true, optimizationLevel: 2 }],
+  ['a/b/..', '..', true, { matchBase: true, optimizationLevel: 2 }],
+  ['a/b/.', '.', true, { matchBase: true, optimizationLevel: 2 }],
+  ['a/b/c.js', '*.js', true, { matchBase: true, optimizationLevel: 2 }],
+  ['x/C:', 'c:', true, { matchBase: true, platform: 'win32' }],
+  ['a/b/c.js', 'a/*.js', false, { matchBase: true }],
 ]
 
 for (const [f, p, match, o] of cases) {
