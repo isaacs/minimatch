@@ -294,4 +294,6 @@ const cases: [
 
 for (const [f, p, match, o] of cases) {
   t.equal(minimatch(f, p, o), match, JSON.stringify([f, p, o]))
+  // the same path again is split, and matched on its parts
+  t.equal(minimatch(f, p, o), match, JSON.stringify([f, p, o, 'split']))
 }

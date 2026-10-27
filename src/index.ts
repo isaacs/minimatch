@@ -1,5 +1,5 @@
 import { expand } from 'brace-expansion'
-import { Matcher } from '@isaacs/nonrecursive-glob-match'
+import { Matcher, type Form } from '@isaacs/nonrecursive-glob-match'
 import { assertValidPattern } from './assert-valid-pattern.js'
 import { escape } from './escape.js'
 import { unescape } from './unescape.js'
@@ -54,6 +54,11 @@ export interface MinimatchOptions {
   nocase?: boolean
   /** ignore case only in wildcard patterns */
   nocaseMagicOnly?: boolean
+  /**
+   * Normalize unicode in the pattern and in each portion of the
+   * tested paths, with this form. `true` means `'NFC'`.
+   */
+  normalize?: boolean | Form
   /** consider braces to be "magic" for the purpose of `hasMagic` */
   magicalBraces?: boolean
   /**
@@ -115,10 +120,7 @@ export const minimatch = (
 /* c8 ignore start */
 const defaultPlatform: Platform = (
   typeof process === 'object' && process ?
-    (typeof process.env === 'object' &&
-      process.env &&
-      process.env.__MINIMATCH_TESTING_PLATFORM__) ||
-    process.platform
+    process.env?.__MINIMATCH_TESTING_PLATFORM__ || process.platform
   : 'posix') as Platform
 
 export type Sep = '\\' | '/'
@@ -339,15 +341,23 @@ const extSafe = (pattern: string) => {
 // often tested against many patterns in a row (such as a list of
 // ignore patterns), so this saves splitting it again. The parts are
 // never changed, so they can be shared.
-let lastSplit:
-  | {
-      f: string
-      isWindows: boolean
-      preserveMultipleSlashes: boolean
-      slashSplit: Minimatch['slashSplit']
-      parts: string[]
-    }
-  | undefined
+let lastSplit: SplitPath | undefined
+
+/**
+ * A path that Minimatch#match split, with the settings that the split
+ * depends on. `resolved` is the parts after optimizationLevel 2 has
+ * resolved `.` and `..` in them, which only depends on the same
+ * settings, once a level 2 Minimatch has needed them.
+ */
+export type SplitPath = {
+  f: string
+  isWindows: boolean
+  preserveMultipleSlashes: boolean
+  normalize: Form | undefined
+  slashSplit: Minimatch['slashSplit']
+  parts: string[]
+  resolved?: string[]
+}
 
 // The last path that Minimatch#match checked before splitting it. If
 // the same path is checked again, it is being tested against many
@@ -385,6 +395,11 @@ const endIndex = (
   : -1
 
 const isDots = (p: string) => p === '.' || p === '..'
+
+// true if ** can walk the path portion: not `.` or `..`, and not a
+// dotfile unless `dot` is set
+const walkable = (p: string, dot: boolean) =>
+  !isDots(p) && (dot || !p.startsWith('.'))
 
 // True if a portion of the path from `start` to `end` can not be
 // walked by **: one that starts with `.`, or with `dot`, one that is
@@ -481,6 +496,8 @@ export class Minimatch {
   #literalCheck: boolean
   // level 2 resolves `.` and `..` portions in the path
   #level2: boolean
+  // the unicode normalization form, if any
+  #form: Form | undefined
   // the string portions of each row in the set
   #literals: string[][] = []
   // the rows that #canMatch can match without splitting the path
@@ -527,6 +544,8 @@ export class Minimatch {
     const slashes = this.slashSplit === Minimatch.prototype.slashSplit
     this.#endCheck = slashes && !this.preserveMultipleSlashes
     this.#level2 = (options.optimizationLevel ?? 1) >= 2
+    const n = options.normalize
+    this.#form = n === true ? 'NFC' : n || undefined
 
     // make the set of Matchers etc.
     this.make()
@@ -587,6 +606,11 @@ export class Minimatch {
       }
       return undefined
     })
+  }
+
+  // a string portion of a pattern, normalized if the option is set
+  #norm(p: string) {
+    return this.#form ? p.normalize(this.#form) : p
   }
 
   // On Windows, the index of the drive letter portion of a row, as
@@ -675,11 +699,14 @@ export class Minimatch {
         const isDrive = /^[a-z]:/i.test(s[0])
         if (isUNC) {
           return [
-            ...s.slice(0, 4),
+            ...s.slice(0, 4).map(p => this.#norm(p)),
             ...s.slice(4).map(ss => this.parse(ss)),
           ]
         } else if (isDrive) {
-          return [s[0], ...s.slice(1).map(ss => this.parse(ss))]
+          return [
+            this.#norm(s[0]!),
+            ...s.slice(1).map(ss => this.parse(ss)),
+          ]
         }
       }
       return s.map(ss => this.parse(ss))
@@ -929,6 +956,51 @@ export class Minimatch {
     return 'no'
   }
 
+  // Match a row of a known shape against the split path, the same as
+  // #matchGlobstar and #matchGlobStarBodySections do. None of these
+  // rows have a drive letter, so they start at the first portion.
+  #matchShape(
+    file: string[],
+    row: ParseReturnFiltered[],
+    shape: 'tail' | 'mid' | 'head',
+  ): boolean {
+    const dot = !!this.options.dot
+    const n = file.length
+    if (shape === 'head') {
+      // x, then at least one portion that ** can walk
+      if (n < 2 || !portionMatch(row[0] as string | Matcher, file[0]!)) {
+        return false
+      }
+      for (let i = 1; i < n; i++)
+        if (!walkable(file[i]!, dot)) return false
+      return true
+    }
+    const x = row[1] as string | Matcher
+    if (shape === 'tail') {
+      // x is the last portion, or the one before a trailing ''
+      let t = n - 1
+      if (!portionMatch(x, file[t]!)) {
+        if (file[t] !== '' || n === 1 || !portionMatch(x, file[--t]!)) {
+          return false
+        }
+      }
+      for (let i = 0; i < t; i++)
+        if (!walkable(file[i]!, dot)) return false
+      return true
+    }
+    // mid: the first x that ** can walk to, with a portion after it,
+    // and ** can walk all of those
+    for (let k = 0; k < n; k++) {
+      if (portionMatch(x, file[k]!) && k + 1 < n) {
+        let i = k + 1
+        while (i < n && walkable(file[i]!, dot)) i++
+        if (i === n) return true
+      }
+      if (!walkable(file[k]!, dot)) return false
+    }
+    return false
+  }
+
   // Match a row of `**/x/**` or `x/**` against the path, the same as
   // #matchGlobstar and #matchGlobStarBodySections do once it is split.
   // x must match a portion (the first one, for `x/**`), the ** before
@@ -962,17 +1034,18 @@ export class Minimatch {
     return 'no'
   }
 
-  // the parts from the last split, if it was the same path with the
-  // same split settings
+  // the last split, if it was the same path with the same split
+  // settings
   #cachedSplit(f: string) {
     const last = lastSplit
     return (
         last?.f === f &&
           last.isWindows === this.isWindows &&
           last.preserveMultipleSlashes === this.preserveMultipleSlashes &&
+          last.normalize === this.#form &&
           last.slashSplit === this.slashSplit
       ) ?
-        last.parts
+        last
       : undefined
   }
 
@@ -980,15 +1053,20 @@ export class Minimatch {
   #split(f: string) {
     const { isWindows, preserveMultipleSlashes, slashSplit } = this
     // windows: need to use /, not \
-    const parts = this.slashSplit(isWindows ? f.split('\\').join('/') : f)
+    let parts = this.slashSplit(isWindows ? f.split('\\').join('/') : f)
+    // normalize each portion, so that a char that normalizes to `/`
+    // does not make a new portion
+    const normalize = this.#form
+    if (normalize) parts = parts.map(p => p.normalize(normalize))
     lastSplit = {
       f,
       isWindows,
       preserveMultipleSlashes,
+      normalize,
       slashSplit,
       parts,
     }
-    return parts
+    return lastSplit
   }
 
   levelTwoFileOptimize(parts: string | string[]) {
@@ -1243,6 +1321,19 @@ export class Minimatch {
     pattern: ParseReturn[],
     partial: boolean = false,
   ) {
+    const form = this.#form
+    if (form) file = file.map(p => p.normalize(form))
+    return this.#matchRow(file, undefined, pattern, partial)
+  }
+
+  // matchOne, with the parts of the file after level 2 resolves them,
+  // if they are known
+  #matchRow(
+    file: string[],
+    resolved: string[] | undefined,
+    pattern: ParseReturn[],
+    partial: boolean,
+  ) {
     let fileStartIndex = 0
     let patternStartIndex = 0
 
@@ -1294,7 +1385,7 @@ export class Minimatch {
     // don't need to do the second phase, because it's only one string[]
     const { optimizationLevel = 1 } = this.options
     if (optimizationLevel >= 2) {
-      file = this.levelTwoFileOptimize(file)
+      file = resolved ?? this.levelTwoFileOptimize(file)
     }
 
     if (pattern.includes(GLOBSTAR)) {
@@ -1641,7 +1732,13 @@ export class Minimatch {
     if (pattern === '**') return GLOBSTAR
     if (pattern === '') return ''
 
-    const { nocase, nocaseMagicOnly, noext = false, dot } = options
+    const {
+      nocase,
+      nocaseMagicOnly,
+      noext = false,
+      dot,
+      normalize,
+    } = options
     const lit = literal(pattern, noext)
     // in nocase mode, a literal with cased chars still needs a
     // Matcher, unless nocaseMagicOnly is set.
@@ -1653,12 +1750,12 @@ export class Minimatch {
         pattern.toUpperCase() !== pattern.toLowerCase()
       )
     ) {
-      return lit
+      return this.#norm(lit)
     }
 
     let m = this.#matchers.get(pattern)
     if (!m) {
-      m = new Matcher(pattern, { nocase, noext, dot })
+      m = new Matcher(pattern, { nocase, noext, dot, normalize })
       this.#matchers.set(pattern, m)
     }
     return m
@@ -1698,10 +1795,13 @@ export class Minimatch {
 
     // treat the test path as a set of pathparts. If it was not just
     // split or checked, check that it can match before splitting it.
-    let ff = this.#cachedSplit(f)
-    if (!ff) {
+    let split = this.#cachedSplit(f)
+    if (!split) {
+      // the checks look at the path as given, so not if it is
+      // normalized
       if (
         !partial &&
+        !this.#form &&
         (this.#endCheck || this.#literalCheck) &&
         lastChecked !== f
       ) {
@@ -1710,9 +1810,21 @@ export class Minimatch {
         if (can === 'no') return options.flipNegate ? false : this.negate
         if (can === 'yes') return options.flipNegate ? true : !this.negate
       }
-      ff = this.#split(f)
+      split = this.#split(f)
     }
+    const ff = split.parts
     this.debug(this.pattern, 'split', ff)
+    // the parts after level 2 resolves them, kept for the next pattern
+    // that tests the same path. Not if a subclass resolves them in its
+    // own way.
+    const resolved =
+      (
+        this.#level2 &&
+        this.levelTwoFileOptimize ===
+          Minimatch.prototype.levelTwoFileOptimize
+      ) ?
+        (split.resolved ??= this.levelTwoFileOptimize(ff))
+      : undefined
 
     // just ONE of the pattern sets in this.set needs to match
     // in order for it to be valid.  If negating, then just one
@@ -1730,12 +1842,24 @@ export class Minimatch {
       }
     }
 
-    for (const pattern of set) {
-      let file = ff
-      if (options.matchBase && pattern.length === 1) {
-        file = [filename]
-      }
-      const hit = this.matchOne(file, pattern, partial)
+    for (let r = 0; r < set.length; r++) {
+      const pattern = set[r]!
+      const shape = partial ? undefined : this.#shapes[r]
+      // level 2 does not change a path of one portion
+      const hit =
+        shape === 'base' ?
+          portionMatch(pattern[0] as string | Matcher, filename)
+        : shape ?
+          this.#matchShape(
+            this.#level2 ?
+              (resolved ?? this.levelTwoFileOptimize(ff))
+            : ff,
+            pattern,
+            shape,
+          )
+        : options.matchBase && pattern.length === 1 ?
+          this.#matchRow([filename], [filename], pattern, partial)
+        : this.#matchRow(ff, resolved, pattern, partial)
       if (hit) {
         if (options.flipNegate) {
           return true
@@ -1759,6 +1883,7 @@ export class Minimatch {
 /* c8 ignore start */
 export { escape } from './escape.js'
 export { unescape } from './unescape.js'
+export type { Form }
 /* c8 ignore stop */
 minimatch.Minimatch = Minimatch
 minimatch.escape = escape

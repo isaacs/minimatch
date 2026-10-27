@@ -12,6 +12,8 @@
 - An empty path portion, such as the last one in `a/b/`, only
   matches an empty pattern portion. So `a/b/` no longer matches
   `a/b/?(x)` or `a/b/*(x)`, the same as `a/b/*`.
+- Add the `normalize` option, to normalize unicode in the pattern
+  and in each portion of the tested path.
 
 ## 10.2
 
