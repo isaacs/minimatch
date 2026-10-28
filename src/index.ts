@@ -523,6 +523,11 @@ export type GlobstarParts = {
 }
 export type ParseReturn = ParseReturnFiltered | false
 
+// What parse() returns in place of a Matcher while make() builds and
+// merges the rows. Most of the Matchers in rows that are merged would
+// never be used, so they are only made for the rows that are left.
+const PENDING = {} as Matcher
+
 export class Minimatch {
   options: MinimatchOptions
   set: ParseReturnFiltered[][]
@@ -560,6 +565,8 @@ export class Minimatch {
   // brace expansion can make the same portion in many rows, so they
   // share one Matcher, and the states that it caches
   #matchers = new Map<string, Matcher>()
+  // parse() returns PENDING in place of a Matcher
+  #pending = false
   // the GlobstarParts of each pattern row, by start index and partial
   #globstarParts = new WeakMap<ParseReturn[], GlobstarParts[]>()
 
@@ -725,6 +732,7 @@ export class Minimatch {
     this.globParts = this.preprocess(rawGlobParts)
 
     // glob --> Matchers
+    this.#pending = true
     let set = this.globParts.map((s, _, __) => {
       if (this.isWindows && this.windowsNoMagicRoot) {
         // check if it's a drive or unc path. The root of a long UNC
@@ -774,6 +782,15 @@ export class Minimatch {
 
     // with noext, `@(...)` would be literal
     if (!options.noext) this.mergeRows()
+
+    this.#pending = false
+    this.set.forEach((row, i) => {
+      for (let k = 0; k < row.length; k++) {
+        if (row[k] === PENDING) {
+          row[k] = this.parse(this.globParts[i]![k]!) as Matcher
+        }
+      }
+    })
   }
 
   // Merge rows that only differ in one portion, where each of them
@@ -790,7 +807,7 @@ export class Minimatch {
         const groups = new Map<string, number[]>()
         this.set.forEach((row, i) => {
           if (
-            !(row[k] instanceof Matcher) ||
+            !(row[k] instanceof Matcher || row[k] === PENDING) ||
             !extSafe(this.globParts[i]![k]!)
           ) {
             return
@@ -1813,6 +1830,7 @@ export class Minimatch {
       return this.#norm(lit)
     }
 
+    if (this.#pending) return PENDING
     let m = this.#matchers.get(pattern)
     if (!m) {
       m = new Matcher(pattern, { nocase, noext, dot, normalize })

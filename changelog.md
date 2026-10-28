@@ -42,6 +42,9 @@
   minutes to compile.
 - `minimatch()` keeps the 256 `Minimatch` objects that it used most
   recently, so it does not compile the same pattern again.
+- Faster to compile brace patterns that make rows that are merged,
+  such as `**/*.{png,jpg,gif}`, because the `Matcher`s for the rows
+  that are merged are not made.
 
 ## 10.2
 
