@@ -40,6 +40,8 @@
   there are `braceExpandMax` patterns, and do not dedupe sets of
   more than 1000 patterns. Before, a short pattern could take
   minutes to compile.
+- `minimatch()` keeps the 256 `Minimatch` objects that it used most
+  recently, so it does not compile the same pattern again.
 
 ## 10.2
 

@@ -115,7 +115,28 @@ export const minimatch = (
     return false
   }
 
-  return new Minimatch(pattern, options).match(p)
+  return cachedMinimatch(pattern, options).match(p)
+}
+
+// The Minimatch objects that minimatch() used most recently. A Map
+// keeps its keys in the order they were set, so the first key is the
+// one used least recently.
+const cache = new Map<string, Minimatch>()
+const cacheMax = 256
+const cachedMinimatch = (pattern: string, options: MinimatchOptions) => {
+  const key = pattern + '\0' + JSON.stringify(options)
+  let mm = cache.get(key)
+  if (mm) {
+    cache.delete(key)
+  } else {
+    // a copy, so a later change to the options can not change it
+    mm = new Minimatch(pattern, { ...options })
+    if (cache.size >= cacheMax) {
+      cache.delete(cache.keys().next().value as string)
+    }
+  }
+  cache.set(key, mm)
+  return mm
 }
 
 /* c8 ignore start */
