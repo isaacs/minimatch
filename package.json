@@ -42,7 +42,7 @@
     "postlint": "npm run format"
   },
   "engines": {
-    "node": "18 || 20 || >=22"
+    "node": "20 || >=22"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
