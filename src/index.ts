@@ -74,7 +74,8 @@ export interface MinimatchOptions {
    * A number indicating the level of optimization that should be done
    * to the pattern prior to parsing and using it for matches.
    * At level 2 or higher, throws RangeError if splitting `**` and `..`
-   * would add more than 1,000,000 path portions.
+   * would make more than `braceExpandMax` patterns, or add more than
+   * 1,000,000 path portions.
    */
   optimizationLevel?: number
   /** operating system platform */
@@ -93,7 +94,8 @@ export interface MinimatchOptions {
    * max number of `{...}` patterns to expand. Default 100_000.
    *
    * At `optimizationLevel` 2 or higher, this also limits the
-   * patterns made when `**` is followed by `..`.
+   * patterns made when `**` is followed by `..`. Over this limit,
+   * construction throws a RangeError.
    */
   braceExpandMax?: number
   /**
@@ -1193,12 +1195,11 @@ export class Minimatch {
   // **/*/<rest> -> */**/<rest> <== not valid because ** doesn't follow
   // this WOULD be allowed if ** did follow symlinks, or * didn't
   firstPhasePreProcess(globParts: string[][]) {
-    // each **/.. split doubles the patterns, so stop at the brace max
+    // each **/.. split doubles the patterns, and adds a copy of the
+    // whole pattern. Throw if either gets too large. A partial split
+    // would match some paths and not others, depending on which rows
+    // the pass reached first.
     const { braceExpandMax = 100_000 } = this.options
-    // each split adds one whole pattern's worth of parts, so the total
-    // parse work amplifies with pattern length. Bound the parts the
-    // split pass may add, independently of the pattern count. Reject
-    // patterns over this budget rather than silently drop alternatives.
     let splitCells = 0
     const maxSplitCells = 1_000_000
     let didSomething = false
@@ -1229,16 +1230,18 @@ export class Minimatch {
             p === '..' ||
             !p2 ||
             p2 === '.' ||
-            p2 === '..' ||
-            globParts.length >= braceExpandMax
+            p2 === '..'
           ) {
             continue
           }
           // Check before changing parts or allocating the new row.
           const addedCells = parts.length - 1
-          if (splitCells + addedCells > maxSplitCells) {
+          if (
+            globParts.length >= braceExpandMax ||
+            splitCells + addedCells > maxSplitCells
+          ) {
             throw new RangeError(
-              'optimizationLevel 2 pattern expansion exceeds 1000000 added path portions',
+              `optimizationLevel 2: too many patterns from '**/..'`,
             )
           }
           didSomething = true
