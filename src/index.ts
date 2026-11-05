@@ -73,6 +73,8 @@ export interface MinimatchOptions {
   /**
    * A number indicating the level of optimization that should be done
    * to the pattern prior to parsing and using it for matches.
+   * At level 2 or higher, throws RangeError if splitting `**` and `..`
+   * would add more than 1,000,000 path portions.
    */
   optimizationLevel?: number
   /** operating system platform */
@@ -1195,8 +1197,8 @@ export class Minimatch {
     const { braceExpandMax = 100_000 } = this.options
     // each split adds one whole pattern's worth of parts, so the total
     // parse work amplifies with pattern length. Bound the parts the
-    // split pass may add, independently of the pattern count, or a
-    // short pattern with many **/.. occurrences exhausts memory.
+    // split pass may add, independently of the pattern count. Reject
+    // patterns over this budget rather than silently drop alternatives.
     let splitCells = 0
     const maxSplitCells = 1_000_000
     let didSomething = false
@@ -1228,17 +1230,23 @@ export class Minimatch {
             !p2 ||
             p2 === '.' ||
             p2 === '..' ||
-            globParts.length >= braceExpandMax ||
-            splitCells >= maxSplitCells
+            globParts.length >= braceExpandMax
           ) {
             continue
+          }
+          // Check before changing parts or allocating the new row.
+          const addedCells = parts.length - 1
+          if (splitCells + addedCells > maxSplitCells) {
+            throw new RangeError(
+              'optimizationLevel 2 pattern expansion exceeds 1000000 added path portions',
+            )
           }
           didSomething = true
           // edit parts in place, and push the new one
           parts.splice(gs, 1)
           const other = parts.slice(0)
           other[gs] = '**'
-          splitCells += other.length
+          splitCells += addedCells
           globParts.push(other)
           gs--
         }
