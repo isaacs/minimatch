@@ -257,6 +257,13 @@ export const braceExpand = (
 }
 minimatch.braceExpand = braceExpand
 
+// A numeric range with at least this many values is matched as one
+// pattern portion, rather than expanded. For a glob walk, that is
+// one directory read, in place of a stat for each value.
+const RANGE_MIN = 100
+// a {lo..hi} range that is not escaped, and not a ${...} variable
+const rangeRe = /(?<![\\$])\{(-?\d+)\.\.(-?\d+)\}/g
+
 export const match = (
   list: string[],
   pattern: string,
@@ -571,6 +578,8 @@ export class Minimatch {
   #matchers = new Map<string, Matcher>()
   // parse() returns PENDING in place of a Matcher
   #pending = false
+  // the char that marks numeric ranges in globSet, if any
+  #rangeMark?: string
   // the GlobstarParts of each pattern row, by start index and partial
   #globstarParts = new WeakMap<ParseReturn[], GlobstarParts[]>()
 
@@ -721,7 +730,7 @@ export class Minimatch {
     this.parseNegate()
 
     // step 2: expand braces
-    this.globSet = [...new Set(this.braceExpand())]
+    this.globSet = [...new Set(this.#expandBraces())]
 
     // step 3: now we have a set, so turn each one into a series of
     // path-portion matching patterns.
@@ -1791,6 +1800,49 @@ export class Minimatch {
     return braceExpand(this.pattern, this.options)
   }
 
+  // Expand braces, except numeric ranges such as {0..999} with at
+  // least RANGE_MIN values. Each of those stays in its pattern as
+  // `<mark>0..999<mark>`, for the Matcher to test. If a range might
+  // be inside a [...] class, expand all of them instead.
+  #expandBraces(): string[] {
+    const { pattern } = this
+    if (this.options.nobrace) return this.braceExpand()
+    let code = 0xe000
+    while (pattern.includes(String.fromCharCode(code))) {
+      if (++code > 0xf8ff) return this.braceExpand()
+    }
+    const mark = String.fromCharCode(code)
+    let found = false
+    const marked = pattern.replace(
+      rangeRe,
+      (m, lo: string, hi: string) => {
+        const a = Number(lo)
+        const b = Number(hi)
+        if (
+          !Number.isSafeInteger(a) ||
+          !Number.isSafeInteger(b) ||
+          Math.abs(a - b) + 1 < RANGE_MIN
+        ) {
+          return m
+        }
+        found = true
+        return `${mark}${lo}..${hi}${mark}`
+      },
+    )
+    if (!found) return this.braceExpand()
+    const set = braceExpand(marked, this.options)
+    for (const p of set) {
+      for (const portion of p.split('/')) {
+        const c = portion.indexOf('[')
+        if (c !== -1 && c < portion.lastIndexOf(mark)) {
+          return this.braceExpand()
+        }
+      }
+    }
+    this.#rangeMark = mark
+    return set
+  }
+
   parse(pattern: string): ParseReturn {
     assertValidPattern(pattern)
 
@@ -1807,7 +1859,11 @@ export class Minimatch {
       dot,
       normalize,
     } = options
-    const lit = literal(pattern, noext)
+    const rangeMark = this.#rangeMark
+    const lit =
+      rangeMark && pattern.includes(rangeMark) ?
+        undefined
+      : literal(pattern, noext)
     // in nocase mode, a literal with cased chars still needs a
     // Matcher, unless nocaseMagicOnly is set.
     if (
@@ -1824,7 +1880,13 @@ export class Minimatch {
     if (this.#pending) return PENDING
     let m = this.#matchers.get(pattern)
     if (!m) {
-      m = new Matcher(pattern, { nocase, noext, dot, normalize })
+      m = new Matcher(pattern, {
+        nocase,
+        noext,
+        dot,
+        normalize,
+        ...(rangeMark && { rangeMark }),
+      })
       this.#matchers.set(pattern, m)
     }
     return m

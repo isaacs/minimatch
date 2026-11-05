@@ -154,6 +154,10 @@ const mm = new Minimatch(pattern, options)
   (that is, it's something like `"foo"` rather than `fo*o?`), then it
   will be left as a string rather than converted to a `Matcher`.
 
+  A numeric range of 100 or more values, such as `{0..999}`, is
+  not expanded. It stays in one row, and the `Matcher` for its
+  portion tests for a number in the range.
+
 - `negate` True if the pattern is negated.
 - `comment` True if the pattern is a comment.
 - `empty` True if the pattern is `""`.
@@ -506,6 +510,13 @@ other interpretation of the glob pattern. Thus, a pattern like
 `+(a|{b),c)}`, which would not be valid in bash or zsh, is expanded
 **first** into the set of `+(a|b)` and `+(a|c)`, and those patterns are
 checked for validity. Since those two are valid, matching proceeds.
+
+A numeric range of 100 or more values, such as `{0..999}` or
+`{001..500}`, is the exception. It is not expanded, but it matches
+the same strings as its expansion. A range is expanded as usual if
+it has a step, such as `{0..999..2}`, if a `\` or `$` is before
+it, or if a `[` is before it in the same path portion, because it
+might be inside a class.
 
 Each portion of a pattern between `/` characters is matched with
 [@isaacs/nonrecursive-glob-match](http://npm.im/@isaacs/nonrecursive-glob-match),

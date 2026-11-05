@@ -18,7 +18,10 @@ t.test('**/.. splits throw over braceExpandMax', t => {
   )
   // many short rows stay under the cell limit
   t.throws(
-    () => new Minimatch('{0..60000}/**/../a/b', { optimizationLevel }),
+    () =>
+      new Minimatch('{0..9}{0..9}{0..9}{0..9}{0..5}/**/../a/b', {
+        optimizationLevel,
+      }),
     RangeError,
   )
   t.end()
@@ -35,17 +38,21 @@ t.test('**/.. splits below the max', t => {
 t.test('large sets are deduped', t => {
   const small = new Minimatch('{x,*}/{0..9}', { optimizationLevel })
   t.equal(small.set.length, 10)
-  const large = new Minimatch('{x,*}/{0..999}', { optimizationLevel })
+  const large = new Minimatch('{x,*}/{0..9}{0..9}{0..9}', {
+    optimizationLevel,
+  })
   t.equal(large.set.length, 1000)
-  t.equal(large.match('x/5'), true)
+  t.equal(large.match('x/005'), true)
   t.equal(large.match('y/999'), true)
-  t.equal(large.match('.y/5'), false)
+  t.equal(large.match('.y/005'), false)
   t.end()
 })
 
 t.test('literal sets are deduped in linear time', t => {
   const start = performance.now()
-  const mm = new Minimatch('a/{0..99999}/b', { optimizationLevel })
+  const mm = new Minimatch('a/{0..9}{0..9}{0..9}{0..9}{0..9}/b', {
+    optimizationLevel,
+  })
   t.equal(mm.set.length, 100_000)
   t.ok(performance.now() - start < 5000, 'should take less than 5s')
   // the first phase makes a/./c into a/c

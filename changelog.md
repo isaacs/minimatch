@@ -36,10 +36,19 @@
 - On Windows, long UNC paths like `//?/UNC/host/share/...` match
   `//host/share/...` and vice versa, the same as `//?/c:/...` and
   `c:/...`.
-- At optimization level 2, stop splitting `**/..` portions once
-  there are `braceExpandMax` patterns, and do not dedupe sets of
-  more than 1000 patterns. Before, a short pattern could take
-  minutes to compile.
+- At optimization level 2, throw a `RangeError` if splitting
+  `**/..` portions would make more than `braceExpandMax` patterns,
+  or add more than 1,000,000 path portions. Before, a short
+  pattern could take minutes to compile.
+- At optimization level 2, dedupe patterns without comparing each
+  pair, so that a large set is deduped in about linear time. Fix
+  `{**/x,x/y}`, which was deduped to `**/x`, so `x/y` did not
+  match.
+- Match a numeric brace range of 100 or more values, such as
+  `{0..999}`, as one pattern portion, in place of one pattern for
+  each value. For a glob walk, this is one directory read, in
+  place of a stat for each value. `hasMagic()` is true for these
+  patterns.
 - `minimatch()` keeps the 256 `Minimatch` objects that it used most
   recently, so it does not compile the same pattern again.
 - Faster to compile brace patterns that make rows that are merged,
