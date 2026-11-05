@@ -1298,82 +1298,54 @@ export class Minimatch {
   }
 
   // second phase: multi-pattern dedupes
-  // {<pre>/*/<rest>,<pre>/<p>/<rest>} -> <pre>/*/<rest>
   // {<pre>/<rest>,<pre>/<rest>} -> <pre>/<rest>
-  // {<pre>/**/<rest>,<pre>/<rest>} -> <pre>/**/<rest>
-  //
-  // {<pre>/**/<rest>,<pre>/**/<p>/<rest>} -> <pre>/**/<rest>
-  // ^-- not valid because ** doens't follow symlinks
+  // {<pre>/*/<rest>,<pre>/<p>/<rest>} -> <pre>/*/<rest>
   secondPhasePreProcess(globParts: string[][]): string[][] {
-    // each pattern is compared to each other one, so skip this for
-    // large sets. The patterns match the same paths either way.
-    if (globParts.length > 1000) return globParts
-    for (let i = 0; i < globParts.length - 1; i++) {
-      for (let j = i + 1; j < globParts.length; j++) {
-        const matched = this.partsMatch(
-          globParts[i],
-          globParts[j],
-          !this.preserveMultipleSlashes,
-        )
-        if (matched) {
-          globParts[i] = []
-          globParts[j] = matched
-          break
-        }
-      }
-    }
-    return globParts.filter(gs => gs.length)
-  }
+    const keys = new Set<string>()
+    const rows = globParts.filter(parts => {
+      const key = parts.join('/')
+      if (keys.has(key)) return false
+      keys.add(key)
+      return true
+    })
 
-  partsMatch(
-    a: string[],
-    b: string[],
-    emptyGSMatch: boolean = false,
-  ): false | string[] {
-    let ai = 0
-    let bi = 0
-    let result: string[] = []
-    let which: string = ''
-    while (ai < a.length && bi < b.length) {
-      if (a[ai] === b[bi]) {
-        result.push(which === 'b' ? b[bi] : a[ai])
-        ai++
-        bi++
-      } else if (emptyGSMatch && a[ai] === '**' && b[bi] === a[ai + 1]) {
-        result.push(a[ai])
-        ai++
-      } else if (emptyGSMatch && b[bi] === '**' && a[ai] === b[bi + 1]) {
-        result.push(b[bi])
-        bi++
-      } else if (
-        a[ai] === '*' &&
-        b[bi] &&
-        (this.options.dot || !b[bi].startsWith('.')) &&
-        b[bi] !== '**'
-      ) {
-        if (which === 'b') return false
-        which = 'a'
-        result.push(a[ai])
-        ai++
-        bi++
-      } else if (
-        b[bi] === '*' &&
-        a[ai] &&
-        (this.options.dot || !a[ai].startsWith('.')) &&
-        a[ai] !== '**'
-      ) {
-        if (which === 'a') return false
-        which = 'b'
-        result.push(b[bi])
-        ai++
-        bi++
-      } else {
-        return false
+    // A row is covered by another row that has `*` at some positions,
+    // and is the same at all others. Collect each distinct set of `*`
+    // positions, then look up each row with `*` put at those positions.
+    const stars = new Map<string, number[]>()
+    for (const parts of rows) {
+      const s: number[] = []
+      for (let i = 0; i < parts.length; i++) {
+        if (parts[i] === '*') s.push(i)
       }
+      if (s.length) stars.set(s.join(','), s)
     }
-    // if we fall out of the loop, it means they two are identical
-    // as long as their lengths match
-    return a.length === b.length && result
+    // Each row is checked against each set of `*` positions, so skip
+    // this if there are too many. The patterns match the same paths
+    // either way.
+    if (!stars.size || rows.length * stars.size > 100_000) return rows
+
+    const { dot } = this.options
+    return rows.filter(parts => {
+      for (const s of stars.values()) {
+        if (s[s.length - 1]! >= parts.length) continue
+        const c = [...parts]
+        let ok = true
+        let changed = false
+        for (const i of s) {
+          const p = parts[i]!
+          if (p === '*') continue
+          if (!p || p === '**' || (!dot && p.startsWith('.'))) {
+            ok = false
+            break
+          }
+          c[i] = '*'
+          changed = true
+        }
+        if (ok && changed && keys.has(c.join('/'))) return false
+      }
+      return true
+    })
   }
 
   parseNegate() {

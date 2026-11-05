@@ -431,16 +431,14 @@ is equivalent in all cases).
     `''`. If this would make more than `braceExpandMax` patterns,
     or add more than 1,000,000 path portions in total,
     construction throws a `RangeError`.
-  - Dedupe patterns where a `**` portion is present in one and
-    omitted in another, and it is not the final path portion, and
-    they are otherwise equivalent. So `{a/**/b,a/b}` becomes
-    `a/**/b`, because `**` matches against an empty path portion.
-  - Dedupe patterns where a `*` portion is present in one, and a
-    non-dot pattern other than `**`, `.`, `..`, or `''` is in the
-    same position in the other. So `a/{*,x}/b` becomes `a/*/b`,
-    because `*` can match against `x`.
-  - Dedupe only sets of 1000 patterns or fewer, because each
-    pattern is compared to each other one.
+  - Remove duplicate patterns.
+  - Remove a pattern when another pattern has `*` at one or more
+    positions, and the same portions at all other positions. The
+    portions that `*` replaces must be non-dot patterns other than
+    `**` or `''`. So `a/{*,x}/b` becomes `a/*/b`, because `*` can
+    match against `x`. This step is skipped when the number of
+    patterns times the number of different sets of `*` positions
+    is more than 100,000.
 
   While these optimizations improve the performance of
   file-walking use cases such as [glob](http://npm.im/glob) (ie,

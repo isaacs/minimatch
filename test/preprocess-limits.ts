@@ -32,13 +32,50 @@ t.test('**/.. splits below the max', t => {
   t.end()
 })
 
-t.test('large sets are not deduped', t => {
+t.test('large sets are deduped', t => {
   const small = new Minimatch('{x,*}/{0..9}', { optimizationLevel })
   t.equal(small.set.length, 10)
   const large = new Minimatch('{x,*}/{0..999}', { optimizationLevel })
-  t.equal(large.set.length, 2000)
+  t.equal(large.set.length, 1000)
   t.equal(large.match('x/5'), true)
   t.equal(large.match('y/999'), true)
   t.equal(large.match('.y/5'), false)
+  t.end()
+})
+
+t.test('literal sets are deduped in linear time', t => {
+  const start = performance.now()
+  const mm = new Minimatch('a/{0..99999}/b', { optimizationLevel })
+  t.equal(mm.set.length, 100_000)
+  t.ok(performance.now() - start < 5000, 'should take less than 5s')
+  // the first phase makes a/./c into a/c
+  const dupes = new Minimatch('{a/./c,a/c,b/c}', { optimizationLevel })
+  t.strictSame(dupes.globParts, [
+    ['a', 'c'],
+    ['b', 'c'],
+  ])
+  t.end()
+})
+
+t.test('rows shorter than the * positions are kept', t => {
+  const mm = new Minimatch('{x/*/c,x/y/c,x}', { optimizationLevel })
+  t.strictSame(mm.globParts, [['x', '*', 'c'], ['x']])
+  t.end()
+})
+
+t.test('too many sets of * positions are not deduped', t => {
+  // 512 rows, and 511 different sets of * positions
+  const p = Array(9).fill('{*,a}').join('/')
+  const mm = new Minimatch(p, { optimizationLevel })
+  t.equal(mm.set.length, 512)
+  t.equal(mm.match(Array(9).fill('a').join('/')), true)
+  t.end()
+})
+
+t.test('** rows are not merged with rows of another shape', t => {
+  const mm = new Minimatch('{**/x,x/y}', { optimizationLevel })
+  t.equal(mm.match('x/y'), true)
+  t.equal(mm.match('q/x'), true)
+  t.equal(mm.match('x/q'), false)
   t.end()
 })
