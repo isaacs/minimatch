@@ -6,12 +6,21 @@ import { Minimatch } from '../dist/esm/index.js'
 
 const optimizationLevel = 2
 
-t.test('**/.. splits stop at braceExpandMax', t => {
-  const p = Array(30).fill('**/../a/b').join('/')
-  const mm = new Minimatch(p, { optimizationLevel, braceExpandMax: 64 })
-  t.equal(mm.set.length, 64)
-  // A larger pattern-count limit cannot bypass the cell budget.
-  t.throws(() => new Minimatch(p, { optimizationLevel }), RangeError)
+t.test('**/.. splits throw over braceExpandMax', t => {
+  const p = Array(6).fill('**/../a/b').join('/')
+  t.equal(
+    new Minimatch(p, { optimizationLevel, braceExpandMax: 64 }).set.length,
+    64,
+  )
+  t.throws(
+    () => new Minimatch(p, { optimizationLevel, braceExpandMax: 63 }),
+    RangeError,
+  )
+  // many short rows stay under the cell limit
+  t.throws(
+    () => new Minimatch('{0..60000}/**/../a/b', { optimizationLevel }),
+    RangeError,
+  )
   t.end()
 })
 
