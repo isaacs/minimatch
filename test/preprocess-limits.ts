@@ -10,10 +10,8 @@ t.test('**/.. splits stop at braceExpandMax', t => {
   const p = Array(30).fill('**/../a/b').join('/')
   const mm = new Minimatch(p, { optimizationLevel, braceExpandMax: 64 })
   t.equal(mm.set.length, 64)
-  // the split pass also bounds the total parts it adds, so long
-  // patterns stop well before the pattern count cap
-  const bounded = new Minimatch(p, { optimizationLevel })
-  t.equal(bounded.set.length, 10320)
+  // A larger pattern-count limit cannot bypass the cell budget.
+  t.throws(() => new Minimatch(p, { optimizationLevel }), RangeError)
   t.end()
 })
 
