@@ -26,6 +26,15 @@ export interface MinimatchOptions {
   nonegate?: boolean
   /** treat `**` the same as `*` */
   noglobstar?: boolean
+  /**
+   * When set, a `**` (or `***`) that is not immediately followed by `/`
+   * is treated as if `/` and a further `*` were present, like zsh's
+   * `GLOB_STAR_SHORT`. For example, `**.js` matches the same as
+   * `**` + `/` + `*.js`.
+   *
+   * Opt-in; bash does not do this by default.
+   */
+  globstarshort?: boolean
   /** do not expand extglobs like `+(a|b)` */
   noext?: boolean
   /** return the pattern if nothing matches */
@@ -539,6 +548,46 @@ export type ParseReturn = ParseReturnFiltered | false
 // never be used, so they are only made for the rows that are left.
 const PENDING = {} as Matcher
 
+/**
+ * zsh GLOB_STAR_SHORT: if `**` / `***` is not followed by `/`, treat as
+ * if `/` and another `*` were present (`**.js` becomes `**` + `/` + `*.js`).
+ */
+const applyGlobstarShort = (
+  pattern: string,
+  windowsPathsNoEscape: boolean,
+): string => {
+  let out = ''
+  let i = 0
+  while (i < pattern.length) {
+    if (!windowsPathsNoEscape && pattern.charAt(i) === '\\') {
+      out += pattern.charAt(i)
+      i++
+      if (i < pattern.length) {
+        out += pattern.charAt(i)
+        i++
+      }
+      continue
+    }
+
+    if (pattern.charAt(i) === '*' && pattern.charAt(i + 1) === '*') {
+      out += '**'
+      i += 2
+      while (pattern.charAt(i) === '*') {
+        out += '*'
+        i++
+      }
+      if (pattern.charAt(i) !== '/') {
+        out += '/*'
+      }
+      continue
+    }
+
+    out += pattern.charAt(i)
+    i++
+  }
+  return out
+}
+
 export class Minimatch {
   options: MinimatchOptions
   set: ParseReturnFiltered[][]
@@ -598,6 +647,12 @@ export class Minimatch {
       !!options.windowsPathsNoEscape || options[awe] === false
     if (this.windowsPathsNoEscape) {
       this.pattern = this.pattern.replace(/\\/g, '/')
+    }
+    if (options.globstarshort && !options.noglobstar) {
+      this.pattern = applyGlobstarShort(
+        this.pattern,
+        this.windowsPathsNoEscape,
+      )
     }
     this.preserveMultipleSlashes = !!options.preserveMultipleSlashes
     this.negate = false

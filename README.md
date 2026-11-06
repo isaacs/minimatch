@@ -258,6 +258,19 @@ Do not expand `{a,b}` and `{1..3}` brace sets.
 
 Disable `**` matching against multiple folder names.
 
+### globstarshort
+
+When set, a `**` (or run of stars starting with `**`) that is not
+immediately followed by `/` is treated as if `/` and a further `*`
+were present, matching zsh's
+[`GLOB_STAR_SHORT`](https://zsh.sourceforge.io/Doc/Release/Expansion.html#Recursive-Globbing)
+option. For example, `**.js` matches the same paths as `**/*.js`.
+
+This is **opt-in**. Bash does not expand patterns this way; the default
+minimatch behavior stays bash-compatible.
+
+Has no effect when `noglobstar` is set.
+
 ### dot
 
 Allow patterns to match filenames starting with a period, even if
@@ -496,7 +509,8 @@ The double-star character `**` is supported by default, unless the
 `noglobstar` flag is set. This is supported in the manner of bsdglob
 and bash 4.1, where `**` only has special significance if it is the only
 thing in a path part. That is, `a/**/b` will match `a/x/y/b`, but
-`a/**b` will not.
+`a/**b` will not. Set `globstarshort` to treat patterns like `**.js` as
+`**/*.js`, as in zsh with `GLOB_STAR_SHORT`.
 
 If an escaped pattern has no matches, and the `nonull` flag is set,
 then minimatch.match returns the pattern as-provided, rather than
