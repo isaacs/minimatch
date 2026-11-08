@@ -49,8 +49,10 @@
   each value. For a glob walk, this is one directory read, in
   place of a stat for each value. `hasMagic()` is true for these
   patterns.
-- `minimatch()` keeps the 256 `Minimatch` objects that it used most
-  recently, so it does not compile the same pattern again.
+- `minimatch()` keeps at least the 256 `Minimatch` objects that it
+  used most recently, so it does not compile the same pattern again.
+- `minimatch.filter()` compiles its pattern once, the first time
+  that it tests a path.
 - Faster to compile brace patterns that make rows that are merged,
   such as `**/*.{png,jpg,gif}`, because the `Matcher`s for the rows
   that are merged are not made.

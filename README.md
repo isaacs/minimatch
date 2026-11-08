@@ -192,9 +192,9 @@ Main export. Tests a path against the pattern using the options.
 const isJS = minimatch(file, '*.js', { matchBase: true })
 ```
 
-It keeps the 256 `Minimatch` objects that it used most recently,
-so a pattern that it tests again with the same options is not
-compiled again. To test many paths against one pattern, a
+It keeps at least the 256 `Minimatch` objects that it used most
+recently, so a pattern that it tests again with the same options
+is not compiled again. To test many paths against one pattern, a
 `Minimatch` object or `minimatch.filter()` is still a bit faster.
 
 ### minimatch.filter(pattern, options)
