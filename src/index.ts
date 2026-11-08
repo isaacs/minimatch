@@ -110,36 +110,42 @@ export interface MinimatchOptions {
 export const minimatch = (
   p: string,
   pattern: string,
-  options: MinimatchOptions = {},
+  options?: MinimatchOptions,
 ) => {
   assertValidPattern(pattern)
 
   // shortcut: comments match nothing.
-  if (!options.nocomment && pattern.charAt(0) === '#') {
+  if (!options?.nocomment && pattern.charAt(0) === '#') {
     return false
   }
 
   return cachedMinimatch(pattern, options).match(p)
 }
 
-// The Minimatch objects that minimatch() used most recently. A Map
-// keeps its keys in the order they were set, so the first key is the
-// one used least recently.
-const cache = new Map<string, Minimatch>()
+// The Minimatch objects that minimatch() used most recently, by options
+// and then by pattern. When the cache is full, it becomes the old one,
+// and the objects used from the old one are moved back to a new one.
+let cache = new Map<string, Map<string, Minimatch>>()
+let oldCache = new Map<string, Map<string, Minimatch>>()
+let cacheSize = 0
 const cacheMax = 256
-const cachedMinimatch = (pattern: string, options: MinimatchOptions) => {
-  const key = pattern + '\0' + JSON.stringify(options)
-  let mm = cache.get(key)
-  if (mm) {
-    cache.delete(key)
-  } else {
-    // a copy, so a later change to the options can not change it
-    mm = new Minimatch(pattern, { ...options })
-    if (cache.size >= cacheMax) {
-      cache.delete(cache.keys().next().value as string)
-    }
+const cachedMinimatch = (pattern: string, options?: MinimatchOptions) => {
+  const key = options ? JSON.stringify(options) : '{}'
+  let mm = cache.get(key)?.get(pattern)
+  if (mm) return mm
+  // a copy, so a later change to the options can not change it
+  mm =
+    oldCache.get(key)?.get(pattern) ??
+    new Minimatch(pattern, { ...options })
+  if (cacheSize >= cacheMax) {
+    oldCache = cache
+    cache = new Map()
+    cacheSize = 0
   }
-  cache.set(key, mm)
+  let byPattern = cache.get(key)
+  if (!byPattern) cache.set(key, (byPattern = new Map()))
+  byPattern.set(pattern, mm)
+  cacheSize++
   return mm
 }
 
@@ -164,10 +170,14 @@ minimatch.sep = sep
 export const GLOBSTAR = Symbol('globstar **')
 minimatch.GLOBSTAR = GLOBSTAR
 
-export const filter =
-  (pattern: string, options: MinimatchOptions = {}) =>
-  (p: string) =>
-    minimatch(p, pattern, options)
+export const filter = (
+  pattern: string,
+  options: MinimatchOptions = {},
+) => {
+  let mm: Minimatch | undefined
+  return (p: string) =>
+    (mm ??= new Minimatch(pattern, { ...options })).match(p)
+}
 minimatch.filter = filter
 
 const ext = (a: MinimatchOptions, b: MinimatchOptions = {}) =>
