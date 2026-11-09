@@ -27,16 +27,18 @@ export const unescape = (
     magicalBraces = true,
   }: Pick<MinimatchOptions, 'windowsPathsNoEscape' | 'magicalBraces'> = {},
 ) => {
+  // Skip backslash escapes while finding bracket escapes, without consuming
+  // the character before a bracket (which may close the previous escape).
   if (magicalBraces) {
     return windowsPathsNoEscape ?
         s.replace(/\[([^/\\])\]/g, '$1')
       : s
-          .replace(/((?!\\).|^)\[([^/\\])\]/g, '$1$2')
+          .replace(/\\.|\[([^/\\])\]/g, (match, value) => value ?? match)
           .replace(/\\([^/])/g, '$1')
   }
   return windowsPathsNoEscape ?
       s.replace(/\[([^/\\{}])\]/g, '$1')
     : s
-        .replace(/((?!\\).|^)\[([^/\\{}])\]/g, '$1$2')
+        .replace(/\\.|\[([^/\\{}])\]/g, (match, value) => value ?? match)
         .replace(/\\([^/{}])/g, '$1')
 }
