@@ -60,3 +60,36 @@ t.test('merged rows match the same paths', t => {
   t.equal(minimatch('.x.js', '**/*.{js,ts}', { dot: true }), true)
   t.end()
 })
+
+t.test('rows of different lengths are not merged', t => {
+  t.strictSame(new Minimatch('{a*,b*/c}').globParts, [['a*'], ['b*', 'c']])
+  t.strictSame(new Minimatch('{a*/x,b*/x/y,c*/x}').globParts, [
+    ['@(a*|c*)', 'x'],
+    ['b*', 'x', 'y'],
+  ])
+  t.strictSame(new Minimatch('x/{a,b}*/y/{c,d}*/z').globParts, [
+    ['x', '@(a*|b*)', 'y', '@(c*|d*)', 'z'],
+  ])
+  t.end()
+})
+
+// GHSA-cf2h-pxjq-68xw: building a key by joining the whole row at
+// every portion made compiling long patterns quadratic
+t.test('merging is not quadratic in the pattern length', t => {
+  const stars = Array(16000).fill('*').join('/')
+  const words = Array.from({ length: 16 }, (_, i) => `w${i}`).join(',')
+  for (const p of [
+    stars,
+    `{${words}}*/${stars.slice(0, 8000)}`,
+    `{${words}}/${stars.slice(0, 8000)}`,
+  ]) {
+    const start = performance.now()
+    const mm = new Minimatch(p)
+    const elapsed = performance.now() - start
+    t.ok(elapsed < 2000, `compiled in ${Math.round(elapsed)}ms`, {
+      length: p.length,
+    })
+    t.equal(mm.set.length, mm.globParts.length)
+  }
+  t.end()
+})

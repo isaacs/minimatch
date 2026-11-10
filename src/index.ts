@@ -966,10 +966,16 @@ export class Minimatch {
     let merged = true
     while (merged) {
       merged = false
+      // a single row cannot be merged with anything
+      if (this.set.length < 2) return
+      let keys = this.#mergeKeys()
       const len = Math.max(0, ...this.set.map(r => r.length))
       for (let k = 0; k < len; k++) {
-        // the rows that are the same other than at portion k
-        const groups = new Map<string, number[]>()
+        // the rows that are the same other than at portion k, keyed
+        // by the ids of the parts before k and the parts after k,
+        // which are at most the number of rows
+        const groups = new Map<number, number[]>()
+        const R = this.set.length + 1
         this.set.forEach((row, i) => {
           if (
             !(row[k] instanceof Matcher || row[k] === PENDING) ||
@@ -977,9 +983,8 @@ export class Minimatch {
           ) {
             return
           }
-          const parts = [...this.globParts[i]!]
-          parts[k] = ''
-          const key = `${row.length}/${parts.join('/')}`
+          const { pre, suf } = keys[i]!
+          const key = pre[k]! * R + suf[k + 1]!
           const g = groups.get(key)
           if (g) g.push(i)
           else groups.set(key, [i])
@@ -998,9 +1003,61 @@ export class Minimatch {
           merged = true
           this.set = this.set.filter((_, i) => !drop.has(i))
           this.globParts = this.globParts.filter((_, i) => !drop.has(i))
+          // every merge drops a row, so this happens at most once per row
+          if (this.set.length < 2) return
+          keys = this.#mergeKeys()
         }
       }
     }
+  }
+
+  // For each row, number ids for its prefixes and suffixes, such that
+  // pre[k] identifies parts[0..k) and suf[k] identifies parts[k..n).
+  // Two rows are the same other than at portion k exactly when they
+  // have the same pre[k] and suf[k + 1]. This is linear in the size of
+  // the rows, where joining the whole row for every k was quadratic.
+  #mergeKeys(): { pre: number[]; suf: number[] }[] {
+    const partIds = new Map<string, number>()
+    const ids = this.globParts.map(parts =>
+      parts.map(s => {
+        let id = partIds.get(s)
+        if (id === undefined) partIds.set(s, (id = partIds.size))
+        return id
+      }),
+    )
+    // ids are only compared at the same k, so they are numbered per
+    // portion, with 0 for the empty prefix or suffix. Then they are
+    // at most the number of rows, and id * P + part id is a safe
+    // integer key for any set that fits in memory.
+    const P = partIds.size
+    const len = Math.max(0, ...ids.map(r => r.length))
+    const keys = ids.map(r => ({
+      pre: [0] as number[],
+      suf: new Array<number>(r.length + 1).fill(0),
+    }))
+    for (let k = 0; k < len; k++) {
+      const m = new Map<number, number>()
+      ids.forEach((r, i) => {
+        if (k >= r.length) return
+        const { pre } = keys[i]!
+        const key = pre[k]! * P + r[k]!
+        let id = m.get(key)
+        if (id === undefined) m.set(key, (id = m.size + 1))
+        pre.push(id)
+      })
+    }
+    for (let k = len - 1; k >= 0; k--) {
+      const m = new Map<number, number>()
+      ids.forEach((r, i) => {
+        if (k >= r.length) return
+        const { suf } = keys[i]!
+        const key = suf[k + 1]! * P + r[k]!
+        let id = m.get(key)
+        if (id === undefined) m.set(key, (id = m.size + 1))
+        suf[k] = id
+      })
+    }
+    return keys
   }
 
   // various transforms to equivalent pattern sets that are
