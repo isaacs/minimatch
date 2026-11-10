@@ -1954,8 +1954,11 @@ export class Minimatch {
 
   // Expand braces, except numeric ranges such as {0..999} with at
   // least RANGE_MIN values. Each of those stays in its pattern as
-  // `<mark>0..999<mark>`, for the Matcher to test. If a range might
-  // be inside a [...] class, expand all of them instead.
+  // `<mark>0..999<mark>`, for the Matcher to test. If marking a range
+  // would not match the same strings as its expansion, expand all of
+  // them instead: when brace expansion would leave the range as text,
+  // when it might be inside a [...] class, when it is inside an
+  // extglob group, or when it is in a windows root portion.
   #expandBraces(): string[] {
     const { pattern } = this
     if (this.options.nobrace) return this.braceExpand()
@@ -1964,19 +1967,20 @@ export class Minimatch {
       if (++code > 0xf8ff) return this.braceExpand()
     }
     const mark = String.fromCharCode(code)
+    const isRange = (lo: string, hi: string) => {
+      const a = Number(lo)
+      const b = Number(hi)
+      return (
+        Number.isSafeInteger(a) &&
+        Number.isSafeInteger(b) &&
+        Math.abs(a - b) + 1 >= RANGE_MIN
+      )
+    }
     let found = false
     const marked = pattern.replace(
       rangeRe,
       (m, lo: string, hi: string) => {
-        const a = Number(lo)
-        const b = Number(hi)
-        if (
-          !Number.isSafeInteger(a) ||
-          !Number.isSafeInteger(b) ||
-          Math.abs(a - b) + 1 < RANGE_MIN
-        ) {
-          return m
-        }
+        if (!isRange(lo, hi)) return m
         found = true
         return `${mark}${lo}..${hi}${mark}`
       },
@@ -1984,11 +1988,80 @@ export class Minimatch {
     if (!found) return this.braceExpand()
     const set = braceExpand(marked, this.options)
     for (const p of set) {
-      for (const portion of p.split('/')) {
+      const portions = p.split('/')
+      for (const portion of portions) {
+        const m = portion.lastIndexOf(mark)
+        if (m === -1) continue
+        // might be inside a [...] class
         const c = portion.indexOf('[')
-        if (c !== -1 && c < portion.lastIndexOf(mark)) {
-          return this.braceExpand()
+        if (c !== -1 && c < m) return this.braceExpand()
+        // inside an extglob group, such as !(x{1..200}), expanding
+        // first makes one pattern per value, which is not the same
+        // as one group of all of them.
+        let depth = 0
+        for (let i = 0; i < portion.length; i++) {
+          const ch = portion.charAt(i)
+          if (ch === '\\') {
+            i++
+          } else if (
+            '+@!?*'.includes(ch) &&
+            portion.charAt(i + 1) === '('
+          ) {
+            depth++
+            i++
+          } else if (ch === ')') {
+            if (depth) depth--
+          } else if (ch === mark && depth) {
+            return this.braceExpand()
+          }
         }
+      }
+      // the drive or UNC root portions are matched as plain strings
+      if (this.isWindows && this.windowsNoMagicRoot) {
+        // the root of a long UNC path, //?/UNC/host/share, is 6
+        // portions, the same as in make()
+        const n = portions[2] === '?' && isLongUNC(portions[3]) ? 6 : 4
+        const root =
+          portions[0] === '' && portions[1] === '' ?
+            portions.slice(0, n)
+          : portions.slice(0, 1)
+        if (root.some(r => r.includes(mark))) return this.braceExpand()
+      }
+    }
+    // brace expansion leaves some ranges as text, such as one after a
+    // {group} it does not expand, or one nested in another range. A
+    // marked range must only stand in for a range that it expands.
+    // Check by expanding each range as a single value, {v..v}, and
+    // comparing with the marked set. Whether an outer group expands
+    // can depend on the value, so check lo, hi, and 0 when the range
+    // crosses it.
+    const single = (v: string) =>
+      braceExpand(`{${v}..${v}}`, this.options)[0]
+    const markRe = new RegExp(`${mark}(-?\\d+)\\.\\.(-?\\d+)${mark}`, 'g')
+    for (const pick of [
+      (lo: string) => lo,
+      (_: string, hi: string) => hi,
+      (lo: string, hi: string) =>
+        Number(lo) < 0 !== Number(hi) < 0 ? '0' : lo,
+    ]) {
+      const probe = pattern.replace(
+        rangeRe,
+        (m, lo: string, hi: string) => {
+          if (!isRange(lo, hi)) return m
+          const v = pick(lo, hi)
+          return `{${v}..${v}}`
+        },
+      )
+      const want = new Set(
+        set.map(p =>
+          p.replace(markRe, (_, lo: string, hi: string) =>
+            single(pick(lo, hi))!,
+          ),
+        ),
+      )
+      const got = new Set(braceExpand(probe, this.options))
+      if (want.size !== got.size || [...got].some(p => !want.has(p))) {
+        return this.braceExpand()
       }
     }
     this.#rangeMark = mark
