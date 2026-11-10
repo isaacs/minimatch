@@ -4,6 +4,11 @@ import { assertValidPattern } from './assert-valid-pattern.js'
 import { escape } from './escape.js'
 import { unescape } from './unescape.js'
 
+const DEFAULT_BRACE_EXPAND_MAX = 100_000
+const DEFAULT_GLOB_STAR_RECURSION_MAX = 200
+// avoid the annoying deprecation flag lol
+const AWE_KEY = ('allowWindow' + 'sEscape') as keyof MinimatchOptions
+
 export type Platform =
   | 'aix'
   | 'android'
@@ -126,18 +131,159 @@ export const minimatch = (
 // and then by pattern. When the cache is full, it becomes the old one,
 // and the objects used from the old one are moved back to a new one.
 // So it keeps 256 to 512 objects.
-let cache = new Map<string, Map<string, Minimatch>>()
-let oldCache = new Map<string, Map<string, Minimatch>>()
+let cache = new Map<number | string, Map<string, Minimatch>>()
+let oldCache = new Map<number | string, Map<string, Minimatch>>()
 let cacheSize = 0
 const cacheMax = 256
+
+type BooleanOption =
+  | 'nobrace'
+  | 'nocomment'
+  | 'nonegate'
+  | 'noglobstar'
+  | 'noext'
+  | 'nonull'
+  | 'windowsPathsNoEscape'
+  | 'allowWindowsEscape'
+  | 'partial'
+  | 'dot'
+  | 'nocase'
+  | 'nocaseMagicOnly'
+  | 'magicalBraces'
+  | 'matchBase'
+  | 'flipNegate'
+  | 'preserveMultipleSlashes'
+  | 'windowsNoMagicRoot'
+type OtherOption =
+  | 'normalize'
+  | 'platform'
+  | 'optimizationLevel'
+  | 'braceExpandMax'
+  | 'maxGlobstarRecursion'
+// tsc fails here if a new option is in neither type. Add it to
+// optionsKey() too.
+const allOptionsKeyed: [
+  Exclude<keyof MinimatchOptions, BooleanOption | OtherOption>,
+] extends [never] ?
+  true
+: never = true
+void allOptionsKeyed
+
+// 0, 1 or 2 for undefined, falsy or truthy.
+const tri = (v: unknown) =>
+  v === undefined ? 0
+  : v ? 2
+  : 1
+
+// The weight of each boolean option's base-3 digit in the key. The
+// weights below 24 are for optimizationLevel (1), platform (3) and
+// windowsPathsNoEscape (12). tsc fails here if a boolean option is
+// not in the list.
+const booleanWeights = new Map<string, number>(
+  Object.keys({
+    nobrace: 0,
+    nocomment: 0,
+    nonegate: 0,
+    noglobstar: 0,
+    noext: 0,
+    nonull: 0,
+    partial: 0,
+    dot: 0,
+    nocase: 0,
+    nocaseMagicOnly: 0,
+    magicalBraces: 0,
+    matchBase: 0,
+    flipNegate: 0,
+    preserveMultipleSlashes: 0,
+    windowsNoMagicRoot: 0,
+  } satisfies Record<
+    Exclude<BooleanOption, 'windowsPathsNoEscape' | 'allowWindowsEscape'>,
+    0
+  >).map((k, i) => [k, 24 * 3 ** i]),
+)
+
+// The cache key for a set of options. It is a number, unless an
+// option is set to a value that the number can not show, such as
+// normalize or an uncommon platform. Then it is a JSON string.
+// The defaults give 0, the same key as no options.
+// It only reads the keys that are set, so that the speed does not
+// depend on the shape of the options object.
+const optionsKey = (o: MinimatchOptions): number | string => {
+  let n = 0
+  let wpe = false
+  // inherited keys too, because Minimatch reads them
+  // oxlint-disable-next-line guard-for-in
+  for (const k in o) {
+    const v = (o as Record<string, unknown>)[k]
+    switch (k) {
+      // the same test as the Minimatch constructor
+      case 'windowsPathsNoEscape':
+        if (v) wpe = true
+        break
+      case AWE_KEY:
+        if (v === false) wpe = true
+        break
+
+      case 'platform': {
+        // the same test as the Minimatch constructor
+        const p = v || defaultPlatform
+        if (p === defaultPlatform) break
+        if (p === 'darwin') n += 3
+        else if (p === 'win32') n += 6
+        else if (p === 'linux') n += 9
+        else return JSON.stringify(o)
+        break
+      }
+
+      case 'optimizationLevel':
+        // The same tests as Minimatch: 1 when undefined, then >= 2,
+        // >= 1, or else 0. The default level 1 adds 0.
+        if (v === undefined) break
+        n +=
+          (v as number) >= 2 ? 1
+          : (v as number) >= 1 ? 0
+          : 2
+        break
+
+      case 'braceExpandMax':
+        if (v !== undefined && v !== DEFAULT_BRACE_EXPAND_MAX) {
+          return JSON.stringify(o)
+        }
+        break
+      case 'maxGlobstarRecursion':
+        if (v !== undefined && v !== DEFAULT_GLOB_STAR_RECURSION_MAX) {
+          return JSON.stringify(o)
+        }
+        break
+      case 'normalize':
+        if (v !== undefined) return JSON.stringify(o)
+        break
+
+      default:
+        // unknown keys have no weight
+        n += (booleanWeights.get(k) ?? 0) * tri(v)
+    }
+  }
+  return wpe ? n + 12 : n
+}
+
+// A copy, so a later change to the options can not change it. Unlike
+// a spread, it keeps the inherited keys, which optionsKey() and the
+// Minimatch constructor also read.
+const copyOptions = (o?: MinimatchOptions) => {
+  const copy: Record<string, unknown> = {}
+  // oxlint-disable-next-line guard-for-in
+  for (const k in o) copy[k] = (o as Record<string, unknown>)[k]
+  return copy as MinimatchOptions
+}
+
 const cachedMinimatch = (pattern: string, options?: MinimatchOptions) => {
-  const key = options ? JSON.stringify(options) : '{}'
+  const key = options ? optionsKey(options) : 0
   let mm = cache.get(key)?.get(pattern)
   if (mm) return mm
-  // a copy, so a later change to the options can not change it
   mm =
     oldCache.get(key)?.get(pattern) ??
-    new Minimatch(pattern, { ...options })
+    new Minimatch(pattern, copyOptions(options))
   if (cacheSize >= cacheMax) {
     oldCache = cache
     cache = new Map()
@@ -595,14 +741,13 @@ export class Minimatch {
 
     options = options || {}
     this.options = options
-    this.maxGlobstarRecursion = options.maxGlobstarRecursion ?? 200
+    this.maxGlobstarRecursion =
+      options.maxGlobstarRecursion ?? DEFAULT_GLOB_STAR_RECURSION_MAX
     this.pattern = pattern
     this.platform = options.platform || defaultPlatform
     this.isWindows = this.platform === 'win32'
-    // avoid the annoying deprecation flag lol
-    const awe = ('allowWindow' + 'sEscape') as keyof MinimatchOptions
     this.windowsPathsNoEscape =
-      !!options.windowsPathsNoEscape || options[awe] === false
+      !!options.windowsPathsNoEscape || options[AWE_KEY] === false
     if (this.windowsPathsNoEscape) {
       this.pattern = this.pattern.replace(/\\/g, '/')
     }
@@ -1215,7 +1360,7 @@ export class Minimatch {
     // whole pattern. Throw if either gets too large. A partial split
     // would match some paths and not others, depending on which rows
     // the pass reached first.
-    const { braceExpandMax = 100_000 } = this.options
+    const { braceExpandMax = DEFAULT_BRACE_EXPAND_MAX } = this.options
     let splitCells = 0
     const maxSplitCells = 1_000_000
     let didSomething = false

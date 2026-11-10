@@ -66,6 +66,177 @@ t.test('filter() uses the same cache as minimatch()', async t => {
   t.equal(count.n, 1)
 })
 
+t.test('each set of options has its own cache key', async t => {
+  const { minimatch, count } = await countCompiles(t)
+  const booleans = [
+    'nobrace',
+    'nocomment',
+    'nonegate',
+    'noglobstar',
+    'noext',
+    'nonull',
+    'windowsPathsNoEscape',
+    'allowWindowsEscape',
+    'partial',
+    'dot',
+    'nocase',
+    'nocaseMagicOnly',
+    'magicalBraces',
+    'matchBase',
+    'flipNegate',
+    'preserveMultipleSlashes',
+    'windowsNoMagicRoot',
+  ]
+  const defaultPlatform =
+    process.env.__MINIMATCH_TESTING_PLATFORM__ || process.platform
+  // [options, true if it needs a new compile]
+  const optionSets: [Record<string, unknown>, boolean][] = [
+    // the same as the defaults, so the same key as no options
+    [{ platform: '' }, false],
+    [{ platform: defaultPlatform }, false],
+    [{ optimizationLevel: 1 }, false],
+    [{ braceExpandMax: 100_000 }, false],
+    [{ maxGlobstarRecursion: 200 }, false],
+    [{ windowsPathsNoEscape: false }, false],
+    [{ allowWindowsEscape: true }, false],
+    [
+      {
+        dot: undefined,
+        platform: undefined,
+        optimizationLevel: undefined,
+        normalize: undefined,
+      },
+      false,
+    ],
+    // unknown keys are not part of the key
+    [{ unknownOption: true }, false],
+    [{ normalize: 'NFC' }, true],
+    [{ optimizationLevel: 2 }, true],
+    [{ optimizationLevel: 3 }, false],
+    [{ optimizationLevel: 0 }, true],
+    // these act as level 0
+    [{ optimizationLevel: 0.5 }, false],
+    [{ optimizationLevel: -1 }, false],
+    [{ optimizationLevel: null }, false],
+    [{ braceExpandMax: 5 }, true],
+    [{ maxGlobstarRecursion: 5 }, true],
+    [{ dot: true, nocase: true }, true],
+    // the order of the keys does not matter
+    [{ nocase: true, dot: true }, false],
+    // inherited keys are read, the same as own keys
+    [Object.create({ dot: true, nocase: true }), false],
+    [{ unknownOption: 1, nocase: true, dot: true }, false],
+    // these three all set windowsPathsNoEscape
+    [{ windowsPathsNoEscape: true }, true],
+    [{ allowWindowsEscape: false }, false],
+    [{ windowsPathsNoEscape: false, allowWindowsEscape: false }, false],
+  ]
+  for (const k of booleans) {
+    if (k === 'windowsPathsNoEscape' || k === 'allowWindowsEscape') {
+      continue
+    }
+    // brace sets are expanded unless nobrace is set
+    optionSets.push(
+      [{ [k]: true }, k !== 'nobrace'],
+      [{ [k]: false }, true],
+    )
+  }
+  // options are read as truthy or falsy
+  optionSets.push([{ dot: 1 }, false], [{ dot: 0 }, false])
+  const pattern = 'a/{b,c}'
+  minimatch('a/b', pattern)
+  minimatch('a/b', pattern, {})
+  t.equal(count.n, 1, 'no options and {} share a key')
+  let expect = 1
+  for (const [o, compiles] of optionSets) {
+    minimatch('a/b', pattern, o)
+    if (compiles) expect++
+    t.equal(count.n, expect, JSON.stringify(o))
+  }
+  // with nobrace, the brace set is literal
+  t.equal(minimatch('a/{b,c}', pattern, { nobrace: true }), true)
+  t.equal(minimatch('a/b', pattern, { nobrace: true }), false)
+  // each one again, from the cache
+  for (const [o] of optionSets) minimatch('a/b', pattern, { ...o })
+  t.equal(count.n, expect, 'not compiled again')
+})
+
+t.test('each platform has its own cache key', async t => {
+  const env = process.env.__MINIMATCH_TESTING_PLATFORM__
+  t.teardown(() => {
+    if (env === undefined)
+      delete process.env.__MINIMATCH_TESTING_PLATFORM__
+    else process.env.__MINIMATCH_TESTING_PLATFORM__ = env
+  })
+  const platforms = ['darwin', 'linux', 'win32'] as const
+  for (const defaultPlatform of platforms) {
+    process.env.__MINIMATCH_TESTING_PLATFORM__ = defaultPlatform
+    const { minimatch, count } = await countCompiles(t)
+    const pattern = 'a/{b,c}'
+    minimatch('a/b', pattern)
+    minimatch('a/b', pattern, { platform: defaultPlatform })
+    t.equal(count.n, 1, `${defaultPlatform}: the default platform`)
+    for (const platform of [...platforms, 'aix'] as const) {
+      if (platform === defaultPlatform) continue
+      const before = count.n
+      minimatch('a/b', pattern, { platform })
+      minimatch('a/b', pattern, { platform })
+      t.equal(count.n, before + 1, `${defaultPlatform}: ${platform}`)
+    }
+  }
+})
+
+t.test('inherited options are used, the same as Minimatch', t => {
+  // a pattern that no other test puts in the cache
+  const pattern = '?inherited'
+  t.equal(
+    minimatch('.inherited', pattern, Object.create({ dot: true })),
+    true,
+  )
+  t.equal(minimatch('.inherited', pattern, {}), false)
+  t.equal(
+    minimatch('.inherited', pattern, Object.create({ dot: false })),
+    false,
+  )
+  t.equal(minimatch('.inherited', pattern, { dot: true }), true)
+  t.end()
+})
+
+t.test('the cached object keeps a copy of the options', t => {
+  // match() reads flipNegate from the options of the object
+  const pattern = '!copied'
+  const options = { flipNegate: false }
+  t.equal(minimatch('x', pattern, options), true)
+  options.flipNegate = true
+  t.equal(minimatch('x', pattern, { flipNegate: false }), true)
+  t.end()
+})
+
+t.test('optimizationLevel below 1 is level 0', t => {
+  t.equal(minimatch('b', 'a/../b', { optimizationLevel: 1 }), true)
+  t.equal(minimatch('b', 'a/../b', { optimizationLevel: 0.5 }), false)
+  t.equal(minimatch('b', 'a/../b', { optimizationLevel: 0 }), false)
+  // the same as Minimatch, which only defaults undefined to 1
+  t.equal(
+    minimatch('b', 'a/../b', { optimizationLevel: null as any }),
+    false,
+  )
+  t.end()
+})
+
+t.test('windowsPathsNoEscape and allowWindowsEscape', t => {
+  const both = { windowsPathsNoEscape: false, allowWindowsEscape: false }
+  t.equal(minimatch('a/b', 'a\\b', { windowsPathsNoEscape: false }), false)
+  t.equal(minimatch('a/b', 'a\\b', both), true)
+  t.equal(minimatch('a/b', 'a\\b', { allowWindowsEscape: true }), false)
+  // only false turns it on, not other falsy values
+  t.equal(
+    minimatch('a/b', 'a\\b', { allowWindowsEscape: 0 as any }),
+    false,
+  )
+  t.end()
+})
+
 t.test('filter() uses the options at its first test', t => {
   const options = { dot: false }
   const f = filter('*', options)
