@@ -57,6 +57,9 @@
 - Faster to compile brace patterns that make rows that are merged,
   such as `**/*.{png,jpg,gif}`, because the `Matcher`s for the rows
   that are merged are not made.
+- Fix in 11.0.6: include inherited properties in the minimatch
+  objects created by the `minimatch()` and `filter()` methods,
+  the same as they are handled in `new Minimatch`.
 
 ## 10.2
 
