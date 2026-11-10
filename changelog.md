@@ -51,8 +51,9 @@
   patterns.
 - `minimatch()` keeps at least the 256 `Minimatch` objects that it
   used most recently, so it does not compile the same pattern again.
-- `minimatch.filter()` compiles its pattern once, the first time
-  that it tests a path.
+- `minimatch.filter()` gets its `Minimatch` object from the same
+  cache as `minimatch()`, the first time that it tests a path. A
+  later change to the options object does not change that filter.
 - Faster to compile brace patterns that make rows that are merged,
   such as `**/*.{png,jpg,gif}`, because the `Matcher`s for the rows
   that are merged are not made.
