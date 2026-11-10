@@ -125,6 +125,7 @@ export const minimatch = (
 // The Minimatch objects that minimatch() used most recently, by options
 // and then by pattern. When the cache is full, it becomes the old one,
 // and the objects used from the old one are moved back to a new one.
+// So it keeps 256 to 512 objects.
 let cache = new Map<string, Map<string, Minimatch>>()
 let oldCache = new Map<string, Map<string, Minimatch>>()
 let cacheSize = 0
@@ -170,13 +171,9 @@ minimatch.sep = sep
 export const GLOBSTAR = Symbol('globstar **')
 minimatch.GLOBSTAR = GLOBSTAR
 
-export const filter = (
-  pattern: string,
-  options: MinimatchOptions = {},
-) => {
+export const filter = (pattern: string, options?: MinimatchOptions) => {
   let mm: Minimatch | undefined
-  return (p: string) =>
-    (mm ??= new Minimatch(pattern, { ...options })).match(p)
+  return (p: string) => (mm ??= cachedMinimatch(pattern, options)).match(p)
 }
 minimatch.filter = filter
 
