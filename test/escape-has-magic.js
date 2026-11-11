@@ -24,7 +24,17 @@ for (const p of patterns) {
     nocaseMagicOnly: true,
   })
   t.equal(mmp.hasMagic(), false, 'posix escape(' + pattern + ')')
-  t.equal(mmw.hasMagic(), false, 'win32 escape(' + pattern + ')')
+  // in windowsPathsNoEscape mode, a leading ! is escaped as @(!), an
+  // extglob that only matches '!'
+  t.equal(
+    mmw.hasMagic(),
+    pattern.startsWith('!'),
+    'win32 escape(' + pattern + ')',
+  )
+  for (const mm of [mmp, mmw]) {
+    t.equal(mm.negate, false, 'not negated: ' + mm.pattern)
+    t.equal(mm.comment, false, 'not a comment: ' + mm.pattern)
+  }
   const maybeMagic = new Minimatch(pattern, opts)
   t.matchSnapshot([maybeMagic.set, maybeMagic.hasMagic()], pattern)
 }

@@ -26,7 +26,13 @@ export const unescape = (
     windowsPathsNoEscape = false,
     magicalBraces = true,
   }: Pick<MinimatchOptions, 'windowsPathsNoEscape' | 'magicalBraces'> = {},
-) => {
+): string => {
+  // escape() writes a leading '!' as '@(!)' in windowsPathsNoEscape mode
+  if (windowsPathsNoEscape && s.startsWith('@(!)')) {
+    return (
+      '!' + unescape(s.slice(4), { windowsPathsNoEscape, magicalBraces })
+    )
+  }
   if (magicalBraces) {
     return windowsPathsNoEscape ?
         s.replace(/\[([^/\\])\]/g, '$1')

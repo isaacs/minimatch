@@ -217,6 +217,15 @@ If the `windowsPathsNoEscape` option is used, then characters are
 escaped by wrapping in `[]`, because a magic character wrapped in
 a character class can only be satisfied by that exact character.
 
+Braces (`{` and `}`) are only escaped if the `magicalBraces`
+option is set. Without it, a brace expansion in the input such as
+`{a,b}` is left as-is, and will be expanded when matching.
+
+A leading `!` or `#` is escaped, so that the result is never a
+negated pattern or a comment. In `windowsPathsNoEscape` mode, a
+leading `!` is written as `@(!)`, which only matches `!` (and
+matches nothing if `noext` is set).
+
 Slashes (and backslashes in `windowsPathsNoEscape` mode) cannot
 be escaped or unescaped.
 

@@ -432,7 +432,20 @@ export const braceExpand = (
     return [pattern]
   }
 
-  return expand(pattern, { max: options.braceExpandMax })
+  // brace-expansion turns each escaped backslash '\\' into a single '\',
+  // which then escapes the next character instead, and can turn an
+  // escaped magic character (for example '\\\*') into a live one.
+  // Double every pair, so an escaped backslash comes back out still
+  // escaped. The parity of each run of backslashes is unchanged.
+  let p = pattern.replace(/\\\\/g, '\\\\\\\\')
+  // brace-expansion does not know about [...] classes. In
+  // windowsPathsNoEscape mode, escape() writes a literal brace as '[{]'
+  // or '[}]'. Escape the brace for brace-expansion, which removes that
+  // backslash again, leaving '[{]' or '[}]'.
+  if (options.windowsPathsNoEscape || options[AWE_KEY] === false) {
+    p = p.replace(/\[([{}])\]/g, '[\\$1]')
+  }
+  return expand(p, { max: options.braceExpandMax })
 }
 minimatch.braceExpand = braceExpand
 
