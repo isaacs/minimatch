@@ -274,9 +274,10 @@ t.test('a pattern with a large brace expansion is not kept', async t => {
 
 t.test('a long pattern is not kept', async t => {
   const { minimatch, count } = await countCompiles(t)
-  const pattern = '*(a|b)'.repeat(1000) + '{x,y}'
-  t.equal(minimatch('ax', pattern), true)
-  t.equal(minimatch('ax', pattern), true)
+  // at most 256 extglobs in each path portion
+  const pattern = Array(4).fill('*(a|b)'.repeat(250)).join('/') + '{x,y}'
+  t.equal(minimatch('a/a/a/ax', pattern), true)
+  t.equal(minimatch('a/a/a/ax', pattern), true)
   t.equal(count.n, 2, 'compiled each time, not kept in the cache')
 })
 

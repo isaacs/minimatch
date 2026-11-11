@@ -532,6 +532,35 @@ const literal = (pattern: string, noext: boolean): string | undefined => {
   return lit
 }
 
+// The matching engine compiles and walks extglobs recursively, so a
+// path portion with very many extglobs (nested, such as `*(*(*(a)))`,
+// or in a row, such as `?(a)?(a)?(a)`) can exhaust the call stack.
+// Portions with more than this many extglobs are rejected.
+const MAX_EXTGLOBS = 256
+
+// The number of extglob openers, such as `*(`, in a path portion
+// pattern. Chars in a class are counted too, so this can be more than
+// the number of extglobs, but never less.
+const extglobCount = (pattern: string): number => {
+  let n = 0
+  for (let i = 0; i < pattern.length - 1; i++) {
+    const c = pattern.charAt(i)
+    if (c === '\\') {
+      i++
+    } else if ('+@!?*'.includes(c) && pattern.charAt(i + 1) === '(') {
+      n++
+      i++
+    }
+  }
+  return n
+}
+
+const assertValidExtglobs = (pattern: string) => {
+  if (extglobCount(pattern) > MAX_EXTGLOBS) {
+    throw new TypeError('pattern has too many extglobs')
+  }
+}
+
 // True if the portion pattern has the same meaning as an alternative
 // inside `@(...)`. It must not have a `|` or `)` that is not in a
 // closed extglob (those are literal at the top level), an extglob
@@ -1034,6 +1063,9 @@ export class Minimatch {
           const [first, ...rest] = g as [number, ...number[]]
           const alts = g.map(i => this.globParts[i]![k]!)
           const glob = `@(${alts.join('|')})`
+          // merging is only an optimization, so leave the rows as they
+          // are if the merged portion would have too many extglobs
+          if (extglobCount(glob) > MAX_EXTGLOBS) continue
           this.globParts[first]![k] = glob
           this.set[first]![k] = this.parse(glob) as Matcher
           for (const i of rest) drop.add(i)
@@ -2128,6 +2160,7 @@ export class Minimatch {
     if (this.#pending) return PENDING
     let m = this.#matchers.get(pattern)
     if (!m) {
+      if (!noext) assertValidExtglobs(pattern)
       m = new Matcher(pattern, {
         nocase,
         noext,
