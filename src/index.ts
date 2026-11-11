@@ -131,10 +131,28 @@ export const minimatch = (
 // and then by pattern. When the cache is full, it becomes the old one,
 // and the objects used from the old one are moved back to a new one.
 // So it keeps 256 to 512 objects.
+// The patterns can come from users, so the cache is also bounded by
+// the total weight of the objects (see cacheWeight()), and an object
+// that is too heavy is never kept. Otherwise a few unique patterns
+// with large brace expansions would fill the heap.
 let cache = new Map<number | string, Map<string, Minimatch>>()
 let oldCache = new Map<number | string, Map<string, Minimatch>>()
 let cacheSize = 0
+let cacheTotalWeight = 0
 const cacheMax = 256
+const cacheMaxWeight = 1 << 15
+const cacheMaxEntryWeight = 1 << 12
+
+// About the memory that a compiled object keeps: the pattern and the
+// expanded patterns, of which each row in set is made.
+const cacheWeight = (mm: Minimatch): number => {
+  let w = mm.pattern.length
+  for (const s of mm.globSet) {
+    w += s.length + 1
+    if (w > cacheMaxEntryWeight) break
+  }
+  return w
+}
 
 type BooleanOption =
   | 'nobrace'
@@ -284,15 +302,23 @@ const cachedMinimatch = (pattern: string, options?: MinimatchOptions) => {
   mm =
     oldCache.get(key)?.get(pattern) ??
     new Minimatch(pattern, copyOptions(options))
-  if (cacheSize >= cacheMax) {
+  const weight = cacheWeight(mm)
+  // too big to keep, so it is compiled again each time
+  if (weight > cacheMaxEntryWeight) return mm
+  if (
+    cacheSize >= cacheMax ||
+    cacheTotalWeight + weight > cacheMaxWeight
+  ) {
     oldCache = cache
     cache = new Map()
     cacheSize = 0
+    cacheTotalWeight = 0
   }
   let byPattern = cache.get(key)
   if (!byPattern) cache.set(key, (byPattern = new Map()))
   byPattern.set(pattern, mm)
   cacheSize++
+  cacheTotalWeight += weight
   return mm
 }
 

@@ -256,3 +256,45 @@ t.test('more patterns than the cache holds', t => {
   }
   t.end()
 })
+
+// GHSA-hqmv-qgp3-jx75: the cache must not keep large compiled patterns,
+// or a few unique patterns with large brace expansions use up the heap.
+t.test('a pattern with a large brace expansion is not kept', async t => {
+  const { minimatch, count } = await countCompiles(t)
+  // 10,000 expanded rows
+  const pattern = '{a,b,c,d,e,f,g,h,i,j}'.repeat(4) + '/large'
+  t.equal(minimatch('abcd/large', pattern), true)
+  t.equal(minimatch('no-match', pattern), false)
+  t.equal(count.n, 2, 'compiled each time, not kept in the cache')
+  // a small pattern is still kept
+  t.equal(minimatch('a/b', 'a/{b,c}'), true)
+  t.equal(minimatch('a/c', 'a/{b,c}'), true)
+  t.equal(count.n, 3)
+})
+
+t.test('a long pattern is not kept', async t => {
+  const { minimatch, count } = await countCompiles(t)
+  const pattern = '*(a|b)'.repeat(1000) + '{x,y}'
+  t.equal(minimatch('ax', pattern), true)
+  t.equal(minimatch('ax', pattern), true)
+  t.equal(count.n, 2, 'compiled each time, not kept in the cache')
+})
+
+t.test(
+  'the cache is bounded by the total size of the patterns',
+  async t => {
+    const { minimatch, count } = await countCompiles(t)
+    // each of these is small enough to be kept, but far fewer than
+    // 256 of them must not all be kept at once
+    const mk = (i: number) =>
+      `${i}/{${Array.from({ length: 100 }, (_, j) => `x${j}-long-name`).join(',')}}`
+    const first = mk(0)
+    t.equal(minimatch('0/x1-long-name', first), true)
+    t.equal(minimatch('0/x1-long-name', first), true)
+    t.equal(count.n, 1, 'kept')
+    for (let i = 1; i < 100; i++) minimatch(`${i}/x1-long-name`, mk(i))
+    t.equal(count.n, 100)
+    t.equal(minimatch('0/x1-long-name', first), true)
+    t.equal(count.n, 101, 'dropped from the cache before 256 patterns')
+  },
+)
