@@ -524,8 +524,9 @@ A numeric range of 100 or more values, such as `{0..999}` or
 `{001..500}`, is the exception. It is not expanded, but it matches
 the same strings as its expansion. A range is expanded as usual if
 it has a step, such as `{0..999..2}`, if a `\` or `$` is before
-it, or if a `[` is before it in the same path portion, because it
-might be inside a class.
+it, if a `[` is before it in the same path portion, because it
+might be inside a class, or if it is inside a `!(...)`, `*(...)`
+or `+(...)` extglob, because those repeat or negate each value.
 
 Each portion of a pattern between `/` characters is matched with
 [@isaacs/nonrecursive-glob-match](http://npm.im/@isaacs/nonrecursive-glob-match),
