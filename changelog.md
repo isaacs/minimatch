@@ -60,6 +60,10 @@
 - Fix in 11.0.6: include inherited properties in the minimatch
   objects created by the `minimatch()` and `filter()` methods,
   the same as they are handled in `new Minimatch`.
+- Fix: a numeric range of 100 or more values inside a `!(...)`,
+  `*(...)` or `+(...)` extglob is expanded, so it matches the same
+  strings as its expansion. Before, `file-!({1..100}).txt` did not
+  match `file-5.txt`, and `*({1..100})` matched `510`.
 
 ## 10.2
 

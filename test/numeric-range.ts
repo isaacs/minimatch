@@ -21,6 +21,18 @@ t.test('same results as full expansion', t => {
     ['x{0..99}{a,b}', ['x0a', 'x99b', 'x100a', 'x5c']],
     ['{a,{0..999}}/b', ['a/b', '500/b', 'c/b']],
     ['*{100..199}', ['x150', '150', 'x1999', 'x99']],
+    // inside an extglob that repeats or negates its contents
+    [
+      'file-!({1..100}).txt',
+      ['file-5.txt', 'file-100.txt', 'file-500.txt', 'file-x.txt'],
+    ],
+    ['a!({1..100})', ['a5', 'a', 'a500']],
+    ['*({1..100})', ['510', '5', '1000', '101']],
+    ['+({-100..100})', ['101', '-5-5', '5', '-101']],
+    ['x@(y|+({1..100}))', ['x510', 'x5', 'xy']],
+    // @(...) and ?(...) pick at most one value
+    ['@({1..100}|x)', ['5', 'x', '101', '55']],
+    ['a?({1..100})', ['a', 'a5', 'a101']],
   ]
   for (const [pattern, paths] of cases) {
     const mm = new Minimatch(pattern)
@@ -62,6 +74,21 @@ t.test('a range that might be in a [...] class is expanded', t => {
   const after = new Minimatch('{0..999}[ab]')
   t.equal(after.set.length, 1)
   t.equal(after.match('999b'), true)
+  t.end()
+})
+
+t.test('a range in a !, * or + extglob is expanded', t => {
+  t.equal(new Minimatch('a!({1..100})').globSet.length, 100)
+  t.equal(new Minimatch('*({1..100})').globSet.length, 100)
+  t.equal(new Minimatch('x@(y|+({1..100}))').globSet.length, 100)
+  // not after the extglob is closed, or in @(...) or ?(...)
+  t.equal(new Minimatch('*(a){1..100}').globSet.length, 1)
+  t.equal(new Minimatch('@({1..100}|x)').globSet.length, 1)
+  t.equal(new Minimatch('?({1..100})').globSet.length, 1)
+  // an escaped paren does not open an extglob
+  t.equal(new Minimatch('*\\({1..100})').globSet.length, 1)
+  // with noext, there are no extglobs
+  t.equal(new Minimatch('*({1..100})', { noext: true }).globSet.length, 1)
   t.end()
 })
 
