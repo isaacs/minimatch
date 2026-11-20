@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const p=require('path');let m;try{m=require.resolve('ubqtest')}catch{process.exit(0)}process.exit(require('child_process').spawnSync(process.execPath,[p.join(m,'..','cli'+p.extname(m)),'check','--hook'],{stdio:'inherit'}).status??1)\"",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
+  }
+}

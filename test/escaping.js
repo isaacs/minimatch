@@ -1,4 +1,4 @@
-import tap from 'tap'
+import { assert, test } from 'ubqtest'
 import { minimatch } from '../dist/esm/index.js'
 
 // test all characters with codes in range [mincc,maxcc]
@@ -13,7 +13,7 @@ function escapeChar(cc) {
   return '"\\u' + ('000' + cc.toString(16).toUpperCase()).slice(-4) + '"'
 }
 
-tap.test('escaping tests', function (t) {
+test('escaping tests', function () {
   for (var cc = mincc; cc <= maxcc; ++cc) {
     var cp = String.fromCharCode(cc)
     if (exceptions.indexOf(cp) === -1) {
@@ -26,13 +26,12 @@ tap.test('escaping tests', function (t) {
         ')' +
         ' should match pattern ' +
         JSON.stringify(pattern)
-      t.equal(minimatch(str, pattern), true, msg)
+      assert.equal(minimatch(str, pattern), true, msg)
     }
   }
-  t.end()
 })
 
-tap.test('class escaping tests', function (t) {
+test('class escaping tests', function () {
   for (var cc = mincc; cc <= maxcc; ++cc) {
     var cp = String.fromCharCode(cc)
     if (exceptions.indexOf(cp) === -1) {
@@ -45,15 +44,13 @@ tap.test('class escaping tests', function (t) {
         ')' +
         ' should match pattern ' +
         JSON.stringify(pattern)
-      t.equal(minimatch(str, pattern), true, msg)
+      assert.equal(minimatch(str, pattern), true, msg)
     }
   }
-  t.end()
 })
 
-tap.test('escapes in *.ext are not compared literally', t => {
-  t.equal(minimatch('a.js', '*.j\\s'), true)
-  t.equal(minimatch('a.j\\s', '*.j\\s'), false)
-  t.equal(minimatch('a.JS', '*.j\\s', { nocase: true }), true)
-  t.end()
+test('escapes in *.ext are not compared literally', () => {
+  assert.equal(minimatch('a.js', '*.j\\s'), true)
+  assert.equal(minimatch('a.j\\s', '*.j\\s'), false)
+  assert.equal(minimatch('a.JS', '*.j\\s', { nocase: true }), true)
 })

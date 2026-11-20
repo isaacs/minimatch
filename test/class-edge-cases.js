@@ -1,4 +1,4 @@
-import t from 'tap'
+import { assert, test } from 'ubqtest'
 import { minimatch } from '../dist/esm/index.js'
 
 const files = ['a[]b', '[b-a]x', 'a]b', 'a[]]b', 'a[[]b']
@@ -27,16 +27,18 @@ const patterns = [
 //
 // console.error('cd ..; rm -rf x')
 
-const matches = {}
+test('class edge cases', () => {
+  const matches = {}
 
-for (const pattern of patterns) {
-  for (const file of files) {
-    if (minimatch(file, pattern)) {
-      matches[pattern] = matches[pattern] || []
-      matches[pattern].push(file)
+  for (const pattern of patterns) {
+    for (const file of files) {
+      if (minimatch(file, pattern)) {
+        matches[pattern] = matches[pattern] || []
+        matches[pattern].push(file)
+      }
     }
   }
-}
 
-t.comment({ files, patterns, matches })
-t.matchSnapshot({ files, patterns, matches })
+  console.log({ files, patterns, matches })
+  assert.snapshot({ files, patterns, matches })
+})

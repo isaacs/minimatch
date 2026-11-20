@@ -1,4 +1,4 @@
-import t from 'tap'
+import { assert, test } from 'ubqtest'
 import { minimatch } from '../src/index.js'
 
 function timed(fn: () => void) {
@@ -33,10 +33,9 @@ const cases: [string, number][] = [
   ['+(a|*(b|c)|d)a', 15],
 ]
 
-for (const [pat, n] of cases) {
-  const tm = timed(() => minimatch('a'.repeat(n) + 'z', pat))
-  t.ok(tm.ms < 100, `${pat} chars=${n} ms=${tm.ms}`, {
-    ...tm,
-    wanted: 'ms should be < 100',
-  })
-}
+test('nested extglobs match in linear time', () => {
+  for (const [pat, n] of cases) {
+    const tm = timed(() => minimatch('a'.repeat(n) + 'z', pat))
+    assert(tm.ms < 100, `${pat} chars=${n} ms=${tm.ms}`)
+  }
+})

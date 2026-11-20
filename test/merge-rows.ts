@@ -1,4 +1,4 @@
-import t from 'tap'
+import { assert, test } from 'ubqtest'
 import { minimatch, Minimatch } from '../src/index.js'
 
 // rows from brace expansion that only differ in one Matcher portion
@@ -30,52 +30,56 @@ const cases: [p: string, globParts: string[][]][] = [
   ['{a,b}*\\', [['a*\\'], ['b*\\']]],
 ]
 
-for (const [p, globParts] of cases) {
-  t.strictSame(new Minimatch(p).globParts, globParts, p)
-}
+test('globParts of brace sets', () => {
+  for (const [p, globParts] of cases) {
+    assert.deepEqual(new Minimatch(p).globParts, globParts, p)
+  }
+})
 
-t.test('set and globParts stay in step', t => {
+test('set and globParts stay in step', () => {
   const m = new Minimatch('{a,b}*/{c,d}*')
-  t.equal(m.set.length, m.globParts.length)
-  t.match(m.set, [[{ pattern: '@(a*|b*)' }, { pattern: '@(c*|d*)' }]])
-  t.end()
+  assert.equal(m.set.length, m.globParts.length)
+  assert.match(m.set, [[{ pattern: '@(a*|b*)' }, { pattern: '@(c*|d*)' }]])
 })
 
-t.test('not with noext, where @(...) is literal', t => {
-  t.strictSame(new Minimatch('**/*.{js,ts}', { noext: true }).globParts, [
-    ['**', '*.js'],
-    ['**', '*.ts'],
-  ])
-  t.end()
+test('not with noext, where @(...) is literal', () => {
+  assert.deepEqual(
+    new Minimatch('**/*.{js,ts}', { noext: true }).globParts,
+    [
+      ['**', '*.js'],
+      ['**', '*.ts'],
+    ],
+  )
 })
 
-t.test('merged rows match the same paths', t => {
+test('merged rows match the same paths', () => {
   for (const f of ['x.js', 'a/x.ts', 'a/x.md', '.x.js', 'a/.x.ts']) {
-    t.equal(
+    assert.equal(
       minimatch(f, '**/*.{js,ts}'),
       /^(.*\/)?[^.][^/]*\.[jt]s$/.test(f),
       f,
     )
   }
-  t.equal(minimatch('.x.js', '**/*.{js,ts}', { dot: true }), true)
-  t.end()
+  assert.equal(minimatch('.x.js', '**/*.{js,ts}', { dot: true }), true)
 })
 
-t.test('rows of different lengths are not merged', t => {
-  t.strictSame(new Minimatch('{a*,b*/c}').globParts, [['a*'], ['b*', 'c']])
-  t.strictSame(new Minimatch('{a*/x,b*/x/y,c*/x}').globParts, [
+test('rows of different lengths are not merged', () => {
+  assert.deepEqual(new Minimatch('{a*,b*/c}').globParts, [
+    ['a*'],
+    ['b*', 'c'],
+  ])
+  assert.deepEqual(new Minimatch('{a*/x,b*/x/y,c*/x}').globParts, [
     ['@(a*|c*)', 'x'],
     ['b*', 'x', 'y'],
   ])
-  t.strictSame(new Minimatch('x/{a,b}*/y/{c,d}*/z').globParts, [
+  assert.deepEqual(new Minimatch('x/{a,b}*/y/{c,d}*/z').globParts, [
     ['x', '@(a*|b*)', 'y', '@(c*|d*)', 'z'],
   ])
-  t.end()
 })
 
 // GHSA-cf2h-pxjq-68xw: building a key by joining the whole row at
 // every portion made compiling long patterns quadratic
-t.test('merging is not quadratic in the pattern length', t => {
+test('merging is not quadratic in the pattern length', () => {
   const stars = Array(16000).fill('*').join('/')
   const words = Array.from({ length: 16 }, (_, i) => `w${i}`).join(',')
   for (const p of [
@@ -86,10 +90,7 @@ t.test('merging is not quadratic in the pattern length', t => {
     const start = performance.now()
     const mm = new Minimatch(p)
     const elapsed = performance.now() - start
-    t.ok(elapsed < 2000, `compiled in ${Math.round(elapsed)}ms`, {
-      length: p.length,
-    })
-    t.equal(mm.set.length, mm.globParts.length)
+    assert(elapsed < 2000, `compiled in ${Math.round(elapsed)}ms`)
+    assert.equal(mm.set.length, mm.globParts.length)
   }
-  t.end()
 })

@@ -1,7 +1,7 @@
 // test in posix mode by default
 process.env.__MINIMATCH_TESTING_PLATFORM__ = 'linux'
 
-import t from 'tap'
+import { assert, describe, env, mockImport, test } from 'ubqtest'
 import { braceExpand } from '../dist/esm/index.js'
 
 const optimizationLevel = 2
@@ -11,22 +11,28 @@ process.env._MINIMATCH_TEST_OPTIMIZATION_LEVEL = String(optimizationLevel)
 import './basic.js'
 import { Minimatch } from '../src/index.js'
 
-t.test('explicit pattern coalescing and optimization', t => {
-  t.plan(2)
-  for (const platform of ['win32', 'linux']) {
-    t.test(platform, async t => {
-      process.env.__MINIMATCH_TESTING_PLATFORM__ = platform
-      const { Minimatch } = await t.mockImport('../dist/esm/index.js', {})
-      const m = new Minimatch('*', { optimizationLevel })
-      const noGS = new Minimatch('*', {
-        noglobstar: true,
-        optimizationLevel,
-      })
-      const ms = new Minimatch('*', {
-        preserveMultipleSlashes: true,
-        optimizationLevel,
-      })
+describe('explicit pattern coalescing and optimization', () => {
+  // a fresh copy of minimatch, loaded with the platform set in the env
+  const load = async (platform: string) => {
+    env({ __MINIMATCH_TESTING_PLATFORM__: platform })
+    const { Minimatch } = await mockImport(
+      () => import('../dist/esm/index.js'),
+      [],
+    )
+    const m = new Minimatch('*', { optimizationLevel })
+    const noGS = new Minimatch('*', {
+      noglobstar: true,
+      optimizationLevel,
+    })
+    const ms = new Minimatch('*', {
+      preserveMultipleSlashes: true,
+      optimizationLevel,
+    })
+    return { m, noGS, ms }
+  }
 
+  for (const platform of ['win32', 'linux']) {
+    describe(platform, () => {
       const patterns = [
         '**',
         '**/../x',
@@ -42,7 +48,6 @@ t.test('explicit pattern coalescing and optimization', t => {
         '//host/share//s/o//me////.//path',
         '**/..',
         '**/../',
-        '**/../x',
         '**/../x/y',
         '**/../x/y/z',
         'a/b/c/**///../x/y/z',
@@ -71,13 +76,12 @@ t.test('explicit pattern coalescing and optimization', t => {
 
       const exp = (p: string) => braceExpand(p).map(s => s.split('/'))
 
-      t.plan(patterns.length)
       for (const p of patterns) {
-        t.test(p, t => {
-          t.matchSnapshot(m.preprocess(exp(p)), 'defaults')
-          t.matchSnapshot(noGS.preprocess(exp(p)), 'no globstar')
-          t.matchSnapshot(ms.preprocess(exp(p)), 'multislash')
-          t.end()
+        test(p, async () => {
+          const { m, noGS, ms } = await load(platform)
+          assert.snapshot(m.preprocess(exp(p)), 'defaults')
+          assert.snapshot(noGS.preprocess(exp(p)), 'no globstar')
+          assert.snapshot(ms.preprocess(exp(p)), 'multislash')
         })
       }
     })

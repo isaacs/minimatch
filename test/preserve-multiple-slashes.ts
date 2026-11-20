@@ -1,10 +1,12 @@
-import t from 'tap'
+import { assert, test } from 'ubqtest'
 import { Minimatch } from '../dist/esm/index.js'
 
-const mm = new Minimatch('a///b', {
-  preserveMultipleSlashes: true,
+test('preserve multiple slashes', () => {
+  const mm = new Minimatch('a///b', {
+    preserveMultipleSlashes: true,
+  })
+
+  assert.deepEqual(mm.set, [['a', '', '', 'b']])
+
+  assert.deepEqual(mm.globSet, ['a///b'])
 })
-
-t.same(mm.set, [['a', '', '', 'b']])
-
-t.same(mm.globSet, ['a///b'])

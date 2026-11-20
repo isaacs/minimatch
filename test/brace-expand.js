@@ -1,7 +1,7 @@
-import t from 'tap'
+import { assert, test } from 'ubqtest'
 import { braceExpand, minimatch } from '../dist/esm/index.js'
 
-t.test('brace expansion', function (t) {
+test('brace expansion', function () {
   // [ pattern, [expanded] ]
   const patterns = [
     [
@@ -38,14 +38,12 @@ t.test('brace expansion', function (t) {
   ]
   patterns.forEach(function (tc) {
     const [p, expect] = tc
-    t.same(minimatch.braceExpand(p), expect, p)
+    assert.deepEqual(minimatch.braceExpand(p), expect, p)
   })
-  t.end()
 })
 
-t.test('limit brace expansion', t => {
+test('limit brace expansion', () => {
   const p = '{' + 'a,'.repeat(1000) + 'x}'
   const expanded = braceExpand(p, { braceExpandMax: 10 })
-  t.strictSame(expanded, 'a'.repeat(10).split(''))
-  t.end()
+  assert.deepEqual(expanded, 'a'.repeat(10).split(''))
 })

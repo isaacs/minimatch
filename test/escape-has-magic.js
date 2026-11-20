@@ -1,116 +1,133 @@
-import t from 'tap'
+import { assert, test } from 'ubqtest'
 import { unescape, escape, Minimatch } from '../dist/esm/index.js'
 import patterns from './patterns.js'
 
-for (const p of patterns) {
-  if (!Array.isArray(p) || typeof p[0] !== 'string') continue
-  const pattern = p[0]
-  const opts = p[2] || {}
-  const escapep = escape(pattern)
-  const escapew = escape(pattern, { windowsPathsNoEscape: true })
-  t.equal(unescape(escapep), pattern, 'posix unescape(' + pattern + ')')
-  t.equal(
-    unescape(escapew, {
+test('escape and unescape', () => {
+  for (const p of patterns) {
+    if (!Array.isArray(p) || typeof p[0] !== 'string') continue
+    const pattern = p[0]
+    const opts = p[2] || {}
+    const escapep = escape(pattern)
+    const escapew = escape(pattern, { windowsPathsNoEscape: true })
+    assert.equal(
+      unescape(escapep),
+      pattern,
+      'posix unescape(' + pattern + ')',
+    )
+    assert.equal(
+      unescape(escapew, {
+        windowsPathsNoEscape: true,
+      }),
+      pattern,
+      'win32 unescape(' + pattern + ')',
+    )
+    const mmp = new Minimatch(escapep, { ...opts, nocaseMagicOnly: true })
+    const mmw = new Minimatch(escapew, {
+      ...opts,
+      platform: 'win32',
       windowsPathsNoEscape: true,
-    }),
-    pattern,
-    'win32 unescape(' + pattern + ')',
-  )
-  const mmp = new Minimatch(escapep, { ...opts, nocaseMagicOnly: true })
-  const mmw = new Minimatch(escapew, {
-    ...opts,
-    platform: 'win32',
-    windowsPathsNoEscape: true,
-    nocaseMagicOnly: true,
-  })
-  t.equal(mmp.hasMagic(), false, 'posix escape(' + pattern + ')')
-  // in windowsPathsNoEscape mode, a leading ! is escaped as @(!), an
-  // extglob that only matches '!'
-  t.equal(
-    mmw.hasMagic(),
-    pattern.startsWith('!'),
-    'win32 escape(' + pattern + ')',
-  )
-  for (const mm of [mmp, mmw]) {
-    t.equal(mm.negate, false, 'not negated: ' + mm.pattern)
-    t.equal(mm.comment, false, 'not a comment: ' + mm.pattern)
+      nocaseMagicOnly: true,
+    })
+    assert.equal(mmp.hasMagic(), false, 'posix escape(' + pattern + ')')
+    // in windowsPathsNoEscape mode, a leading ! is escaped as @(!), an
+    // extglob that only matches '!'
+    assert.equal(
+      mmw.hasMagic(),
+      pattern.startsWith('!'),
+      'win32 escape(' + pattern + ')',
+    )
+    for (const mm of [mmp, mmw]) {
+      assert.equal(mm.negate, false, 'not negated: ' + mm.pattern)
+      assert.equal(mm.comment, false, 'not a comment: ' + mm.pattern)
+    }
+    const maybeMagic = new Minimatch(pattern, opts)
+    assert.snapshot([maybeMagic.set, maybeMagic.hasMagic()], pattern)
   }
-  const maybeMagic = new Minimatch(pattern, opts)
-  t.matchSnapshot([maybeMagic.set, maybeMagic.hasMagic()], pattern)
-}
 
-// edge case, [\\] should be unescaped as [], not \\
-t.equal(unescape('[\\]'), '[]')
+  // edge case, [\\] should be unescaped as [], not \\
+  assert.equal(unescape('[\\]'), '[]')
 
-t.equal(new Minimatch('{a,b}').hasMagic(), false)
-t.equal(new Minimatch('{a,b}', { magicalBraces: true }).hasMagic(), true)
-
-/** @type {[string, string, { magicalBraces: boolean, windowsPathsNoEscape: boolean }][]} */
-const bracedEscapeTests = [
-  [
-    '{a,b}',
-    '\\{a,b\\}',
-    { magicalBraces: true, windowsPathsNoEscape: false },
-  ],
-  [
-    '{a,b}',
-    '[{]a,b[}]',
-    { magicalBraces: true, windowsPathsNoEscape: true },
-  ],
-  [
-    '[{]',
-    '\\[\\{\\]',
-    { magicalBraces: true, windowsPathsNoEscape: false },
-  ],
-  [
-    '[{]',
-    '[[][{][]]',
-    { magicalBraces: true, windowsPathsNoEscape: true },
-  ],
-  [
-    '[\\{]',
-    '\\[\\\\\\{\\]',
-    { magicalBraces: true, windowsPathsNoEscape: false },
-  ],
-  [
-    '[\\{]',
-    '[[]\\[{][]]',
-    { magicalBraces: true, windowsPathsNoEscape: true },
-  ],
-
-  [
-    '{a,b}',
-    '{a,b}',
-    { magicalBraces: false, windowsPathsNoEscape: false },
-  ],
-  ['{a,b}', '{a,b}', { magicalBraces: false, windowsPathsNoEscape: true }],
-  [
-    '[{]',
-    '\\[{\\]',
-    { magicalBraces: false, windowsPathsNoEscape: false },
-  ],
-  ['[{]', '[[]{[]]', { magicalBraces: false, windowsPathsNoEscape: true }],
-  [
-    '[\\{]',
-    '\\[\\\\{\\]',
-    { magicalBraces: false, windowsPathsNoEscape: false },
-  ],
-  [
-    '[\\{]',
-    '[[]\\{[]]',
-    { magicalBraces: false, windowsPathsNoEscape: true },
-  ],
-]
-
-for (const [pattern, escaped, opts] of bracedEscapeTests) {
-  t.equal(
-    escape(pattern, opts),
-    escaped,
-    JSON.stringify({ pattern, escaped, opts }),
+  assert.equal(new Minimatch('{a,b}').hasMagic(), false)
+  assert.equal(
+    new Minimatch('{a,b}', { magicalBraces: true }).hasMagic(),
+    true,
   )
-  t.equal(
-    unescape(escaped, opts),
-    pattern,
-    JSON.stringify({ pattern, escaped, opts }),
-  )
-}
+
+  /** @type {[string, string, { magicalBraces: boolean, windowsPathsNoEscape: boolean }][]} */
+  const bracedEscapeTests = [
+    [
+      '{a,b}',
+      '\\{a,b\\}',
+      { magicalBraces: true, windowsPathsNoEscape: false },
+    ],
+    [
+      '{a,b}',
+      '[{]a,b[}]',
+      { magicalBraces: true, windowsPathsNoEscape: true },
+    ],
+    [
+      '[{]',
+      '\\[\\{\\]',
+      { magicalBraces: true, windowsPathsNoEscape: false },
+    ],
+    [
+      '[{]',
+      '[[][{][]]',
+      { magicalBraces: true, windowsPathsNoEscape: true },
+    ],
+    [
+      '[\\{]',
+      '\\[\\\\\\{\\]',
+      { magicalBraces: true, windowsPathsNoEscape: false },
+    ],
+    [
+      '[\\{]',
+      '[[]\\[{][]]',
+      { magicalBraces: true, windowsPathsNoEscape: true },
+    ],
+
+    [
+      '{a,b}',
+      '{a,b}',
+      { magicalBraces: false, windowsPathsNoEscape: false },
+    ],
+    [
+      '{a,b}',
+      '{a,b}',
+      { magicalBraces: false, windowsPathsNoEscape: true },
+    ],
+    [
+      '[{]',
+      '\\[{\\]',
+      { magicalBraces: false, windowsPathsNoEscape: false },
+    ],
+    [
+      '[{]',
+      '[[]{[]]',
+      { magicalBraces: false, windowsPathsNoEscape: true },
+    ],
+    [
+      '[\\{]',
+      '\\[\\\\{\\]',
+      { magicalBraces: false, windowsPathsNoEscape: false },
+    ],
+    [
+      '[\\{]',
+      '[[]\\{[]]',
+      { magicalBraces: false, windowsPathsNoEscape: true },
+    ],
+  ]
+
+  for (const [pattern, escaped, opts] of bracedEscapeTests) {
+    assert.equal(
+      escape(pattern, opts),
+      escaped,
+      JSON.stringify({ pattern, escaped, opts }),
+    )
+    assert.equal(
+      unescape(escaped, opts),
+      pattern,
+      JSON.stringify({ pattern, escaped, opts }),
+    )
+  }
+})

@@ -1,33 +1,47 @@
-import t from 'tap'
+import { any, assert, describe, test } from 'ubqtest'
 import type { MinimatchOptions } from '../dist/esm/index.js'
 import { minimatch, Minimatch } from '../dist/esm/index.js'
 import { Matcher } from '@isaacs/nonrecursive-glob-match'
 
-t.test('long UNC roots are not magic', async t => {
+test('long UNC roots are not magic', async () => {
   for (const o of [{ nocase: true }, { windowsNoMagicRoot: true }]) {
     const mm = new Minimatch('//?/unc/host/share/*', {
       platform: 'win32',
       ...o,
     })
-    t.match(mm.set, [['', '', '?', 'UNC', 'host', 'share', Matcher]])
-    t.equal(mm.match('//?/UNC/HOST/SHARE/x'), true)
-    t.equal(mm.match('//HOST/share/x'), true)
-    t.equal(mm.match('//x/UNC/host/share/x'), false)
+    assert.match(mm.set, [
+      ['', '', '?', 'UNC', 'host', 'share', any.instanceOf(Matcher)],
+    ])
+    assert.equal(mm.match('//?/UNC/HOST/SHARE/x'), true)
+    assert.equal(mm.match('//HOST/share/x'), true)
+    assert.equal(mm.match('//x/UNC/host/share/x'), false)
   }
   // with magic, the host and share are Matchers
   const mm = new Minimatch('//?/UNC/h*/share/*', {
     platform: 'win32',
     nocase: true,
   })
-  t.match(mm.set, [['', '', '?', 'UNC', Matcher, Matcher, Matcher]])
-  t.equal(mm.match('//HOST/share/x'), true)
+  assert.match(mm.set, [
+    [
+      '',
+      '',
+      '?',
+      'UNC',
+      any.instanceOf(Matcher),
+      any.instanceOf(Matcher),
+      any.instanceOf(Matcher),
+    ],
+  ])
+  assert.equal(mm.match('//HOST/share/x'), true)
 })
 
-t.test('UNC patterns do not lose their //', async t => {
+test('UNC patterns do not lose their //', async () => {
   const share = new Minimatch('//host/share/*', { platform: 'win32' })
-  t.match(share.set, [['', '', 'host', 'share', Matcher]])
+  assert.match(share.set, [
+    ['', '', 'host', 'share', any.instanceOf(Matcher)],
+  ])
   const uncPath = new Minimatch('//?/d:/*', { platform: 'win32' })
-  t.match(uncPath.set, [['', '', '?', 'd:', Matcher]])
+  assert.match(uncPath.set, [['', '', '?', 'd:', any.instanceOf(Matcher)]])
 })
 
 type Case = [f: string, p: string, e: boolean, opt?: MinimatchOptions]
@@ -41,9 +55,7 @@ const cases: Case[] = [
   ['c:/x', '//?/C:/*', true],
   ['//?/c:/x', 'C:/*', true],
   ['//?/c:/x', '//?/C:/*', true],
-  ['c:/x', '//?/C:/*', true],
   ['c:/x', 'C:/*', true],
-  ['C:/x', '//?/c:/*', true],
   ['C:/x', 'c:/*', true],
 
   ['d:/x', '//?/c:/*', false],
@@ -97,30 +109,32 @@ const cases: Case[] = [
   ],
 ]
 
-t.test('UNC drive letter paths match normal paths', async t => {
+describe('UNC drive letter paths match normal paths', () => {
   for (const [file, pattern, expect, opt = {}] of cases) {
+    // the options are part of the name, to keep each name unique
+    const o = Object.keys(opt).length ? ` o=${JSON.stringify(opt)}` : ''
     opt.platform = 'win32'
-    t.test(`f=${file} p=${pattern}`, t => {
-      t.test('/ only', t => {
-        t.equal(minimatch(file, pattern, opt), expect)
-        t.end()
+    describe(`f=${file} p=${pattern}${o}`, () => {
+      test('/ only', () => {
+        assert.equal(minimatch(file, pattern, opt), expect)
       })
-      t.test('file \\', t => {
-        t.equal(minimatch(file.replace(/\//g, '\\'), pattern, opt), expect)
-        t.end()
+      test('file \\', () => {
+        assert.equal(
+          minimatch(file.replace(/\//g, '\\'), pattern, opt),
+          expect,
+        )
       })
-      t.test('pattern \\', t => {
-        t.equal(
+      test('pattern \\', () => {
+        assert.equal(
           minimatch(file, pattern.replace(/\//g, '\\'), {
             ...opt,
             windowsPathsNoEscape: true,
           }),
           expect,
         )
-        t.end()
       })
-      t.test('both \\', t => {
-        t.equal(
+      test('both \\', () => {
+        assert.equal(
           minimatch(
             file.replace(/\//g, '\\'),
             pattern.replace(/\//g, '\\'),
@@ -131,21 +145,19 @@ t.test('UNC drive letter paths match normal paths', async t => {
           ),
           expect,
         )
-        t.end()
       })
-      t.end()
     })
   }
 })
 
-t.test('matching a drive letter does not change the pattern', async t => {
+test('matching a drive letter does not change the pattern', async () => {
   for (const pattern of ['c:/x/**/y', '//?/c:/x/**/y']) {
     const m = new Minimatch(pattern, { platform: 'win32' })
     const before = JSON.stringify(m.set.map(r => r.map(String)))
-    t.equal(m.match('C:/x/a/y'), true)
-    t.equal(m.match('c:/x/a/y'), true)
-    t.equal(m.match('//?/C:/x/y'), true)
-    t.equal(m.match('d:/x/a/y'), false)
-    t.equal(JSON.stringify(m.set.map(r => r.map(String))), before)
+    assert.equal(m.match('C:/x/a/y'), true)
+    assert.equal(m.match('c:/x/a/y'), true)
+    assert.equal(m.match('//?/C:/x/y'), true)
+    assert.equal(m.match('d:/x/a/y'), false)
+    assert.equal(JSON.stringify(m.set.map(r => r.map(String))), before)
   }
 })

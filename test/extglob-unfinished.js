@@ -1,13 +1,11 @@
-import t from 'tap'
+import { assert, test } from 'ubqtest'
 import { minimatch as mm } from '../dist/esm/index.js'
 
 var types = '!?+*@'.split('')
 
-t.plan(types.length)
 types.forEach(function (type) {
-  t.test(type, function (t) {
-    t.plan(2)
-    t.ok(mm(type + '(a|B', type + '(a|B', { nonegate: true }))
-    t.notOk(mm(type + '(a|B', 'B', { nonegate: true }))
+  test(type, function () {
+    assert(mm(type + '(a|B', type + '(a|B', { nonegate: true }))
+    assert(!mm(type + '(a|B', 'B', { nonegate: true }))
   })
 })

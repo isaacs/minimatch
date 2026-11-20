@@ -1,7 +1,7 @@
 import { Minimatch } from '../dist/esm/index.js'
-import t from 'tap'
+import { assert, describe, test } from 'ubqtest'
 
-t.test('no magic the root', t => {
+describe('no magic the root', () => {
   const patterns = [
     '//host/share/x/y/z',
     '//host/share/',
@@ -13,17 +13,16 @@ t.test('no magic the root', t => {
     'd:/',
     'd:',
   ]
-  t.plan(patterns.length)
   for (const p of patterns) {
-    t.test(p, t => {
-      t.matchSnapshot(
+    test(p, () => {
+      assert.snapshot(
         new Minimatch(p, {
           platform: 'win32',
           nocase: true,
         }).set,
         'default to true',
       )
-      t.matchSnapshot(
+      assert.snapshot(
         new Minimatch(p, {
           windowsNoMagicRoot: false,
           platform: 'win32',
@@ -31,7 +30,6 @@ t.test('no magic the root', t => {
         }).set,
         'set explicitly false',
       )
-      t.end()
     })
   }
 })

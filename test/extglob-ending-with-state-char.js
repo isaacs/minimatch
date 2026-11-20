@@ -1,8 +1,7 @@
-import { test } from 'tap'
+import { assert, test } from 'ubqtest'
 import { minimatch } from '../dist/esm/index.js'
 
-test('extglob ending with statechar', function (t) {
-  t.notOk(minimatch('ax', 'a?(b*)'))
-  t.ok(minimatch('ax', '?(a*|b)'))
-  t.end()
+test('extglob ending with statechar', function () {
+  assert(!minimatch('ax', 'a?(b*)'))
+  assert(minimatch('ax', '?(a*|b)'))
 })

@@ -322,10 +322,10 @@ const cachedMinimatch = (pattern: string, options?: MinimatchOptions) => {
   return mm
 }
 
-/* c8 ignore start */
 const defaultPlatform: Platform = (
   typeof process === 'object' && process ?
     process.env?.__MINIMATCH_TESTING_PLATFORM__ || process.platform
+    // ubq: not measured: tests always run where process exists
   : 'posix') as Platform
 
 export type Sep = '\\' | '/'
@@ -334,7 +334,6 @@ const path: { [k: string]: { sep: Sep } } = {
   win32: { sep: '\\' },
   posix: { sep: '/' },
 }
-/* c8 ignore stop */
 
 export const sep =
   defaultPlatform === 'win32' ? path.win32.sep : path.posix.sep
@@ -2053,12 +2052,10 @@ export class Minimatch {
       let p = pattern[pi]
       let f = file[fi]
 
-      // should be impossible.
-      /* c8 ignore start */
+      // ubq: not measured: should be impossible
       if (p === false || p === GLOBSTAR) {
         return false
       }
-      /* c8 ignore stop */
 
       // something other than **
       // non-magic patterns just have to match exactly
@@ -2092,13 +2089,10 @@ export class Minimatch {
       // empty segment of a file with a trailing slash.
       // a/* should match a/b/
       return fi === fl - 1 && file[fi] === ''
-
-      /* c8 ignore start */
     } else {
-      // should be unreachable.
+      // ubq: not measured: should be unreachable
       throw new Error('wtf?')
     }
-    /* c8 ignore stop */
   }
 
   braceExpand() {
@@ -2305,11 +2299,9 @@ export class Minimatch {
     return minimatch.defaults(def).Minimatch
   }
 }
-/* c8 ignore start */
 export { escape } from './escape.js'
 export { unescape } from './unescape.js'
 export type { Form }
-/* c8 ignore stop */
 minimatch.Minimatch = Minimatch
 minimatch.escape = escape
 minimatch.unescape = unescape

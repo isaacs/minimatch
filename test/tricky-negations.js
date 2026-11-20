@@ -1,4 +1,4 @@
-import t from 'tap'
+import { assert, test } from 'ubqtest'
 import { minimatch } from '../dist/esm/index.js'
 
 var cases = {
@@ -100,12 +100,11 @@ var cases = {
 var options = { nonegate: true }
 
 Object.keys(cases).forEach(function (file) {
-  t.test(file, function (t) {
+  test(file, function () {
     Object.keys(cases[file]).forEach(function (pattern) {
       var res = cases[file][pattern]
       var s = file + ' ' + pattern
-      t.equal(minimatch(file, pattern, options), res, s)
+      assert.equal(minimatch(file, pattern, options), res, s)
     })
-    t.end()
   })
 })

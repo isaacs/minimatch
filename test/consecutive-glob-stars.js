@@ -1,4 +1,4 @@
-import t from 'tap'
+import { assert, test } from 'ubqtest'
 import { Minimatch } from '../dist/esm/index.js'
 
 const patterns = []
@@ -10,6 +10,8 @@ for (const a of ['**', '**/**', '**/**/**']) {
   }
 }
 
-for (const m of patterns.map(p => new Minimatch(p))) {
-  t.same(m.globParts, [['x', '**', 'y', '**', 'z', '**']])
-}
+test('consecutive globstars collapse', () => {
+  for (const m of patterns.map(p => new Minimatch(p))) {
+    assert.deepEqual(m.globParts, [['x', '**', 'y', '**', 'z', '**']])
+  }
+})
