@@ -39,6 +39,6 @@ test('class edge cases', () => {
     }
   }
 
-  console.log({ files, patterns, matches })
+  // console.log({ files, patterns, matches })
   assert.snapshot({ files, patterns, matches })
 })

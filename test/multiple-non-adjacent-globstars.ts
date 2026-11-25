@@ -7,7 +7,7 @@ test('GHSA-7r86-cg39-jmmj', async () => {
     Array.from({ length: k }, () => '**/a').join('/') + '/b/**'
   const patha = Array(100).fill('a').join('/') + '/a'
   const pathb = Array(100).fill('a').join('/') + '/b/c/d/.e/a/b'
-  console.log({ patha, pathb, pattern })
+  // console.log({ patha, pathb, pattern })
 
   const starta = performance.now()
   assert.equal(minimatch(patha, pattern), false)
@@ -17,13 +17,13 @@ test('GHSA-7r86-cg39-jmmj', async () => {
   const startb = performance.now()
   assert.equal(minimatch(pathb, pattern, { dot: true }), true)
   const durb = performance.now() - startb
-  console.log({ dura, durb })
+  // console.log({ dura, durb })
   assert(durb < 10_000, 'should take less than 10s to find match')
 
   const startc = performance.now()
   assert.equal(minimatch(pathb, pattern), false)
   const durc = performance.now() - startc
-  console.log({ dura, durb, durc })
+  // console.log({ dura, durb, durc })
   assert(durc < 10_000, 'should take less than 10s to find dot mismatch')
 })
 
@@ -39,7 +39,7 @@ test('alphabetical', async () => {
       .join('/') +
     '/' +
     exclude('a').concat('a').join('/')
-  console.log(path, pattern)
+  // console.log(path, pattern)
   const start = performance.now()
   assert.equal(
     minimatch(path, pattern, { maxGlobstarRecursion: 30 }),
@@ -47,7 +47,7 @@ test('alphabetical', async () => {
   )
   assert.equal(minimatch(path, pattern), true)
   const dur = performance.now() - start
-  console.log('alphabet time', dur)
+  // console.log('alphabet time', dur)
 })
 
 test('tail handling 1', async () => {

@@ -9,12 +9,12 @@ import { minimatch as mm } from '../dist/esm/index.js'
 import patterns from './patterns.js'
 
 test('basic tests', function () {
-  var start = Date.now()
+  // var start = Date.now()
 
   // [ pattern, [matches], MM opts, files, TAP opts]
   patterns.forEach(function (c) {
     if (typeof c === 'function') return c()
-    if (typeof c === 'string') return console.log(c)
+    if (typeof c === 'string') return // console.log(c)
 
     var pattern = c[0]
     var expect = c[1].sort(alpha)
@@ -40,7 +40,7 @@ test('basic tests', function () {
     )
   })
 
-  console.log('time=' + (Date.now() - start) + 'ms')
+  // console.log('time=' + (Date.now() - start) + 'ms')
 })
 
 test('global leak test', function () {
