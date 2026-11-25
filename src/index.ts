@@ -1866,7 +1866,7 @@ export class Minimatch {
       partial,
       0,
       !!fileTailMatch,
-      new Set(),
+      new Array<number>(segments.length).fill(-1),
     )
   }
 
@@ -1933,11 +1933,14 @@ export class Minimatch {
     partial: boolean,
     globStarDepth: number,
     sawTail: boolean,
-    // the places that a walk has already tried, as
-    // bodyIndex * (file.length + 1) + fileIndex. A walk from a place
-    // does the same no matter how it got there, and it only comes back
-    // if it found no match, so a walk that gets to one stops.
-    tried: Set<number>,
+    // for each body segment, the last file index that a walk has
+    // already tried it at, or -1. A walk from a place does the same no
+    // matter how it got there, and it only comes back if it found no
+    // match, so a walk that gets to one stops. The walks of a segment
+    // only go forward: each walk of the one before it tries it at
+    // later places, and starts after the places that walk tried. So
+    // the places it was tried at are the ones up to this index.
+    tried: number[],
   ): boolean | null {
     // take the first body segment, and walk from fileIndex to its "after"
     // value at the end
@@ -1981,9 +1984,8 @@ export class Minimatch {
     // with partial, the path can end before the body does
     const after = partial ? fileLength : fileLength - need
     while (fileIndex <= after) {
-      const key = bodyIndex * (file.length + 1) + fileIndex
-      if (tried.has(key)) return false
-      tried.add(key)
+      if (fileIndex <= tried[bodyIndex]!) return false
+      tried[bodyIndex] = fileIndex
       const m = this.#matchOne(
         file,
         body,
